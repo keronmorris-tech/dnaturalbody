@@ -32,7 +32,7 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- Cart button opens drawer -->
+      <!-- Drawer cart trigger -->
       <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
         <span class="cart-icon">👜</span>
         <span class="cart-count" id="cartCount" style="display:none;">0</span>
@@ -56,28 +56,18 @@
           <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
         </div>
 
-        <!-- SIZE PICKER -->
         <div class="size-picker">
           <p class="size-label">Choose your size:</p>
 
           <div class="size-options" id="sizeOptions">
-            <!-- 8 oz -->
             <button class="size-option active" type="button"
-              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">
-              8 oz
-            </button>
+              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
 
-            <!-- 4 oz -->
             <button class="size-option" type="button"
-              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">
-              4 oz
-            </button>
+              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
 
-            <!-- 2 oz -->
             <button class="size-option" type="button"
-              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">
-              2 oz
-            </button>
+              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
           </div>
         </div>
 
@@ -87,7 +77,18 @@
         </p>
 
         <div class="product-actions">
-          <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
+          <!-- cart.js listens for .add-to-cart + data-* -->
+          <button
+            class="primary-btn add-to-cart"
+            id="addToCartBtn"
+            type="button"
+            data-id="53018857242989"
+            data-name="Cashmere Kisses"
+            data-price="22.00"
+            data-size="8 oz"
+            data-image="../images/Cashmere-kisses-body-butter.jpg"
+          >Add to Cart</button>
+
           <a href="../shop-body-butter.html" class="outline-btn">Back to Body Butters</a>
         </div>
 
@@ -125,9 +126,10 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART DRAWER (same IDs your cart.js expects) -->
+  <!-- CART DRAWER OVERLAY -->
   <div class="cart-overlay" id="cartOverlay"></div>
 
+  <!-- CART DRAWER PANEL -->
   <aside class="cart-drawer" id="cartDrawer">
     <div class="cart-drawer-header">
       <h2>Your Cart</h2>
@@ -142,13 +144,12 @@
         <span id="cartSubtotalDrawer">$0.00</span>
       </div>
 
-      <!-- This button will redirect to Shopify with ALL cart items -->
       <button class="primary-btn cart-checkout" type="button">Checkout</button>
       <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
     </div>
   </aside>
 
-  <!-- Page-only script: size switching + addToCart -->
+  <!-- Size switching ONLY updates the button’s data-* so cart.js can do the rest -->
   <script>
     (function () {
       const wrapper = document.getElementById("sizeOptions");
@@ -158,58 +159,42 @@
 
       if (!wrapper || !addBtn) return;
 
-      const formatPrice = v => "$" + Number(v).toFixed(2);
-
+      function formatPrice(v) { return "$" + Number(v).toFixed(2); }
       function getActiveBtn() {
         return wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
       }
 
       function setActive(btn) {
         if (!btn) return;
+
         wrapper.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
 
         const price = btn.dataset.price;
         const size  = btn.dataset.size;
         const grams = btn.dataset.grams;
+        const variant = btn.dataset.variant;
 
         if (priceEl && price) priceEl.textContent = formatPrice(price);
         if (sizeEl && size) sizeEl.textContent = grams ? `Net Wt. ${size} / ${grams} g` : `Size: ${size}`;
+
+        // Update the Add to Cart button (variant id + display info)
+        addBtn.dataset.id = variant;
+        addBtn.dataset.price = price;
+        addBtn.dataset.size = size;
       }
 
-      wrapper.addEventListener("click", (e) => {
+      wrapper.addEventListener("click", function (e) {
         const btn = e.target.closest(".size-option");
         if (btn) setActive(btn);
-      });
-
-      addBtn.addEventListener("click", () => {
-        const active = getActiveBtn();
-        const variantId = active?.dataset?.variant; // ✅ Shopify variant ID
-        const price = Number(active?.dataset?.price || 0);
-        const size = active?.dataset?.size || "";
-
-        if (!variantId) return alert("Select a size first.");
-
-        if (typeof window.addToCart !== "function") {
-          alert("Cart script not loaded. Make sure ../cart.js exists.");
-          return;
-        }
-
-        window.addToCart({
-          id: String(variantId), // ✅ MUST be Shopify variant id for checkout sync
-          name: "Cashmere Kisses",
-          price: price,
-          size: size,
-          qty: 1,
-          image: "../images/Cashmere-kisses-body-butter.jpg"
-        });
       });
 
       setActive(getActiveBtn());
     })();
   </script>
 
-  <!-- Your global cart logic -->
+  <!-- IMPORTANT: cart.js is in the root, so go up one level -->
   <script src="../cart.js"></script>
+
 </body>
 </html>
