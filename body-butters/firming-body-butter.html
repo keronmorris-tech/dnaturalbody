@@ -1,0 +1,131 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Firming Body Butter | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <!-- HEADER -->
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <!-- Shopify Cart -->
+      <a class="cart-button nav-link" href="https://shop.dnaturalbody.com/cart" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+      </a>
+    </nav>
+  </header>
+
+  <!-- PRODUCT SECTION -->
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <!-- IMAGE -->
+      <div class="product-image">
+        <img src="../images/Firming-body-butter.jpg" alt="Firming Body Butter">
+      </div>
+
+      <!-- INFO -->
+      <div class="product-info">
+        <h1>Firming</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price">$24.00</div>
+          <div class="size">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        <p class="product-desc">
+          A smoothing, caffeine-boosted body butter that hugs the skin in
+          rich moisture while helping the look of firmness and bounce over time.
+        </p>
+
+        <!-- ACTIONS -->
+        <div class="product-actions">
+          <button class="primary-btn" id="addToCartBtn" type="button">
+            Add to Cart
+          </button>
+
+          <a href="../shop-body-butter.html" class="outline-btn">
+            Back to Body Butters
+          </a>
+        </div>
+
+        <!-- DETAILS -->
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Infused with caffeine-rich coffee extracts to support the look of firm, toned skin.<br>
+              • Cushions dry areas with silky, non-greasy moisture.<br>
+              • Ideal for thighs, hips, arms, and anywhere you want a smoother appearance.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              Aqua (Water), Glycerin, Simmondsia Chinensis (Jojoba) Seed Oil,
+              Butyrospermum Parkii (Shea) Butter, Mangifera Indica (Mango) Seed Butter,
+              Theobroma Cacao (Cocoa) Seed Butter, Cetyl Alcohol,
+              Behentrimonium Methosulfate (and) Cetearyl Alcohol,
+              Coffea Arabica (Coffee) Seed Extract, Hydrogenated Soybean Oil,
+              Coffea Arabica (Coffee) Seed Oil, Phenoxyethanol (and) Caprylyl Glycol,
+              Parfum (Fragrance).
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Massage onto clean, slightly damp skin using firm upward strokes,
+              focusing on thighs, hips, arms, and tummy.
+              Use daily for best results.
+            </p>
+          </details>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <!-- SHOPIFY CART REDIRECT SCRIPT -->
+  <script>
+    document.getElementById("addToCartBtn").addEventListener("click", function () {
+      const variantId = "53018931003757"; // Firming 8oz
+      window.location.href = "https://shop.dnaturalbody.com/cart/" + variantId + ":1";
+    });
+  </script>
+
+</body>
+</html>
