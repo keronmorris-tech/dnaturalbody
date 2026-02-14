@@ -1,0 +1,224 @@
+
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Rose Silk Body Butter | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <!-- Shopify Cart (Option B) -->
+      <a class="cart-button nav-link" href="https://shop.dnaturalbody.com/cart" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Rose-Silk-body-butter.jpg" alt="Rose Silk Body Butter">
+      </div>
+
+      <div class="product-info">
+        <h1>Rose Silk</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        <!-- SIZE PICKER -->
+        <div class="size-picker">
+          <p class="size-label">Choose your size:</p>
+
+          <div class="size-options" id="sizeOptions">
+            <button class="size-option active"
+                    type="button"
+                    data-size="8 oz"
+                    data-grams="227"
+                    data-price="22.00"
+                    data-variant="53018857439597">
+              8 oz
+            </button>
+
+            <button class="size-option"
+                    type="button"
+                    data-size="4 oz"
+                    data-grams="113"
+                    data-price="14.00"
+                    data-variant="53018857472365">
+              4 oz
+            </button>
+
+            <button class="size-option"
+                    type="button"
+                    data-size="2 oz"
+                    data-grams="57"
+                    data-price="8.00"
+                    data-variant="53019419902317">
+              2 oz
+            </button>
+          </div>
+        </div>
+
+        <p class="product-desc">
+          A soft, romantic blend that wraps skin in silky moisture and a delicate rose scent.
+          Perfect for when you want to feel ultra-feminine and pampered.
+        </p>
+
+        <div class="product-actions">
+          <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
+          <a href="../shop-body-butter.html" class="outline-btn">Back to Body Butters</a>
+        </div>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Wraps skin in a soft, silky veil of moisture.<br>
+              • Ideal for those who love a feminine, floral scent.<br>
+              • Helps smooth rough texture and restore radiance.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p><strong>Formula:</strong></p>
+            <p>
+              Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter,
+              Cocoa Butter, Cetyl Alcohol, Behentrimonium Methosulfate (and) Cetearyl Alcohol (BTMS-50),
+              Propylene Glycol (and) Diazolidinyl Urea (and) Iodopropynyl Butylcarbamate (Liquid Germall Plus),
+              Fragrance (Parfum).
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Smooth over clean skin, concentrating on areas that feel dry or rough.
+              For a spa moment at home, apply after a warm shower or bath.
+            </p>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script>
+    (function () {
+      const shopDomain = "https://shop.dnaturalbody.com";
+      const wrapper = document.getElementById("sizeOptions");
+      const priceEl = document.getElementById("priceText");
+      const sizeEl  = document.getElementById("sizeText");
+      const addBtn  = document.getElementById("addToCartBtn");
+
+      if (!wrapper || !addBtn) return;
+
+      function formatPrice(value) {
+        return "$" + Number(value).toFixed(2);
+      }
+
+      function getActiveBtn() {
+        return wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
+      }
+
+      function setActive(btn) {
+        if (!btn) return;
+        wrapper.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const price = btn.dataset.price;
+        const size  = btn.dataset.size;
+        const grams = btn.dataset.grams;
+
+        if (priceEl && price) priceEl.textContent = formatPrice(price);
+        if (sizeEl && size) {
+          sizeEl.textContent = grams ? `Net Wt. ${size} / ${grams} g` : `Size: ${size}`;
+        }
+      }
+
+      wrapper.addEventListener("click", function (e) {
+        const btn = e.target.closest(".size-option");
+        if (!btn) return;
+        setActive(btn);
+      });
+
+      addBtn.addEventListener("click", function () {
+        const active = getActiveBtn();
+        const variantId = active?.dataset?.variant;
+
+        if (!variantId) {
+          alert("Sorry — please select a size first.");
+          return;
+        }
+
+        window.location.href = `${shopDomain}/cart/${variantId}:1`;
+      });
+
+      setActive(getActiveBtn());
+    })();
+  </script>
+
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close" type="button">&times;</button>
+    </div>
+
+    <div class="cart-items" id="cartItemsDrawer"></div>
+
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cartSubtotalDrawer">$0.00</span>
+      </div>
+
+      <button class="primary-btn cart-checkout" type="button">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
+    </div>
+  </aside>
+
+
+  <script src="../cart.js"></script>
+</body>
+</html>
+

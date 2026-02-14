@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Peach Please Body Yogurt | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <button class="cart-button" id="cartButton" type="button">
+        <span class="cart-icon">👜</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/peach-please-body-yogurt.jpg" alt="Peach Please Body Yogurt">
+      </div>
+
+      <div class="product-info">
+        <h1>Peach Please</h1>
+        <div class="product-type">Body Yogurt</div>
+
+        <p class="product-desc">
+          A fluffy, peachy-fresh body yogurt that soaks in quickly and leaves skin
+          feeling bouncy, hydrated, and smelling like a juicy summer peach.
+        </p>
+
+        <div class="product-meta">
+          <div class="price">$20.00</div>
+          <div class="size">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        <div class="product-actions">
+          <button class="primary-btn" type="button"
+            onclick="window.addToCart({
+              id: 'peach-please-yogurt',
+              name: 'Peach Please',
+              type: 'Body Yogurt',
+              price: 20.00,
+              image: '../images/peach-please-body-yogurt.jpg'
+            })">
+            Add to Cart
+          </button>
+
+          <a href="../shop-body-yogurt.html" class="outline-btn">Back to Body Yogurts</a>
+        </div>
+
+        <details open>
+          <summary>Benefits</summary>
+          <p>
+            • Lightweight hydration with a soft, creamy feel.<br>
+            • Perfect everyday moisturizer for normal skin.<br>
+            • Layers beautifully under your favorite body butter.
+          </p>
+        </details>
+
+        <details>
+          <summary>Ingredients</summary>
+          <p>
+            Water (Aqua), Glycerin, Caprylic/Capric Triglyceride,
+            Cetearyl Alcohol, Cetearyl Olivate (and) Sorbitan Olivate,
+            Jojoba Oil, Fragrance (Parfum), Carbomer, Triethanolamine,
+            Phenoxyethanol (and) Ethylhexylglycerin.
+          </p>
+        </details>
+
+        <details>
+          <summary>How to Use</summary>
+          <p>
+            Massage onto clean skin after showering or bathing.
+            Use daily for soft, peachy-smooth skin.
+          </p>
+        </details>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <div class="cart-overlay" id="cartOverlay"></div>
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close">&times;</button>
+    </div>
+    <div class="cart-items" id="cartItems"></div>
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cartSubtotal">$0.00</span>
+      </div>
+      <button class="primary-btn cart-checkout" type="button">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue" type="button">
+        Continue Shopping
+      </button>
+    </div>
+  </aside>
+
+  <script src="../cart.js"></script>
+</body>
+</html>

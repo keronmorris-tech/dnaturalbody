@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Turmeric Brightening Body Butter | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <!-- Shopify Cart (Option B) -->
+      <a class="cart-button nav-link" href="https://shop.dnaturalbody.com/cart" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <!-- LEFT: IMAGE -->
+      <div class="product-image">
+        <img src="../images/turmeric-body-butter.jpg" alt="Turmeric Brightening Body Butter">
+      </div>
+
+      <!-- RIGHT: INFO -->
+      <div class="product-info">
+        <h1>Turmeric Brightening Body Butter</h1>
+        <p class="product-type">Body Butter</p>
+
+        <p class="product-desc">
+          A rich, creamy body butter infused with turmeric and comforting botanicals to help
+          nourish dry skin and promote a soft, healthy-looking glow.
+        </p>
+
+        <div class="product-meta">
+          <p class="price">$22.00</p>
+          <p class="size">Net Wt. 8 oz / 227 g</p>
+        </div>
+
+        <div class="product-sections">
+
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              Formulated to wrap the skin in moisture, support the skin’s barrier, and leave a
+              smoother, more radiant-looking finish over time.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p><strong>Full formula:</strong></p>
+            <p>
+              Distilled Water (48.5%), Frankincense Hydrosol, Glycerin, Turmeric Oil, Coconut Oil,
+              Shea Butter, Mango Butter, BTMS-50, Cetyl Alcohol, Liquid Germall Plus,
+              Turmeric Extract, Licorice Root Extract, Vitamin E Oil, Fragrance.
+            </p>
+
+            <p><strong>What each key ingredient does:</strong></p>
+            <ul>
+              <li><strong>Distilled Water (48.5%)</strong> – Provides lightweight hydration and helps disperse all the skin-loving ingredients evenly.</li>
+              <li><strong>Frankincense Hydrosol</strong> – A gentle botanical water that helps soothe and refresh the skin’s surface.</li>
+              <li><strong>Glycerin</strong> – A humectant that attracts moisture to the skin, helping it feel soft and comfortably hydrated.</li>
+              <li><strong>Turmeric Oil</strong> – Known for its antioxidant properties and its ability to support a more even, radiant-looking tone.</li>
+              <li><strong>Coconut Oil</strong> – Helps condition and soften dry areas, adding a smooth, nourishing slip.</li>
+              <li><strong>Shea Butter</strong> – Rich, buttery moisture that helps support the skin barrier and protect against dryness.</li>
+              <li><strong>Mango Butter</strong> – Lightweight butter that melts into skin to improve softness and suppleness.</li>
+              <li><strong>BTMS-50</strong> – A conditioning emulsifier that gives the butter a silky, spreadable texture and helps lock in moisture.</li>
+              <li><strong>Cetyl Alcohol</strong> – A fatty (non-drying) alcohol that adds creaminess and helps skin feel smooth and cushioned.</li>
+              <li><strong>Liquid Germall Plus</strong> – Broad-spectrum preservative that helps keep the formula fresh and safe to use.</li>
+              <li><strong>Turmeric Extract</strong> – Antioxidant support that helps brighten the look of dull skin.</li>
+              <li><strong>Licorice Root Extract</strong> – Known to help improve the appearance of uneven tone and boost overall radiance.</li>
+              <li><strong>Vitamin E Oil</strong> – An antioxidant that supports the skin’s protective barrier and helps condition dry skin.</li>
+            </ul>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Apply to clean, dry skin, massaging in circular motions until fully absorbed.
+              Focus on areas that tend to be drier, like legs, arms, elbows, and knees.
+              Use daily for best results.
+            </p>
+          </details>
+
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="product-actions">
+          <button class="primary-btn" id="addToCartBtn" type="button">
+            Add to Cart
+          </button>
+
+          <a href="../shop-body-butter.html" class="outline-btn">Back to Body Butters</a>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script>
+    document.getElementById("addToCartBtn").addEventListener("click", function () {
+      const variantId = "53018930938221"; // Turmeric 8oz
+      window.location.href = "https://shop.dnaturalbody.com/cart/" + variantId + ":1";
+    });
+  </script>
+
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close" type="button">&times;</button>
+    </div>
+
+    <div class="cart-items" id="cartItemsDrawer"></div>
+
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cartSubtotalDrawer">$0.00</span>
+      </div>
+
+      <button class="primary-btn cart-checkout" type="button">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
+    </div>
+  </aside>
+
+
+  <script src="../cart.js"></script>
+</body>
+</html>

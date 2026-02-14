@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Shea Body Scrub | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- note the ../ here -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <header class="header">
+    <!-- go UP to root, then to index.html -->
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <button class="cart-button" id="cartButton" type="button">
+        <span class="cart-icon">👜</span>
+        <span class="cart-count" id="cartCount">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <!-- LEFT IMAGE -->
+      <div class="product-image">
+        <img src="../images/shea-body-scrub.jpg" alt="Shea Body Scrub">
+      </div>
+
+      <!-- RIGHT INFO -->
+      <div class="product-info">
+        <h1>Shea</h1>
+        <div class="product-type">Body Scrub</div>
+
+        <p class="product-desc">
+          A rich, shea-powered sugar scrub that melts onto the skin, gently polishing away
+          dullness while cocooning your body in soft, comforting moisture. Skin feels smoother,
+          nourished, and baby-soft after every rinse.
+        </p>
+
+        <div class="product-meta">
+          <div class="price">$22.00</div>
+          <div class="size">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        <!-- ACTIONS -->
+        <div class="product-actions">
+          <button class="primary-btn"
+            type="button"
+            onclick="addToCart({
+              id: 'shea-scrub',
+              name: 'Shea',
+              type: 'Body Scrub',
+              price: 22.00,
+              image: '../images/shea-body-scrub.jpg'
+            })">
+            Add to Cart
+          </button>
+
+          <a href="../shop-body-scrub.html" class="outline-btn">Back to Body Scrubs</a>
+        </div>
+
+        <details open>
+          <summary>Benefits</summary>
+          <p>
+            This creamy body scrub exfoliates without stripping moisture,
+            leaving skin smooth, cushioned, and glowing after every use.
+          </p>
+          <ul>
+            <li>Shea butter helps replenish and comfort dry, tight-feeling skin.</li>
+            <li>Sugar crystals gently buff away rough patches and flakiness.</li>
+            <li>Oils leave behind a soft, moisturized finish — not a dry squeak.</li>
+          </ul>
+        </details>
+
+        <details>
+          <summary>Ingredients</summary>
+          <p>
+            Sugar, Glycerin, Butyrospermum Parkii (Shea) Butter,
+            Simmondsia Chinensis (Jojoba) Seed Oil, Prunus Amygdalus Dulcis (Sweet Almond) Oil,
+            Fragrance (Parfum), and a gentle preservative system to keep your scrub fresh.
+          </p>
+        </details>
+
+        <details>
+          <summary>How to Use</summary>
+          <p>
+            Massage onto damp skin in circular motions, focusing on rough areas like legs, elbows,
+            and arms. Rinse thoroughly and pat dry. Follow with body yogurt or body butter
+            for extra nourishment. Use 2–3 times per week.
+          </p>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <!-- CART DRAWER OVERLAY -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <!-- CART DRAWER PANEL -->
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close">&times;</button>
+    </div>
+
+    <div class="cart-items" id="cartItems">
+      <!-- JS will inject cart items here -->
+    </div>
+
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cartSubtotal">$0.00</span>
+      </div>
+
+      <button class="primary-btn cart-checkout">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue">Continue Shopping</button>
+    </div>
+  </aside>
+
+  <!-- IMPORTANT: go up one level to reach cart.js -->
+  <script src="../cart.js"></script>
+</body>
+</html>

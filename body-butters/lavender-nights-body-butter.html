@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Lavender Nights Body Butter | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <!-- Shopify Cart (Option B) -->
+      <a class="cart-button nav-link" href="https://shop.dnaturalbody.com/cart" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+      </a>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Lavender-nights-body-butter.jpg" alt="Lavender Nights Body Butter">
+      </div>
+
+      <div class="product-info">
+        <h1>Lavender Nights</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        <!-- SIZE PICKER -->
+        <div class="size-picker">
+          <p class="size-label">Choose your size:</p>
+
+          <div class="size-options" id="sizeOptions">
+            <!-- 8 oz (default) -->
+            <button class="size-option active"
+                    type="button"
+                    data-size="8 oz"
+                    data-grams="227"
+                    data-price="22.00"
+                    data-variant="53019419804013">
+              8 oz
+            </button>
+
+            <!-- 4 oz -->
+            <button class="size-option"
+                    type="button"
+                    data-size="4 oz"
+                    data-grams="113"
+                    data-price="14.00"
+                    data-variant="53019419836781">
+              4 oz
+            </button>
+
+            <!-- 2 oz -->
+            <button class="size-option"
+                    type="button"
+                    data-size="2 oz"
+                    data-grams="57"
+                    data-price="8.00"
+                    data-variant="53019419869549">
+              2 oz
+            </button>
+          </div>
+        </div>
+
+        <p class="product-desc">
+          A calming, creamy blend that melts into the skin like a bedtime hug —
+          soothing, softening, and perfect for unwinding at the end of the day.
+        </p>
+
+        <div class="product-actions">
+          <button class="primary-btn" id="addToCartBtn" type="button">
+            Add to Cart
+          </button>
+
+          <a href="../shop-body-butter.html" class="outline-btn">Back to Body Butters</a>
+        </div>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Cushions skin with rich moisture while feeling soft and silky.<br>
+              • Lavender-inspired scent helps set the tone for a relaxing night routine.<br>
+              • Ideal for dry areas that need extra care and comfort.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p><strong>Formula:</strong></p>
+            <p>
+              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter,
+              Cocoa Butter, Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
+            </p>
+
+            <p><strong>Key ingredient benefits:</strong></p>
+            <ul>
+              <li><strong>Glycerin</strong> – draws moisture into the skin for lasting hydration.</li>
+              <li><strong>Shea &amp; Mango Butter</strong> – cushiony butters that protect and soften.</li>
+              <li><strong>Cocoa Butter</strong> – supports a smoother, more supple skin texture.</li>
+              <li><strong>Jojoba Oil</strong> – balances and conditions without heaviness.</li>
+              <li><strong>BTMS-50 &amp; Cetyl Alcohol</strong> – give a velvety, non-greasy finish.</li>
+            </ul>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Apply generously after showering or any time your skin needs a moisture boost.
+              For a full nighttime ritual, layer over your matching Lavender Nights body scrub.
+            </p>
+          </details>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script>
+    (function () {
+      const shopDomain = "https://shop.dnaturalbody.com";
+      const wrapper = document.getElementById("sizeOptions");
+      const priceEl = document.getElementById("priceText");
+      const sizeEl  = document.getElementById("sizeText");
+      const addBtn  = document.getElementById("addToCartBtn");
+
+      if (!wrapper || !addBtn) return;
+
+      function formatPrice(value) {
+        return "$" + Number(value).toFixed(2);
+      }
+
+      function getActiveBtn() {
+        return wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
+      }
+
+      function setActive(btn) {
+        if (!btn) return;
+        wrapper.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+
+        const price = btn.dataset.price;
+        const size  = btn.dataset.size;
+        const grams = btn.dataset.grams;
+
+        if (priceEl && price) priceEl.textContent = formatPrice(price);
+        if (sizeEl && size) {
+          sizeEl.textContent = grams ? `Net Wt. ${size} / ${grams} g` : `Size: ${size}`;
+        }
+      }
+
+      wrapper.addEventListener("click", function (e) {
+        const btn = e.target.closest(".size-option");
+        if (!btn) return;
+        setActive(btn);
+      });
+
+      addBtn.addEventListener("click", function () {
+        const active = getActiveBtn();
+        const variantId = active?.dataset?.variant;
+
+        if (!variantId) {
+          alert("Sorry — please select a size first.");
+          return;
+        }
+
+        window.location.href = `${shopDomain}/cart/${variantId}:1`;
+      });
+
+      setActive(getActiveBtn());
+    })();
+  </script>
+
+
+  <!-- CART DRAWER -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close" type="button">&times;</button>
+    </div>
+
+    <div class="cart-items" id="cartItemsDrawer"></div>
+
+    <div class="cart-footer">
+      <div class="cart-subtotal">
+        <span>Subtotal</span>
+        <span id="cartSubtotalDrawer">$0.00</span>
+      </div>
+
+      <button class="primary-btn cart-checkout" type="button">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
+    </div>
+  </aside>
+
+
+  <script src="../cart.js"></script>
+</body>
+</html>
