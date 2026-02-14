@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <!-- IMPORTANT: you're in /body-butters/ so go UP one level -->
   <link rel="stylesheet" href="../styles.css">
 </head>
 
@@ -44,7 +45,8 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Cashmere-Kisses-body-butter.jpg" alt="Cashmere Kisses Body Butter">
+        <!-- IMPORTANT: go UP one level for images -->
+        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses Body Butter">
       </div>
 
       <div class="product-info">
@@ -61,19 +63,13 @@
 
           <div class="size-options" id="sizeOptions">
             <button class="size-option active" type="button"
-              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">
-              8 oz
-            </button>
+              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
 
             <button class="size-option" type="button"
-              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">
-              4 oz
-            </button>
+              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
 
             <button class="size-option" type="button"
-              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">
-              2 oz
-            </button>
+              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
           </div>
         </div>
 
@@ -108,9 +104,7 @@
 
           <details>
             <summary>How to Use</summary>
-            <p>
-              Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.
-            </p>
+            <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
           </details>
         </div>
       </div>
@@ -164,17 +158,11 @@
 
       if (!wrapper || !addBtn) return;
 
-      function formatPrice(v) {
-        return "$" + Number(v).toFixed(2);
-      }
+      const formatPrice = v => "$" + Number(v).toFixed(2);
+      const money = cents => "$" + (Number(cents || 0) / 100).toFixed(2);
 
-      function money(cents) {
-        return "$" + (Number(cents || 0) / 100).toFixed(2);
-      }
-
-      function getActiveBtn() {
-        return wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
-      }
+      const getActiveBtn = () =>
+        wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
 
       function setActive(btn) {
         if (!btn) return;
@@ -223,7 +211,7 @@
       function renderCart(cart) {
         if (!itemsEl || !subtotalEl) return;
 
-        if (!cart || !cart.items || cart.items.length === 0) {
+        if (!cart?.items?.length) {
           itemsEl.innerHTML = `<p style="margin:0;">Your cart is empty.</p>`;
           subtotalEl.textContent = "$0.00";
           return;
@@ -259,13 +247,12 @@
         if (!res.ok) throw new Error("Add to cart failed");
       }
 
-      wrapper.addEventListener("click", function (e) {
+      wrapper.addEventListener("click", (e) => {
         const btn = e.target.closest(".size-option");
-        if (!btn) return;
-        setActive(btn);
+        if (btn) setActive(btn);
       });
 
-      addBtn.addEventListener("click", async function () {
+      addBtn.addEventListener("click", async () => {
         const active = getActiveBtn();
         const variantId = active?.dataset?.variant;
         if (!variantId) return alert("Select a size first.");
@@ -289,7 +276,7 @@
         }
       });
 
-      cartLink?.addEventListener("click", async function (e) {
+      cartLink?.addEventListener("click", async (e) => {
         e.preventDefault();
         try {
           const cart = await fetchCart();
@@ -308,3 +295,6 @@
 
 </body>
 </html>
+
+</html>
+
