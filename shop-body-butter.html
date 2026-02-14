@@ -201,38 +201,31 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART DRAWER OVERLAY -->
-  <div class="cart-overlay" id="cartOverlay"></div>
+<!-- CART DRAWER OVERLAY -->
+<div class="cart-overlay" id="cartOverlay"></div>
 
-  <!-- CART DRAWER PANEL -->
-  <aside class="cart-drawer" id="cartDrawer">
-    <div class="cart-drawer-header">
-      <h2>Your Cart</h2>
-      <button id="closeCart" class="cart-close">&times;</button>
+<!-- CART DRAWER PANEL -->
+<aside class="cart-drawer" id="cartDrawer">
+  <div class="cart-drawer-header">
+    <h2>Your Cart</h2>
+    <button id="closeCart" class="cart-close">&times;</button>
+  </div>
+
+  <div class="cart-items" id="cartItemsDrawer"></div>
+
+  <div class="cart-footer">
+    <div class="cart-subtotal">
+      <span>Subtotal</span>
+      <span id="cartSubtotalDrawer">$0.00</span>
     </div>
 
-    <div class="cart-items" id="cartItems">
-      <!-- JS will inject cart items here -->
-    </div>
+    <button class="primary-btn cart-checkout">Checkout</button>
+    <button class="outline-btn cart-continue" id="cartContinue">Continue Shopping</button>
+  </div>
+</aside>
 
-    <div class="cart-footer">
-      <div class="cart-subtotal">
-        <span>Subtotal</span>
-        <span id="cartSubtotal">$0.00</span>
-      </div>
+<script src="cart.js"></script>
 
-      <!-- Checkout should go to full cart page -->
-      <button class="primary-btn cart-checkout" id="cartCheckout" type="button">
-        Checkout
-      </button>
-
-      <button class="outline-btn cart-continue" id="cartContinue" type="button">
-        Continue Shopping
-      </button>
-    </div>
-  </aside>
-
-  <!-- CART SCRIPT -->
-  <script src="cart.js"></script>
 </body>
 </html>
+
