@@ -53,36 +53,49 @@
           <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
         </div>
 
-        
         <div class="size-picker">
           <p class="size-label">Choose your size:</p>
           <div class="size-options" id="sizeOptions">
-            <button class="size-option active" type="button" data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button><button class="size-option" type="button" data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button><button class="size-option" type="button" data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
+            <button class="size-option active" type="button" data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
+            <button class="size-option" type="button" data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
+            <button class="size-option" type="button" data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
           </div>
         </div>
-        
 
-        <p class="product-desc">A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing, comforting, and perfect for everyday luxury.</p>
+        <p class="product-desc">
+          A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
+          comforting, and perfect for everyday luxury.
+        </p>
 
         <div class="product-actions">
-<button class="primary-btn" id="addToCartBtn" type="button"
-  data-title="Cashmere Kisses"
-  data-image="../images/Cashmere-kisses-body-butter.jpg"
-  data-price="22.00"
-  data-variant="53018857242989"
-  data-variant-id="53018857242989"
->
-
-            Add to Cart
-          </button>
+          <!-- CLEAN: cart.js reads the ACTIVE .size-option[data-variant] so no extra data attrs needed here -->
+          <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
 
         <div class="product-sections">
-<details open><summary>Benefits</summary><p>• Cushions dry skin with rich, creamy moisture.<br>• Adds a soft, comforting scent that hugs the skin.<br>• Helps improve the look and feel of rough areas over time.</p></details>
-<details><summary>Ingredients</summary><p>59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter, Cocoa Butter, Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.</p></details>
-<details><summary>How to Use</summary><p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p></details>
-</div>
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Cushions dry skin with rich, creamy moisture.<br>
+              • Adds a soft, comforting scent that hugs the skin.<br>
+              • Helps improve the look and feel of rough areas over time.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter, Cocoa Butter,
+              Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
+          </details>
+        </div>
 
       </div>
     </div>
@@ -93,7 +106,9 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
+  <!-- CART OVERLAY + DRAWER (right before </body> is perfect) -->
   <div class="cart-overlay" id="cartOverlay"></div>
+
   <aside class="cart-drawer" id="cartDrawer">
     <div class="cart-drawer-header">
       <h2>Your Cart</h2>
@@ -109,51 +124,11 @@
       </div>
 
       <button class="primary-btn cart-checkout" type="button">Checkout</button>
+      <!-- keep type="button" so it never acts weird -->
       <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
     </div>
   </aside>
-<script>
-  document.addEventListener("DOMContentLoaded", () => {
-    const sizeWrap = document.getElementById("sizeOptions");
-    const addBtn = document.getElementById("addToCartBtn");
 
-    if (!sizeWrap || !addBtn) return;
-
-    function syncVariant() {
-      const active =
-        sizeWrap.querySelector(".size-option.active") ||
-        sizeWrap.querySelector(".size-option");
-      if (!active) return;
-
-      addBtn.dataset.variant = active.dataset.variant;
-      addBtn.dataset.variantId = active.dataset.variant;
-
-      // also keep price/size text in sync (optional but nice)
-      const priceText = document.getElementById("priceText");
-      const sizeText = document.getElementById("sizeText");
-      if (priceText && active.dataset.price) {
-        priceText.textContent = "$" + Number(active.dataset.price).toFixed(2);
-      }
-      if (sizeText && active.dataset.size && active.dataset.grams) {
-        sizeText.textContent = `Net Wt. ${active.dataset.size} / ${active.dataset.grams} g`;
-      }
-    }
-
-    // when clicking a size button, update active + sync
-    sizeWrap.addEventListener("click", (e) => {
-      const btn = e.target.closest(".size-option");
-      if (!btn) return;
-      sizeWrap.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
-      btn.classList.add("active");
-      syncVariant();
-    });
-
-    // initial
-    syncVariant();
-  });
-</script>
-
-<script src="/cart.js"></script>
-
+  <script src="/cart.js"></script>
 </body>
 </html>
