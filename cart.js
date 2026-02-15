@@ -1,23 +1,20 @@
-/* D'NATURAL BODY — Cart (Netlify Functions -> Shopify)
-   - Adds items via /.netlify/functions/cart-add
-   - Reads cart via /.netlify/functions/cart-get
-   - Drawer open/close
-   - Updates cart count everywhere
+/* D'NATURAL BODY — Cart
+   Primary: Netlify Functions
+   Fallback: Shopify /cart/add (works even if functions fail or when testing locally)
 */
-
 (function () {
-  const SHOPIFY_CART_URL = "https://shop.dnaturalbody.com/cart";
+  const SHOP_DOMAIN = "https://shop.dnaturalbody.com";
+  const SHOPIFY_CART_URL = `${SHOP_DOMAIN}/cart`;
 
-  // Elements (may not exist on every page)
+  // Elements
   const overlay = document.getElementById("cartOverlay");
   const drawer = document.getElementById("cartDrawer");
   const closeBtn = document.getElementById("closeCart");
   const contBtn = document.getElementById("cartContinue");
 
-  const cartButton = document.getElementById("cartButton"); // can be <button> or <a>
+  const cartButton = document.getElementById("cartButton");
   const cartCountEl = document.getElementById("cartCount");
 
-  // Drawer content containers (different pages use different IDs)
   const itemsEl =
     document.getElementById("cartItemsDrawer") ||
     document.getElementById("cartItems");
@@ -26,7 +23,6 @@
     document.getElementById("cartSubtotalDrawer") ||
     document.getElementById("cartSubtotal");
 
-  // Checkout button (in drawer)
   const drawerCheckoutBtn = document.querySelector(".cart-checkout");
 
   function money(cents) {
@@ -47,37 +43,31 @@
     document.body.style.overflow = "";
   }
 
-  overlay?.addEventListener("click", closeCart);
-  closeBtn?.addEventListener("click", closeCart);
-  contBtn?.addEventListener("click", closeCart);
+  overlay && overlay.addEventListener("click", closeCart);
+  closeBtn && closeBtn.addEventListener("click", closeCart);
+  contBtn && contBtn.addEventListener("click", closeCart);
 
   async function fetchCart() {
     const res = await fetch("/.netlify/functions/cart-get", { cache: "no-store" });
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error("cart-get failed: " + res.status + " " + t);
-    }
+    if (!res.ok) throw new Error("cart-get failed");
     return res.json();
   }
 
-  async function addToCart(variantId, qty = 1) {
+  async function addToCartViaFunctions(variantId, qty = 1) {
     const res = await fetch("/.netlify/functions/cart-add", {
       method: "POST",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify({ items: [{ id: Number(variantId), quantity: Number(qty) || 1 }] })
     });
+    if (!res.ok) throw new Error("cart-add failed");
+    // may or may not return cart json
+    try { return await res.json(); } catch { return null; }
+  }
 
-    if (!res.ok) {
-      const t = await res.text().catch(() => "");
-      throw new Error("cart-add failed: " + res.status + " " + t);
-    }
-
-    // Some implementations return the updated cart. If yours doesn't, we just fetch next.
-    try {
-      return await res.json();
-    } catch {
-      return null;
-    }
+  function addToCartFallbackRedirect(variantId, qty = 1) {
+    // Shopify supports /cart/add?id=VARIANT&quantity=1
+    const url = `${SHOP_DOMAIN}/cart/add?id=${encodeURIComponent(variantId)}&quantity=${encodeURIComponent(qty)}`;
+    window.location.href = url;
   }
 
   function updateCartCount(cart) {
@@ -117,50 +107,48 @@
     subtotalEl.textContent = money(cart.total_price);
   }
 
-  // Clicking the cart icon opens drawer
-  cartButton?.addEventListener("click", async (e) => {
-    // If it's an <a>, stop navigation so drawer can open
-    if (cartButton.tagName === "A") e.preventDefault();
-
+  // Cart icon opens drawer
+  cartButton && cartButton.addEventListener("click", async (e) => {
+    e.preventDefault();
     try {
       const cart = await fetchCart();
       renderCart(cart);
       updateCartCount(cart);
       openCart();
     } catch (err) {
-      console.error(err);
-      // fallback: go to Shopify cart page
+      // fallback to Shopify cart page
       window.location.href = SHOPIFY_CART_URL;
     }
   });
 
-  // Checkout button: go to Shopify cart page (your preference)
-  drawerCheckoutBtn?.addEventListener("click", () => {
+  // Checkout button goes to Shopify cart page (your preference)
+  drawerCheckoutBtn && drawerCheckoutBtn.addEventListener("click", () => {
     window.location.href = SHOPIFY_CART_URL;
   });
 
   // ---------
-  // ADD TO CART BINDING (works across all product pages)
+  // ADD TO CART — event delegation (works everywhere)
+  // Looks for:
+  //  - #addToCartBtn
+  //  - .add-to-cart
+  // Then reads:
+  //  - data-variant OR data-variant-id OR active .size-option[data-variant]
   // ---------
-
-  function getVariantFromPage(clickedEl) {
-    // 1) If the clicked button has data-variant
-    const direct = clickedEl?.dataset?.variant;
+  function getVariantId(btn) {
+    const direct = btn?.dataset?.variant || btn?.dataset?.variantId;
     if (direct) return direct;
 
-    // 2) If there's a size option group, use the active one
-    const activeSize = document.querySelector(".size-option.active[data-variant]");
-    if (activeSize?.dataset?.variant) return activeSize.dataset.variant;
+    const active = document.querySelector(".size-option.active[data-variant]");
+    if (active?.dataset?.variant) return active.dataset.variant;
 
-    // 3) Otherwise first size option
-    const firstSize = document.querySelector(".size-option[data-variant]");
-    if (firstSize?.dataset?.variant) return firstSize.dataset.variant;
+    const first = document.querySelector(".size-option[data-variant]");
+    if (first?.dataset?.variant) return first.dataset.variant;
 
     return null;
   }
 
-  async function handleAddToCart(btn) {
-    const variantId = getVariantFromPage(btn);
+  async function handleAdd(btn) {
+    const variantId = getVariantId(btn);
     if (!variantId) {
       alert("Missing variant ID on this page.");
       return;
@@ -171,34 +159,29 @@
     btn.textContent = "Adding...";
 
     try {
-      await addToCart(variantId, 1);
+      await addToCartViaFunctions(variantId, 1);
+
+      // if functions work, update + open drawer
       const cart = await fetchCart();
       renderCart(cart);
       updateCartCount(cart);
       openCart();
     } catch (err) {
-      console.error(err);
-      alert("Couldn’t add to cart. Please confirm your Netlify functions are deployed.");
+      // If functions fail (local/file://), still add via Shopify + go to Shopify cart
+      addToCartFallbackRedirect(variantId, 1);
     } finally {
       btn.disabled = false;
       btn.textContent = original;
     }
   }
 
-  // 1) Classic id="addToCartBtn"
-  const singleAddBtn = document.getElementById("addToCartBtn");
-  if (singleAddBtn) {
-    singleAddBtn.addEventListener("click", () => handleAddToCart(singleAddBtn));
-  }
-
-  // 2) Any buttons/links with class .add-to-cart
-  document.querySelectorAll(".add-to-cart").forEach(btn => {
-    btn.addEventListener("click", (e) => {
-      e.preventDefault();
-      handleAddToCart(btn);
-    });
+  document.addEventListener("click", (e) => {
+    const btn = e.target.closest("#addToCartBtn, .add-to-cart");
+    if (!btn) return;
+    e.preventDefault();
+    handleAdd(btn);
   });
 
-  // Initial load: update cart badge
+  // Initial cart badge
   fetchCart().then(updateCartCount).catch(() => {});
 })();
