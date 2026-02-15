@@ -147,33 +147,47 @@
     return null;
   }
 
-  async function handleAdd(btn) {
-    const variantId = getVariantId(btn);
-    if (!variantId) {
-      alert("Missing variant ID on this page.");
+async function handleAdd(btn) {
+  const variantId = getVariantId(btn);
+  if (!variantId) {
+    alert("Missing variant ID on this page.");
+    return;
+  }
+
+  const original = btn.textContent;
+  btn.disabled = true;
+  btn.textContent = "Adding...";
+
+  try {
+    // 1) Try your Netlify function
+    await addToCartViaFunctions(variantId, 1);
+
+    // 2) Read cart back
+    const cart = await fetchCart();
+
+    // If cart is STILL empty, your functions aren't persisting session properly.
+    // Fallback: add via Shopify and go to Shopify cart page.
+    const count = (cart?.items || []).reduce((s, i) => s + (i.quantity || 0), 0);
+    if (!count) {
+      const url = `${SHOP_DOMAIN}/cart/add?id=${encodeURIComponent(variantId)}&quantity=1`;
+      window.location.href = url; // Shopify will add + land on Shopify cart
       return;
     }
 
-    const original = btn.textContent;
-    btn.disabled = true;
-    btn.textContent = "Adding...";
+    // 3) Normal path: show drawer
+    renderCart(cart);
+    updateCartCount(cart);
+    openCart();
 
-    try {
-      await addToCartViaFunctions(variantId, 1);
-
-      // if functions work, update + open drawer
-      const cart = await fetchCart();
-      renderCart(cart);
-      updateCartCount(cart);
-      openCart();
-    } catch (err) {
-      // If functions fail (local/file://), still add via Shopify + go to Shopify cart
-      addToCartFallbackRedirect(variantId, 1);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = original;
-    }
+  } catch (err) {
+    // If functions fail, fallback to Shopify add
+    const url = `${SHOP_DOMAIN}/cart/add?id=${encodeURIComponent(variantId)}&quantity=1`;
+    window.location.href = url;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = original;
   }
+}
 
   document.addEventListener("click", (e) => {
     const btn = e.target.closest("#addToCartBtn, .add-to-cart");
