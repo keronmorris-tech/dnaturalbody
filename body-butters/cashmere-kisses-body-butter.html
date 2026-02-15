@@ -65,11 +65,14 @@
         <p class="product-desc">A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing, comforting, and perfect for everyday luxury.</p>
 
         <div class="product-actions">
-          <button class="primary-btn" id="addToCartBtn" type="button"
-            data-title="Cashmere Kisses"
-            data-image="../images/Cashmere-kisses-body-butter.jpg"
-            data-price="22.00"
-            >
+<button class="primary-btn" id="addToCartBtn" type="button"
+  data-title="Cashmere Kisses"
+  data-image="../images/Cashmere-kisses-body-butter.jpg"
+  data-price="22.00"
+  data-variant="53018857242989"
+  data-variant-id="53018857242989"
+>
+
             Add to Cart
           </button>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
@@ -109,6 +112,48 @@
       <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
     </div>
   </aside>
+<script>
+  document.addEventListener("DOMContentLoaded", () => {
+    const sizeWrap = document.getElementById("sizeOptions");
+    const addBtn = document.getElementById("addToCartBtn");
+
+    if (!sizeWrap || !addBtn) return;
+
+    function syncVariant() {
+      const active =
+        sizeWrap.querySelector(".size-option.active") ||
+        sizeWrap.querySelector(".size-option");
+      if (!active) return;
+
+      addBtn.dataset.variant = active.dataset.variant;
+      addBtn.dataset.variantId = active.dataset.variant;
+
+      // also keep price/size text in sync (optional but nice)
+      const priceText = document.getElementById("priceText");
+      const sizeText = document.getElementById("sizeText");
+      if (priceText && active.dataset.price) {
+        priceText.textContent = "$" + Number(active.dataset.price).toFixed(2);
+      }
+      if (sizeText && active.dataset.size && active.dataset.grams) {
+        sizeText.textContent = `Net Wt. ${active.dataset.size} / ${active.dataset.grams} g`;
+      }
+    }
+
+    // when clicking a size button, update active + sync
+    sizeWrap.addEventListener("click", (e) => {
+      const btn = e.target.closest(".size-option");
+      if (!btn) return;
+      sizeWrap.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
+      syncVariant();
+    });
+
+    // initial
+    syncVariant();
+  });
+</script>
+
+<script src="../cart.js"></script>
 
   <script src="../cart.js"></script>
 </body>
