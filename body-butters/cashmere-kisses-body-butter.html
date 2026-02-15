@@ -6,6 +6,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
+
+  <!-- Optional but very helpful: ensures nothing "covers" the size buttons -->
+  <style>
+    .product-info, .size-picker, .size-options, .product-actions { position: relative; z-index: 5; }
+    .product-image { position: relative; z-index: 1; }
+    .size-option { cursor: pointer; pointer-events: auto; }
+  </style>
 </head>
 
 <body class="product-body">
@@ -56,9 +63,14 @@
         <div class="size-picker">
           <p class="size-label">Choose your size:</p>
           <div class="size-options" id="sizeOptions">
-            <button class="size-option active" type="button" data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
-            <button class="size-option" type="button" data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
-            <button class="size-option" type="button" data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
+            <button class="size-option active" type="button"
+              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
+
+            <button class="size-option" type="button"
+              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
+
+            <button class="size-option" type="button"
+              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
           </div>
         </div>
 
@@ -68,7 +80,7 @@
         </p>
 
         <div class="product-actions">
-          <!-- CLEAN: cart.js reads the ACTIVE .size-option[data-variant] so no extra data attrs needed here -->
+          <!-- cart.js reads the ACTIVE .size-option[data-variant] -->
           <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
@@ -106,7 +118,7 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART OVERLAY + DRAWER (right before </body> is perfect) -->
+  <!-- CART OVERLAY + DRAWER -->
   <div class="cart-overlay" id="cartOverlay"></div>
 
   <aside class="cart-drawer" id="cartDrawer">
@@ -124,11 +136,43 @@
       </div>
 
       <button class="primary-btn cart-checkout" type="button">Checkout</button>
-      <!-- keep type="button" so it never acts weird -->
       <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
     </div>
   </aside>
 
-  <script src="/cart.js"></script>
+  <!-- THIS makes size switching reliable + updates price/size text -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const wrap = document.getElementById("sizeOptions");
+      const priceEl = document.getElementById("priceText");
+      const sizeEl  = document.getElementById("sizeText");
+      if (!wrap) return;
+
+      function applyFrom(btn) {
+        if (!btn) return;
+        const price = btn.dataset.price;
+        const size = btn.dataset.size;
+        const grams = btn.dataset.grams;
+
+        if (priceEl && price) priceEl.textContent = "$" + Number(price).toFixed(2);
+        if (sizeEl && size && grams) sizeEl.textContent = `Net Wt. ${size} / ${grams} g`;
+      }
+
+      // initial
+      applyFrom(wrap.querySelector(".size-option.active") || wrap.querySelector(".size-option"));
+
+      wrap.addEventListener("click", (e) => {
+        const btn = e.target.closest(".size-option");
+        if (!btn) return;
+
+        wrap.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        applyFrom(btn);
+      });
+    });
+  </script>
+
+  <!-- IMPORTANT: this file is inside /body-butters/, so cart.js must go UP one level -->
+  <script src="../cart.js"></script>
 </body>
 </html>
