@@ -137,7 +137,7 @@
 
   function ShopifyBuyInit() {
     var client = ShopifyBuy.buildClient({
-      domain: 'dpscr1-vz.myshopify.com',
+      domain: 'https://shop.dnaturalbody.com/cart',
       storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
     });
 
@@ -279,11 +279,26 @@ function wireDrawerCheckoutToCartPage() {
           openCartDrawer();
         });
       }
+function forceDrawerCheckoutToCartPage() {
+  function intercept(e) {
+    var btn = e.target && e.target.closest && e.target.closest('.shopify-buy__cart__checkout');
+    if (!btn) return;
+
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+    window.location.assign(SHOPIFY_CART_URL);
+  }
+
+  document.addEventListener('click', intercept, true);
+  document.addEventListener('touchend', intercept, true);
+}
 
 // ✅ Activate listeners + checkout wiring
 wireCartModelListeners();
 setTimeout(updateCartBadge, 400);
-wireDrawerCheckoutToCartPage();
+forceDrawerCheckoutToCartPage();
 
       // ✅ Make the cartComponent available to other scripts if needed
       window.DN_CART = cartComponent;
