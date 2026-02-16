@@ -1,4 +1,60 @@
-        <!doctype html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cashmere Kisses | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+        <span class="cart-count" id="cartCount" style="display:none;">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses">
+      </div>
+
+      <div class="product-info">
+        <h1>Cashmere Kisses</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        
+   <!doctype html>
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -68,7 +124,7 @@
         </p>
 
         <div class="product-actions">
-          <!-- CLEAN: the cart script reads the ACTIVE .size-option[data-variant] so no extra data attrs needed here -->
+          <!-- CLEAN: cart.js reads the ACTIVE .size-option[data-variant] so no extra data attrs needed here -->
           <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
@@ -106,187 +162,122 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART OVERLAY + DRAWER (right before <div id="shopify-toggle-host" style="display:none;"></div>
-<script type="text/javascript">
-/* D'Natural Body — Shopify cart + inventory (Buy Button UI cart drawer) */
-(function() {
-  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-  function loadScript(cb) {
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = scriptURL;
-    s.onload = cb;
-    (document.head || document.body).appendChild(s);
+  <!-- CART OVERLAY + DRAWER (right before 
+<script>
+(function(){
+  const SHOP = 'https://shop.dnaturalbody.com';
+
+  function loadShopifySDK(cb){
+    const url='https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+    if(window.ShopifyBuy && window.ShopifyBuy.UI){ cb(); return; }
+    const s=document.createElement('script');
+    s.async=true; s.src=url;
+    s.onload=cb;
+    (document.head||document.body).appendChild(s);
   }
 
-  function getSelectedVariantId() {
-    var active = document.querySelector('.size-option.active[data-variant]');
-    if (active) return active.getAttribute('data-variant');
-    var btn = document.getElementById('addToCartBtn');
-    if (btn && btn.getAttribute('data-variant')) return btn.getAttribute('data-variant');
-    var any = document.querySelector('[data-variant]');
-    if (any) return any.getAttribute('data-variant');
-    return null;
+  function openShopifyDrawer(){
+    const toggleBtn = document.querySelector('.shopify-buy__cart-toggle');
+    if(toggleBtn){ toggleBtn.click(); return; }
+    // Fallback: send to Shopify cart page
+    window.location.href = SHOP + '/cart';
   }
 
-  function getQty() {
-    var q = document.getElementById('quantity') || document.querySelector('input[name="quantity"]');
-    var n = q ? parseInt(q.value || '1', 10) : 1;
-    return (isFinite(n) && n > 0) ? n : 1;
-  }
-
-  async function addToShopifyCart(variantId, qty) {
-    var res = await fetch('https://shop.dnaturalbody.com/cart/add.js', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: Number(qty) }] })
+  async function addToShopifyCart(variantId, qty){
+    const res = await fetch(SHOP + '/cart/add.js', {
+      method:'POST',
+      headers:{'Content-Type':'application/json','Accept':'application/json'},
+      credentials:'include',
+      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: Number(qty||1) }] })
     });
-    if (!res.ok) {
-      var text = await res.text();
-      throw new Error('Add to cart failed: ' + text);
+    if(!res.ok){
+      const t = await res.text().catch(()=> '');
+      throw new Error('Add to cart failed: ' + res.status + ' ' + t);
     }
     return res.json();
   }
 
-  function openShopifyDrawer() {
-    // The Buy Button UI injects a toggle button; clicking it opens the drawer.
-    var toggle = document.querySelector('.shopify-buy__cart-toggle');
-    if (toggle) toggle.click();
-    else window.location.href = 'https://shop.dnaturalbody.com/cart';
+  function getSelectedVariantId(){
+    const active = document.querySelector('[data-variant].active');
+    if(active && active.dataset && active.dataset.variant) return active.dataset.variant;
+
+    const sel = document.querySelector('select[name="id"], #variantSelect, #variant');
+    if(sel && sel.value) return sel.value;
+
+    const first = document.querySelector('[data-variant]');
+    return first?.dataset?.variant || null;
   }
 
-  function wireSizeButtons() {
-    var wrap = document.getElementById('sizeOptions');
-    if (!wrap) return;
-    wrap.addEventListener('click', function(e) {
-      var btn = e.target.closest('.size-option');
-      if (!btn) return;
-      wrap.querySelectorAll('.size-option').forEach(function(b){ b.classList.remove('active'); });
-      btn.classList.add('active');
-
-      // Update any on-page price text if you have one.
-      var price = btn.getAttribute('data-price');
-      if (price) {
-        var priceEl = document.querySelector('.price') || document.getElementById('productPrice');
-        if (priceEl) {
-          // Keep leading $ if present in markup
-          priceEl.textContent = priceEl.textContent.trim().startsWith('$') ? ('$' + price) : price;
-        }
-      }
-    });
+  function getQty(){
+    const qtyEl = document.querySelector('#quantity, input[name="quantity"], #qty');
+    const v = qtyEl ? parseInt(qtyEl.value,10) : 1;
+    return Number.isFinite(v) && v>0 ? v : 1;
   }
 
-  function wireAddToCart() {
-    var btn = document.getElementById('addToCartBtn');
-    if (!btn) return;
-    btn.addEventListener('click', async function() {
-      try {
-        btn.disabled = true;
-        var variantId = getSelectedVariantId();
-        if (!variantId) {
-          alert('Please select an option first.');
-          return;
-        }
-        await addToShopifyCart(variantId, getQty());
-        openShopifyDrawer();
-      } catch (err) {
-        console.error(err);
-        alert('Sorry — I could not add that item to the cart. Please try again.');
-      } finally {
-        btn.disabled = false;
-      }
-    });
-  }
-
-  function initUI() {
-    var client = ShopifyBuy.buildClient({
+  function initCartDrawer(){
+    const client = ShopifyBuy.buildClient({
       domain: 'dpscr1-vz.myshopify.com',
-      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
+      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78'
     });
-    ShopifyBuy.UI.onReady(client).then(function(ui) {
-      // Create cart + toggle (drawer)
-      var toggleHost = document.getElementById('shopify-toggle-host');
-      if (!toggleHost) {
-        toggleHost = document.createElement('div');
-        toggleHost.id = 'shopify-toggle-host';
-        toggleHost.style.display = 'none';
-        document.body.appendChild(toggleHost);
+
+    ShopifyBuy.UI.onReady(client).then(function(ui){
+      // Create a hidden toggle to ensure the drawer/cart UI exists
+      let host = document.getElementById('shopify-toggle-host');
+      if(!host){
+        host = document.createElement('div');
+        host.id = 'shopify-toggle-host';
+        host.style.display = 'none';
+        document.body.appendChild(host);
       }
       ui.createComponent('toggle', {
-        node: toggleHost,
+        node: host,
         options: {
-          toggle: {
-            styles: {
-              toggle: {
-                "background-color": "#1d201c",
-                ":hover": {"background-color": "#313630"},
-                ":focus": {"background-color": "#313630"}
-              }
-            }
-          },
-          cart: {
-            text: { total: "Subtotal", button: "Checkout" },
-            styles: {
-              button: {
-                "background-color": "#1d201c",
-                ":hover": {"background-color": "#313630"},
-                ":focus": {"background-color": "#313630"}
-              },
-              // These text colors were set in your snippet; keep readable on Shopify drawer
-              title: { "color": "#212020" },
-              header: { "color": "#212020" },
-              lineItems: { "color": "#212020" },
-              subtotalText: { "color": "#212020" },
-              subtotal: { "color": "#212020" },
-              notice: { "color": "#212020" },
-              currency: { "color": "#212020" },
-              close: { "color": "#212020", ":hover": { "color": "#212020" } },
-              empty: { "color": "#212020" },
-              noteDescription: { "color": "#212020" },
-              discountText: { "color": "#212020" },
-              discountIcon: { "fill": "#212020" },
-              discountAmount: { "color": "#212020" }
-            }
-          },
-          lineItem: {
-            styles: {
-              variantTitle: { "color": "#212020" },
-              title: { "color": "#212020" },
-              price: { "color": "#212020" },
-              fullPrice: { "color": "#212020" },
-              discount: { "color": "#212020" },
-              discountIcon: { "fill": "#212020" },
-              quantity: { "color": "#212020" },
-              quantityIncrement: { "color": "#212020", "border-color": "#212020" },
-              quantityDecrement: { "color": "#212020", "border-color": "#212020" },
-              quantityInput: { "color": "#212020", "border-color": "#212020" }
-            }
-          }
+          toggle: { styles: { toggle: {
+            "background-color":"#1d201c",
+            ":hover":{"background-color":"#313630"},
+            ":focus":{"background-color":"#313630"}
+          }}},
+          cart: { text: { total: "Subtotal", button: "Checkout" } }
         }
       });
 
-      // Wire your header cart icon to open the Shopify drawer
-      var cartBtn = document.getElementById('cartButton');
-      if (cartBtn) {
-        cartBtn.addEventListener('click', function() {
+      // Cart icon opens drawer
+      const cartBtn = document.getElementById('cartButton');
+      if(cartBtn){
+        cartBtn.addEventListener('click', function(e){
+          e.preventDefault();
           openShopifyDrawer();
+        });
+      }
+
+      // Your page Add to Cart button -> Shopify
+      const addBtn = document.getElementById('addToCartBtn') || document.querySelector('.primary-btn');
+      if(addBtn){
+        addBtn.addEventListener('click', async function(e){
+          e.preventDefault();
+          const variantId = getSelectedVariantId();
+          if(!variantId){ alert('Please select a size/option first.'); return; }
+          try{
+            addBtn.disabled = true;
+            await addToShopifyCart(variantId, getQty());
+            openShopifyDrawer();
+          }catch(err){
+            console.error(err);
+            alert('Sorry — could not add to cart. Please try again.');
+          }finally{
+            addBtn.disabled = false;
+          }
         });
       }
     });
   }
 
-  function boot() {
-    wireSizeButtons();
-    wireAddToCart();
-    if (window.ShopifyBuy && window.ShopifyBuy.UI) initUI();
-    else loadScript(initUI);
-  }
-
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
-  else boot();
+  loadShopifySDK(function(){
+    if(window.ShopifyBuy && window.ShopifyBuy.UI) initCartDrawer();
+  });
 })();
 </script>
+
 </body> is perfect) -->
 </body>
 </html>
