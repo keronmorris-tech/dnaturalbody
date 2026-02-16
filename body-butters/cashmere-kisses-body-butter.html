@@ -8,7 +8,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
-  <!-- Hide Shopify variant dropdown ONLY inside this buy button area -->
+  <!-- Hide Shopify's variant dropdown ONLY inside this buy button area -->
   <style>
     #product-component-1771275419576 .shopify-buy__product__variant-selectors,
     #product-component-1771275419576 .shopify-buy__option-select-wrapper,
@@ -116,6 +116,9 @@
 
   <!-- Mount the Cashmere Kisses Buy Button -->
   <script>
+    window.DNShopify = window.DNShopify || {};
+
+    // Wait a tick in case the SDK is still initializing
     (function mountWhenReady(){
       if (!window.DNShopify || !window.DNShopify.mountProduct) {
         return setTimeout(mountWhenReady, 80);
@@ -133,7 +136,9 @@
               button: false,
               buttonWithQuantity: true
             },
-            text: { button: 'Add to cart' },
+            text: {
+              button: 'Add to cart'
+            },
             styles: {
               button: {
                 'background-color': '#1d201c',
@@ -144,7 +149,9 @@
               }
             }
           },
-          cart: { popup: false }
+          cart: {
+            popup: false
+          }
         }
       });
     })();
