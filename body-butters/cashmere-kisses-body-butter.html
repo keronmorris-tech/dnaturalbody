@@ -2,20 +2,15 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Cashmere Kisses | D'NATURAL BODY</title>
+  <title>Cashmere Kisses Body Butter | D'NATURAL BODY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
-
-  <!-- Optional but very helpful: ensures nothing "covers" the size buttons -->
-  <style>
-    .product-info, .size-picker, .size-options, .product-actions { position: relative; z-index: 5; }
-    .product-image { position: relative; z-index: 1; }
-    .size-option { cursor: pointer; pointer-events: auto; }
-  </style>
 </head>
 
 <body class="product-body">
+
   <header class="header">
     <a href="../index.html" class="logo">
       <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
@@ -37,6 +32,7 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
+      <!-- Drawer cart trigger -->
       <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
         <span class="cart-icon">👜</span>
         <span class="cart-count" id="cartCount" style="display:none;">0</span>
@@ -48,7 +44,7 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses">
+        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses Body Butter">
       </div>
 
       <div class="product-info">
@@ -62,6 +58,7 @@
 
         <div class="size-picker">
           <p class="size-label">Choose your size:</p>
+
           <div class="size-options" id="sizeOptions">
             <button class="size-option active" type="button"
               data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
@@ -75,14 +72,24 @@
         </div>
 
         <p class="product-desc">
-          A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
-          comforting, and perfect for everyday luxury.
+          A soft, cozy blend that feels like your favorite cashmere sweater on the skin —
+          smoothing, comforting, and perfect for everyday luxury.
         </p>
 
         <div class="product-actions">
-          <!-- cart.js reads the ACTIVE .size-option[data-variant] -->
-          <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
-          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+          <!-- cart.js listens for .add-to-cart + data-* -->
+          <button
+            class="primary-btn add-to-cart"
+            id="addToCartBtn"
+            type="button"
+            data-id="53018857242989"
+            data-name="Cashmere Kisses"
+            data-price="22.00"
+            data-size="8 oz"
+            data-image="../images/Cashmere-kisses-body-butter.jpg"
+          >Add to Cart</button>
+
+          <a href="../shop-body-butter.html" class="outline-btn">Back to Body Butters</a>
         </div>
 
         <div class="product-sections">
@@ -97,9 +104,10 @@
 
           <details>
             <summary>Ingredients</summary>
+            <p><strong>Formula:</strong></p>
             <p>
-              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter, Cocoa Butter,
-              Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
+              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter,
+              Cocoa Butter, Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
             </p>
           </details>
 
@@ -108,8 +116,8 @@
             <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
           </details>
         </div>
-
       </div>
+
     </div>
   </section>
 
@@ -118,9 +126,10 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART OVERLAY + DRAWER -->
+  <!-- CART DRAWER OVERLAY -->
   <div class="cart-overlay" id="cartOverlay"></div>
 
+  <!-- CART DRAWER PANEL -->
   <aside class="cart-drawer" id="cartDrawer">
     <div class="cart-drawer-header">
       <h2>Your Cart</h2>
@@ -140,39 +149,52 @@
     </div>
   </aside>
 
-  <!-- THIS makes size switching reliable + updates price/size text -->
+  <!-- Size switching ONLY updates the button’s data-* so cart.js can do the rest -->
   <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const wrap = document.getElementById("sizeOptions");
+    (function () {
+      const wrapper = document.getElementById("sizeOptions");
       const priceEl = document.getElementById("priceText");
       const sizeEl  = document.getElementById("sizeText");
-      if (!wrap) return;
+      const addBtn  = document.getElementById("addToCartBtn");
 
-      function applyFrom(btn) {
-        if (!btn) return;
-        const price = btn.dataset.price;
-        const size = btn.dataset.size;
-        const grams = btn.dataset.grams;
+      if (!wrapper || !addBtn) return;
 
-        if (priceEl && price) priceEl.textContent = "$" + Number(price).toFixed(2);
-        if (sizeEl && size && grams) sizeEl.textContent = `Net Wt. ${size} / ${grams} g`;
+      function formatPrice(v) { return "$" + Number(v).toFixed(2); }
+      function getActiveBtn() {
+        return wrapper.querySelector(".size-option.active") || wrapper.querySelector(".size-option");
       }
 
-      // initial
-      applyFrom(wrap.querySelector(".size-option.active") || wrap.querySelector(".size-option"));
-
-      wrap.addEventListener("click", (e) => {
-        const btn = e.target.closest(".size-option");
+      function setActive(btn) {
         if (!btn) return;
 
-        wrap.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
+        wrapper.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
         btn.classList.add("active");
-        applyFrom(btn);
+
+        const price = btn.dataset.price;
+        const size  = btn.dataset.size;
+        const grams = btn.dataset.grams;
+        const variant = btn.dataset.variant;
+
+        if (priceEl && price) priceEl.textContent = formatPrice(price);
+        if (sizeEl && size) sizeEl.textContent = grams ? `Net Wt. ${size} / ${grams} g` : `Size: ${size}`;
+
+        // Update the Add to Cart button (variant id + display info)
+        addBtn.dataset.id = variant;
+        addBtn.dataset.price = price;
+        addBtn.dataset.size = size;
+      }
+
+      wrapper.addEventListener("click", function (e) {
+        const btn = e.target.closest(".size-option");
+        if (btn) setActive(btn);
       });
-    });
+
+      setActive(getActiveBtn());
+    })();
   </script>
 
-  <!-- IMPORTANT: this file is inside /body-butters/, so cart.js must go UP one level -->
+  <!-- IMPORTANT: cart.js is in the root, so go up one level -->
   <script src="../cart.js"></script>
+
 </body>
 </html>
