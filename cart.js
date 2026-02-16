@@ -210,3 +210,4 @@
   // Initial badge
   fetchCart().then(updateCartCount).catch(() => {});
 })();
+
