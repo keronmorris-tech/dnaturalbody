@@ -4,14 +4,15 @@
   <meta charset="utf-8" />
   <title>Cashmere Kisses | D'NATURAL BODY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
-  <!-- ✅ Hide Shopify's variant dropdown ONLY inside this buy button area -->
+  <!-- Hide Shopify variant dropdown ONLY inside this buy button area -->
   <style>
-    #buybutton-cashmere .shopify-buy__product__variant-selectors,
-    #buybutton-cashmere .shopify-buy__option-select-wrapper,
-    #buybutton-cashmere select.shopify-buy__option-select__select {
+    #product-component-1771275419576 .shopify-buy__product__variant-selectors,
+    #product-component-1771275419576 .shopify-buy__option-select-wrapper,
+    #product-component-1771275419576 select.shopify-buy__option-select__select {
       display: none !important;
     }
   </style>
@@ -39,7 +40,7 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- ✅ Cart icon opens the Shopify cart drawer -->
+      <!-- Cart icon (opens Shopify cart drawer + shows quantity) -->
       <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
         <span class="cart-icon">👜</span>
         <span class="cart-count" id="cartCount" style="display:none;">0</span>
@@ -69,8 +70,8 @@
         </p>
 
         <div class="product-actions">
-          <!-- ✅ Shopify Buy Button mounts here -->
-          <div id="buybutton-cashmere"></div>
+          <!-- Shopify Buy Button mounts here -->
+          <div id="product-component-1771275419576"></div>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
 
@@ -107,298 +108,46 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- hidden node used by Shopify cart toggle -->
+  <!-- Hidden node used by Shopify cart toggle (required) -->
   <div id="shopify-cart-toggle" style="display:none;"></div>
 
-<script>
-(function () {
-  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  <!-- Global Shopify Buy Button + Cart wiring -->
+  <script src="../buybutton.js"></script>
 
-  // ✅ Drawer checkout should go to Shopify CART page (your shop domain)
-  var SHOPIFY_CART_URL = 'https://shop.dnaturalbody.com/cart';
-
-  function loadScript() {
-    var script = document.createElement('script');
-    script.async = true;
-    script.src = scriptURL;
-    (document.head || document.body).appendChild(script);
-    script.onload = ShopifyBuyInit;
-  }
-
-  if (window.ShopifyBuy) {
-    if (window.ShopifyBuy.UI) ShopifyBuyInit();
-    else loadScript();
-  } else {
-    loadScript();
-  }
-
-  function ShopifyBuyInit() {
-    // ✅ IMPORTANT: this must be your *.myshopify.com domain ONLY (no https, no /cart)
-    var client = ShopifyBuy.buildClient({
-      domain: 'dpscr1-vz.myshopify.com',
-      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    });
-
-    ShopifyBuy.UI.onReady(client).then(function (ui) {
-
-      // ✅ STORE the cart component (this is what was missing)
-      var cartComponent = ui.createComponent('cart', {
-        options: {
-          cart: {
-            startOpen: false,
-            text: { total: "Subtotal", button: "Checkout" }
-          },
-          toggle: {
-            node: document.getElementById('shopify-cart-toggle'),
-            styles: {
-              toggle: {
-                "background-color": "#1d201c",
-                ":hover": { "background-color": "#313630" },
-                ":focus": { "background-color": "#313630" }
-              }
-            }
-          }
-        }
-      });
-
-      // ---------- helpers ----------
-      function openCartDrawer() {
-        try {
-          if (cartComponent && typeof cartComponent.open === "function") return cartComponent.open();
-          if (cartComponent && typeof cartComponent.toggleVisibility === "function") return cartComponent.toggleVisibility();
-          // extra fallback
-          var fallback = ui.components && ui.components.cart && ui.components.cart[0];
-          if (fallback && typeof fallback.open === "function") return fallback.open();
-          if (fallback && typeof fallback.toggleVisibility === "function") return fallback.toggleVisibility();
-        } catch (e) {}
+  <!-- Mount the Cashmere Kisses Buy Button -->
+  <script>
+    (function mountWhenReady(){
+      if (!window.DNShopify || !window.DNShopify.mountProduct) {
+        return setTimeout(mountWhenReady, 80);
       }
 
-      function getItemCount() {
-        try {
-          var items = (cartComponent && cartComponent.model && cartComponent.model.lineItems) || [];
-          return items.reduce(function (sum, item) {
-            return sum + (item.quantity || 0);
-          }, 0);
-        } catch (e) {
-          return 0;
-        }
-      }
-
-      function updateCartBadge() {
-        var badge = document.getElementById("cartCount");
-        if (!badge) return;
-
-        var count = getItemCount();
-        badge.textContent = String(count);
-        badge.style.display = count > 0 ? "inline-flex" : "none";
-      }
-
-      // ✅ Force drawer checkout -> /cart (most reliable way: replace the button element)
-      function forceDrawerCheckoutToCartPage() {
-        var obs = new MutationObserver(function () {
-          // Shopify sometimes renders as <a> or <button>
-          var btn = document.querySelector('.shopify-buy__cart__checkout');
-          if (!btn || btn.dataset.dnFixed) return;
-
-          btn.dataset.dnFixed = "1";
-
-          // Replace node to remove Shopify handlers
-          var replacement = btn.cloneNode(true);
-          btn.parentNode.replaceChild(replacement, btn);
-
-          // Make it behave like a normal link to /cart
-          if (replacement.tagName.toLowerCase() === "a") {
-            replacement.setAttribute("href", SHOPIFY_CART_URL);
-            replacement.setAttribute("target", "_self");
-          }
-
-          replacement.addEventListener("click", function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-            window.location.assign(SHOPIFY_CART_URL);
-          }, true);
-        });
-
-        obs.observe(document.body, { childList: true, subtree: true });
-      }
-
-      // ✅ Create PRODUCT buy button (Cashmere)
-      ui.createComponent('product', {
+      window.DNShopify.mountProduct({
         id: '14889665036653',
-        node: document.getElementById('buybutton-cashmere'),
+        node: '#product-component-1771275419576',
         options: {
           product: {
-            contents: { img: false, title: false, price: false },
-            text: { button: "Add to Cart" },
+            contents: {
+              img: false,
+              title: false,
+              price: false,
+              button: false,
+              buttonWithQuantity: true
+            },
+            text: { button: 'Add to cart' },
             styles: {
               button: {
-                "background-color": "#1d201c",
-                ":hover": { "background-color": "#313630" },
-                ":focus": { "background-color": "#313630" },
-                "padding": "14px 18px",
-                "border-radius": "10px"
+                'background-color': '#1d201c',
+                ':hover': { 'background-color': '#313630' },
+                ':focus': { 'background-color': '#313630' },
+                'padding': '14px 18px',
+                'border-radius': '10px'
               }
             }
           },
-          events: {
-            afterAddVariant: function () {
-              updateCartBadge();
-              openCartDrawer();
-            }
-          }
+          cart: { popup: false }
         }
       });
-
-      // ✅ cart icon opens drawer
-      var cartBtn = document.getElementById("cartButton");
-      if (cartBtn) {
-        cartBtn.addEventListener("click", function () {
-          updateCartBadge();
-          openCartDrawer();
-        });
-      }
-
-      // ✅ keep badge updated
-      if (cartComponent && cartComponent.model && typeof cartComponent.model.on === "function") {
-        cartComponent.model.on("change", updateCartBadge);
-        cartComponent.model.on("update", updateCartBadge);
-      }
-
-      // initial + delayed badge update (cart loads async)
-      updateCartBadge();
-      setTimeout(updateCartBadge, 600);
-      setTimeout(updateCartBadge, 1500);
-
-      // ✅ force checkout behavior
-      forceDrawerCheckoutToCartPage();
-
-      // expose for debugging/other pages
-      window.DN_CART = cartComponent;
-    });
-  }
-})();
-</script>
-
-  <!-- =========================
-       ✅ Size buttons control hidden Shopify variant
-       + update your price/net wt text
-       (kept as-is)
-       ========================= -->
-<script>
-(function () {
-  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-  var SHOPIFY_CART_URL = 'https://shop.dnaturalbody.com/cart';
-
-  function loadScript() {
-    var script = document.createElement('script');
-    script.async = true;
-    script.src = scriptURL;
-    (document.head || document.body).appendChild(script);
-    script.onload = ShopifyBuyInit;
-  }
-
-  if (window.ShopifyBuy) {
-    if (window.ShopifyBuy.UI) ShopifyBuyInit();
-    else loadScript();
-  } else {
-    loadScript();
-  }
-
-  function ShopifyBuyInit() {
-
-    var client = ShopifyBuy.buildClient({
-      domain: 'dpscr1-vz.myshopify.com',
-      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    });
-
-    ShopifyBuy.UI.onReady(client).then(function (ui) {
-
-      // ✅ Create cart drawer
-      var cartComponent = ui.createComponent('cart', {
-        options: {
-          cart: {
-            startOpen: false,
-            text: { total: "Subtotal", button: "Checkout" }
-          },
-          toggle: {
-            node: document.getElementById('shopify-cart-toggle')
-          }
-        }
-      });
-
-      // ✅ Create product button
-      ui.createComponent('product', {
-        id: '14889665036653',
-        node: document.getElementById('buybutton-cashmere'),
-        options: {
-          product: {
-            contents: { img: false, title: false, price: false },
-            text: { button: "Add to Cart" },
-            styles: {
-              button: {
-                "background-color": "#1d201c",
-                ":hover": { "background-color": "#313630" },
-                ":focus": { "background-color": "#313630" },
-                "padding": "14px 18px",
-                "border-radius": "10px"
-              }
-            }
-          },
-          events: {
-            afterAddVariant: function () {
-              updateBadge();
-              openDrawer();
-            }
-          }
-        }
-      });
-
-      // ---------- Badge ----------
-      function updateBadge() {
-        var badge = document.getElementById("cartCount");
-        if (!badge) return;
-
-        var items = (cartComponent.model && cartComponent.model.lineItems) || [];
-        var count = items.reduce(function (sum, item) {
-          return sum + (item.quantity || 0);
-        }, 0);
-
-        badge.textContent = count;
-        badge.style.display = count > 0 ? "inline-flex" : "none";
-      }
-
-      if (cartComponent.model && cartComponent.model.on) {
-        cartComponent.model.on("change", updateBadge);
-        cartComponent.model.on("update", updateBadge);
-      }
-
-      setTimeout(updateBadge, 800);
-
-      // ---------- Drawer Open ----------
-      function openDrawer() {
-        var toggle = document.getElementById('shopify-cart-toggle');
-        if (toggle) toggle.click();
-      }
-
-      document.getElementById("cartButton")?.addEventListener("click", function () {
-        openDrawer();
-      });
-
-      // ---------- FORCE Checkout → Cart Page ----------
-      document.addEventListener("click", function (e) {
-        var btn = e.target.closest('.shopify-buy__cart__checkout');
-        if (!btn) return;
-
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        window.location.href = SHOPIFY_CART_URL;
-      }, true);
-
-    });
-  }
-})();
-</script>
-
+    })();
+  </script>
 </body>
 </html>
