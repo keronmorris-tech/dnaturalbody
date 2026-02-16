@@ -938,3 +938,8 @@ img {
     height: 130px;
   }
 }
+/* Shopify Buy Button: hide the built-in toggle node we mount */
+#shopify-cart-toggle {
+  display: none !important;
+}
+
