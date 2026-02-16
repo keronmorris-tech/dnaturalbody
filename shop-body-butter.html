@@ -1,92 +1,152 @@
 <script>
-(function(){
-  const SHOP_CART_ADD = "https://shop.dnaturalbody.com/cart/add";
+(function () {
+  const SHOP_DOMAIN = "https://shop.dnaturalbody.com";
+  const SHOP_CART_ADD = SHOP_DOMAIN + "/cart/add";
+  const DRAWER_CART_URL = SHOP_DOMAIN + "/cart?view=drawer";
+
+  // Drawer elements (may not exist on every page)
   const drawer = document.getElementById("cartDrawer");
   const overlay = document.getElementById("cartOverlay");
   const frame = document.getElementById("cartFrame");
   const addFrame = document.getElementById("cartAddFrame");
 
-  function getVariantId(){
-    const active = document.querySelector('.size-option.active[data-variant]');
-    if (active) return active.getAttribute('data-variant');
-    const first = document.querySelector('.size-option[data-variant]');
-    if (first) return first.getAttribute('data-variant');
+  function getVariantId(fromEl) {
+    // 1) If a specific button was clicked and it has a variant
+    if (fromEl && fromEl.getAttribute && fromEl.getAttribute("data-variant")) {
+      return fromEl.getAttribute("data-variant");
+    }
 
-    const btn = document.getElementById('addToCartBtn');
-    if (btn && btn.getAttribute('data-variant')) return btn.getAttribute('data-variant');
+    // 2) Product pages with size options
+    const active = document.querySelector(".size-option.active[data-variant]");
+    if (active) return active.getAttribute("data-variant");
+
+    // 3) First available size option
+    const first = document.querySelector(".size-option[data-variant]");
+    if (first) return first.getAttribute("data-variant");
+
+    // 4) Add-to-cart button may carry variant directly
+    const btn = document.getElementById("addToCartBtn");
+    if (btn && btn.getAttribute("data-variant")) return btn.getAttribute("data-variant");
 
     return null;
   }
 
-  function refreshCart(){
-    frame.src = "https://shop.dnaturalbody.com/cart?view=drawer&t=" + Date.now();
+  function getQty(fromEl) {
+    const qtyAttr = fromEl?.getAttribute?.("data-qty");
+    const qty = qtyAttr ? parseInt(qtyAttr, 10) : 1;
+    return Number.isFinite(qty) && qty > 0 ? qty : 1;
   }
 
-  function openCart(){
+  function refreshCart() {
+    if (!frame) return;
+    frame.src = DRAWER_CART_URL + "&t=" + Date.now();
+  }
+
+  function openCart() {
+    // If drawer isn't on this page, fallback to Shopify cart page
+    if (!drawer || !overlay || !frame) {
+      window.location.href = SHOP_DOMAIN + "/cart";
+      return;
+    }
     overlay.style.display = "block";
     drawer.style.right = "0";
     refreshCart();
   }
 
-  function closeCart(){
+  function closeCart() {
+    if (!drawer || !overlay) return;
     overlay.style.display = "none";
     drawer.style.right = "-420px";
   }
 
-  function wireSizeButtons(){
-    document.querySelectorAll('.size-option[data-variant]').forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        document.querySelectorAll('.size-option').forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
+  function wireSizeButtons() {
+    document.querySelectorAll(".size-option[data-variant]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        document.querySelectorAll(".size-option").forEach((b) => b.classList.remove("active"));
+        btn.classList.add("active");
 
-        const price = btn.getAttribute('data-price');
-        const size = btn.getAttribute('data-size');
-        const grams = btn.getAttribute('data-grams');
-        const priceEl = document.getElementById('priceText');
-        const sizeEl = document.getElementById('sizeText');
+        // Optional UI updates if your page uses these IDs
+        const price = btn.getAttribute("data-price");
+        const size = btn.getAttribute("data-size");
+        const grams = btn.getAttribute("data-grams");
+        const priceEl = document.getElementById("priceText");
+        const sizeEl = document.getElementById("sizeText");
+
         if (price && priceEl) priceEl.textContent = `$${parseFloat(price).toFixed(2)}`;
         if (sizeEl && size && grams) sizeEl.textContent = `Net Wt. ${size} / ${grams} g`;
       });
     });
   }
 
-  function wireAddToCart(){
-    const btn = document.getElementById('addToCartBtn');
-    if (!btn) return;
+  function addVariantToCart(variantId, qty) {
+    if (!variantId) {
+      alert("Couldn't find the selected size/variant.");
+      return;
+    }
 
-    btn.addEventListener('click', ()=>{
-      const variantId = getVariantId();
-      if (!variantId){
-        alert("Couldn't find the selected size/variant.");
-        return;
-      }
-
-      // Add to Shopify cart WITHOUT leaving the page (reliable cross-subdomain method)
-      // This will update Shopify cart + inventory, then we open drawer + refresh the cart view.
-      addFrame.onload = function(){
+    // Most reliable method across subdomains:
+    // load /cart/add in a hidden iframe and then open drawer
+    if (addFrame) {
+      addFrame.onload = function () {
         openCart();
         addFrame.onload = null;
       };
+      addFrame.src =
+        `${SHOP_CART_ADD}?id=${encodeURIComponent(variantId)}` +
+        `&quantity=${encodeURIComponent(qty)}` +
+        `&return_to=%2Fcart%3Fview%3Ddrawer`;
+    } else {
+      // Fallback: go directly to Shopify cart page with item added
+      window.location.href =
+        `${SHOP_CART_ADD}?id=${encodeURIComponent(variantId)}` +
+        `&quantity=${encodeURIComponent(qty)}`;
+    }
+  }
 
-      addFrame.src = `${SHOP_CART_ADD}?id=${encodeURIComponent(variantId)}&quantity=1&return_to=%2Fcart%3Fview%3Ddrawer`;
+  function wireAddToCartButtons() {
+    // Main product page button
+    const mainBtn = document.getElementById("addToCartBtn");
+    if (mainBtn) {
+      mainBtn.addEventListener("click", () => {
+        const variantId = getVariantId(mainBtn);
+        const qty = getQty(mainBtn);
+        addVariantToCart(variantId, qty);
+      });
+    }
+
+    // Shop/grid buttons: any element with data-variant="..."
+    document.querySelectorAll("[data-variant].add-to-cart, button[data-variant], a[data-variant]").forEach((btn) => {
+      // Avoid double-binding the main button if it matches selector
+      if (btn.id === "addToCartBtn") return;
+
+      btn.addEventListener("click", (e) => {
+        // If it's a link, stop navigation
+        if (btn.tagName.toLowerCase() === "a") e.preventDefault();
+
+        const variantId = getVariantId(btn);
+        const qty = getQty(btn);
+        addVariantToCart(variantId, qty);
+      });
     });
   }
 
-  function wireCartIcon(){
-    const cartBtn = document.getElementById('cartButton');
+  function wireCartIcon() {
+    const cartBtn = document.getElementById("cartButton");
     if (!cartBtn) return;
-    cartBtn.addEventListener('click', (e)=>{
+
+    cartBtn.addEventListener("click", (e) => {
       e.preventDefault();
       openCart();
     });
   }
 
+  // Close controls (only if drawer exists)
   document.getElementById("closeCart")?.addEventListener("click", closeCart);
   overlay?.addEventListener("click", closeCart);
 
-  document.addEventListener('DOMContentLoaded', ()=>{
+  document.addEventListener("DOMContentLoaded", () => {
     wireSizeButtons();
-    wireAddToCart();
+    wireAddToCartButtons();
     wireCartIcon();
   });
 })();
