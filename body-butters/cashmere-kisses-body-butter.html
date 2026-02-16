@@ -204,21 +204,29 @@
       }
 
       // Force cart drawer checkout button -> Shopify /cart page
-      function wireDrawerCheckoutToCartPage() {
-        // The BuyButton UI renders the drawer later, so we watch for it.
-        var observer = new MutationObserver(function () {
-          var btn = document.querySelector(".shopify-buy__cart__checkout");
-          if (btn && !btn.dataset.dnWired) {
-            btn.dataset.dnWired = "1";
-            btn.addEventListener("click", function (e) {
-              e.preventDefault();
-              window.location.href = SHOPIFY_CART_URL;
-            });
-          }
-        });
+function wireDrawerCheckoutToCartPage() {
+  var observer = new MutationObserver(function () {
+    var btn = document.querySelector(".shopify-buy__cart__checkout");
+    if (btn && !btn.dataset.dnOverride) {
+      btn.dataset.dnOverride = "1";
 
-        observer.observe(document.body, { childList: true, subtree: true });
-      }
+      // Remove Shopify's default click behaviour completely
+      var newBtn = btn.cloneNode(true);
+      btn.parentNode.replaceChild(newBtn, btn);
+
+      newBtn.addEventListener("click", function (e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+
+        // FORCE redirect to Shopify CART page
+        window.location.href = "https://dpscr1-vz.myshopify.com/cart";
+      });
+    }
+  });
+
+  observer.observe(document.body, { childList: true, subtree: true });
+}
 
       // ✅ Keep badge in sync
       function wireCartModelListeners() {
