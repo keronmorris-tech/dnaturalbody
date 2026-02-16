@@ -1,227 +1,93 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Body Butters | D'NATURAL BODY</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+<script>
+(function(){
+  const SHOP_CART_ADD = "https://shop.dnaturalbody.com/cart/add";
+  const drawer = document.getElementById("cartDrawer");
+  const overlay = document.getElementById("cartOverlay");
+  const frame = document.getElementById("cartFrame");
+  const addFrame = document.getElementById("cartAddFrame");
 
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
-</head>
+  function getVariantId(){
+    const active = document.querySelector('.size-option.active[data-variant]');
+    if (active) return active.getAttribute('data-variant');
+    const first = document.querySelector('.size-option[data-variant]');
+    if (first) return first.getAttribute('data-variant');
 
-<body class="shop-body">
+    const btn = document.getElementById('addToCartBtn');
+    if (btn && btn.getAttribute('data-variant')) return btn.getAttribute('data-variant');
 
-  <!-- HEADER -->
-  <header class="header">
-    <a href="index.html" class="logo">
-      <img src="images/logo.png" alt="D'NATURAL BODY Logo">
-    </a>
+    return null;
+  }
 
-    <nav class="main-nav">
-      <a href="index.html" class="nav-link">Home</a>
+  function refreshCart(){
+    frame.src = "https://shop.dnaturalbody.com/cart?view=drawer&t=" + Date.now();
+  }
 
-      <!-- SHOP DROPDOWN -->
-      <div class="nav-item dropdown">
-        <a href="shop.html" class="nav-link">Shop ▾</a>
-        <div class="dropdown-menu">
-          <a href="shop.html">View All</a>
-          <a href="shop-body-butter.html">Body Butter</a>
-          <a href="shop-body-scrub.html">Body Scrub</a>
-          <a href="shop-body-yogurt.html">Body Yogurt</a>
-        </div>
-      </div>
+  function openCart(){
+    overlay.style.display = "block";
+    drawer.style.right = "0";
+    refreshCart();
+  }
 
-      <a href="about.html" class="nav-link">About</a>
-      <a href="contact.html" class="nav-link">Contact</a>
+  function closeCart(){
+    overlay.style.display = "none";
+    drawer.style.right = "-420px";
+  }
 
-      <!-- CART BUTTON -->
-      <button class="cart-button" id="cartButton" type="button" aria-label="Cart"><span class="cart-icon">👜</span><span class="cart-count" id="cartCount" style="display:none;">0</span></button>
-    </nav>
-  </header>
+  function wireSizeButtons(){
+    document.querySelectorAll('.size-option[data-variant]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.size-option').forEach(b=>b.classList.remove('active'));
+        btn.classList.add('active');
 
-  <!-- BODY BUTTERS LIST -->
-  <section class="shop-page">
-    <h1>Body Butters</h1>
+        const price = btn.getAttribute('data-price');
+        const size = btn.getAttribute('data-size');
+        const grams = btn.getAttribute('data-grams');
+        const priceEl = document.getElementById('priceText');
+        const sizeEl = document.getElementById('sizeText');
+        if (price && priceEl) priceEl.textContent = `$${parseFloat(price).toFixed(2)}`;
+        if (sizeEl && size && grams) sizeEl.textContent = `Net Wt. ${size} / ${grams} g`;
+      });
+    });
+  }
 
-    <div class="grid">
+  function wireAddToCart(){
+    const btn = document.getElementById('addToCartBtn');
+    if (!btn) return;
 
-      <!-- Cashmere Kisses -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/Cashmere-kisses-body-butter.jpg"
-               alt="Cashmere Kisses Body Butter">
-          <img class="product-img-hover"
-               src="images/Cashmere-kisses-body-butter2.jpg"
-               alt="Cashmere Kisses Body Butter texture">
-        </div>
-        <h2>Cashmere Kisses</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/cashmere-kisses-body-butter.html" class="btn">View Details</a>
-      </div>
+    btn.addEventListener('click', ()=>{
+      const variantId = getVariantId();
+      if (!variantId){
+        alert("Couldn't find the selected size/variant.");
+        return;
+      }
 
-      <!-- Firming -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/Firming-body-butter.jpg"
-               alt="Firming Body Butter">
-          <img class="product-img-hover"
-               src="images/Firming-body-butter2.jpg"
-               alt="Firming Body Butter texture">
-        </div>
-        <h2>Firming</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$25.00</p>
-        <a href="body-butters/firming-body-butter.html" class="btn">View Details</a>
-      </div>
+      // Add to Shopify cart WITHOUT leaving the page (reliable cross-subdomain method)
+      // This will update Shopify cart + inventory, then we open drawer + refresh the cart view.
+      addFrame.onload = function(){
+        openCart();
+        addFrame.onload = null;
+      };
 
-      <!-- Grown and Fine -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/grown-fine-body-butter.jpg"
-               alt="Grown and Fine Body Butter">
-          <img class="product-img-hover"
-               src="images/grown-fine-body-butter2.jpg"
-               alt="Grown and Fine Body Butter texture">
-        </div>
-        <h2>Grown and Fine</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/grown-fine-body-butter.html" class="btn">View Details</a>
-      </div>
+      addFrame.src = `${SHOP_CART_ADD}?id=${encodeURIComponent(variantId)}&quantity=1&return_to=%2Fcart%3Fview%3Ddrawer`;
+    });
+  }
 
-      <!-- Island Sugar Glow -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/island-sugar-glow-body-butter.jpg"
-               alt="Island Sugar Glow Body Butter">
-          <img class="product-img-hover"
-               src="images/island-sugar-glow-body-butter2.jpg"
-               alt="Island Sugar Glow Body Butter texture">
-        </div>
-        <h2>Island Sugar Glow</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/island-sugar-glow-body-butter.html" class="btn">View Details</a>
-      </div>
+  function wireCartIcon(){
+    const cartBtn = document.getElementById('cartButton');
+    if (!cartBtn) return;
+    cartBtn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      openCart();
+    });
+  }
 
-      <!-- Lavender Nights -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/lavender-nights-body-butter.jpg"
-               alt="Lavender Nights Body Butter">
-          <img class="product-img-hover"
-               src="images/lavender-nights-body-butter2.jpg"
-               alt="Lavender Nights Body Butter texture">
-        </div>
-        <h2>Lavender Nights</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/lavender-nights-body-butter.html" class="btn">View Details</a>
-      </div>
+  document.getElementById("closeCart")?.addEventListener("click", closeCart);
+  overlay?.addEventListener("click", closeCart);
 
-      <!-- Rose Silk -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/Rose-silk-body-butter.jpg"
-               alt="Rose Silk Body Butter">
-          <img class="product-img-hover"
-               src="images/Rose-silk-body-butter2.jpg"
-               alt="Rose Silk Body Butter texture">
-        </div>
-        <h2>Rose Silk</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/rose-silk-body-butter.html" class="btn">View Details</a>
-      </div>
-
-      <!-- Sweet Indulgence -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/Sweet-Indulgence-body-butter.jpg"
-               alt="Sweet Indulgence Body Butter">
-          <img class="product-img-hover"
-               src="images/Sweet-Indulgence-body-butter2.jpg"
-               alt="Sweet Indulgence Body Butter texture">
-        </div>
-        <h2>Sweet Indulgence</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/sweet-indulgence-body-butter.html" class="btn">View Details</a>
-      </div>
-
-      <!-- Turmeric Brightening -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/turmeric-body-butter.jpg"
-               alt="Turmeric Brightening Body Butter">
-          <img class="product-img-hover"
-               src="images/turmeric-body-butter2.jpg"
-               alt="Turmeric Brightening Body Butter texture">
-        </div>
-        <h2>Turmeric Brightening</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$25.00</p>
-        <a href="body-butters/turmeric-body-butter.html" class="btn">View Details</a>
-      </div>
-
-      <!-- Vanilla Vibes -->
-      <div class="product-card">
-        <div class="product-image-swap">
-          <img class="product-img-main"
-               src="images/Vanilla-Vibes-body-butter.jpg"
-               alt="Vanilla Vibes Body Butter">
-          <img class="product-img-hover"
-               src="images/Vanilla-Vibes-body-butter2.jpg"
-               alt="Vanilla Vibes Body Butter texture">
-        </div>
-        <h2>Vanilla Vibes</h2>
-        <p class="product-type">Body Butter</p>
-        <p class="price">$22.00</p>
-        <a href="body-butters/vanilla-vibes-body-butter.html" class="btn">View Details</a>
-      </div>
-
-    </div>
-  </section>
-
-  <!-- FOOTER -->
-  <footer class="footer">
-    <p>© 2026 D'NATURAL BODY</p>
-    <p>Email: dnaturalbody@outlook.com</p>
-  </footer>
-
-  <!-- CART DRAWER OVERLAY -->
-  <div class="cart-overlay" id="cartOverlay"></div>
-
-  <!-- CART DRAWER PANEL -->
-  <aside class="cart-drawer" id="cartDrawer">
-    <div class="cart-drawer-header">
-      <h2>Your Cart</h2>
-      <button id="closeCart" class="cart-close" type="button">&times;</button>
-    </div>
-
-    <div class="cart-items" id="cartItemsDrawer"></div>
-
-    <div class="cart-footer">
-      <div class="cart-subtotal">
-        <span>Subtotal</span>
-        <span id="cartSubtotalDrawer">$0.00</span>
-      </div>
-
-      <button class="primary-btn cart-checkout" type="button">Checkout</button>
-      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
-    </div>
-  </aside>
-
-  <script src="cart.js"></script>
-
-</body>
-</html>
+  document.addEventListener('DOMContentLoaded', ()=>{
+    wireSizeButtons();
+    wireAddToCart();
+    wireCartIcon();
+  });
+})();
+</script>
