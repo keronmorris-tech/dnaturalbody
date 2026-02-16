@@ -6,13 +6,62 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
+</head>
 
-  <!-- Optional but very helpful: ensures nothing "covers" the size buttons -->
-  <style>
-    .product-info, .size-picker, .size-options, .product-actions { position: relative; z-index: 5; }
-    .product-image { position: relative; z-index: 1; }
-    .size-option { cursor: pointer; pointer-events: auto; }
-  </style>
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
+        <span class="cart-icon">👜</span>
+        <span class="cart-count" id="cartCount" style="display:none;">0</span>
+      </button>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses">
+      </div>
+
+      <div class="product-info">
+        <h1>Cashmere Kisses</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        
+   <!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cashmere Kisses | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
 </head>
 
 <body class="product-body">
@@ -63,14 +112,9 @@
         <div class="size-picker">
           <p class="size-label">Choose your size:</p>
           <div class="size-options" id="sizeOptions">
-            <button class="size-option active" type="button"
-              data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
-
-            <button class="size-option" type="button"
-              data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
-
-            <button class="size-option" type="button"
-              data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
+            <button class="size-option active" type="button" data-size="8 oz" data-grams="227" data-price="22.00" data-variant="53018857242989">8 oz</button>
+            <button class="size-option" type="button" data-size="4 oz" data-grams="113" data-price="14.00" data-variant="53018857275757">4 oz</button>
+            <button class="size-option" type="button" data-size="2 oz" data-grams="57" data-price="8.00" data-variant="53019419640173">2 oz</button>
           </div>
         </div>
 
@@ -80,7 +124,7 @@
         </p>
 
         <div class="product-actions">
-          <!-- cart.js reads the ACTIVE .size-option[data-variant] -->
+          <!-- CLEAN: the cart script reads the ACTIVE .size-option[data-variant] so no extra data attrs needed here -->
           <button class="primary-btn" id="addToCartBtn" type="button">Add to Cart</button>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
@@ -118,62 +162,187 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART OVERLAY + DRAWER -->
-  <div class="cart-overlay" id="cartOverlay"></div>
+  <!-- CART OVERLAY + DRAWER (right before <div id="shopify-toggle-host" style="display:none;"></div>
+<script type="text/javascript">
+/* D'Natural Body — Shopify cart + inventory (Buy Button UI cart drawer) */
+(function() {
+  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+  function loadScript(cb) {
+    var s = document.createElement('script');
+    s.async = true;
+    s.src = scriptURL;
+    s.onload = cb;
+    (document.head || document.body).appendChild(s);
+  }
 
-  <aside class="cart-drawer" id="cartDrawer">
-    <div class="cart-drawer-header">
-      <h2>Your Cart</h2>
-      <button id="closeCart" class="cart-close" type="button">&times;</button>
-    </div>
+  function getSelectedVariantId() {
+    var active = document.querySelector('.size-option.active[data-variant]');
+    if (active) return active.getAttribute('data-variant');
+    var btn = document.getElementById('addToCartBtn');
+    if (btn && btn.getAttribute('data-variant')) return btn.getAttribute('data-variant');
+    var any = document.querySelector('[data-variant]');
+    if (any) return any.getAttribute('data-variant');
+    return null;
+  }
 
-    <div class="cart-items" id="cartItemsDrawer"></div>
+  function getQty() {
+    var q = document.getElementById('quantity') || document.querySelector('input[name="quantity"]');
+    var n = q ? parseInt(q.value || '1', 10) : 1;
+    return (isFinite(n) && n > 0) ? n : 1;
+  }
 
-    <div class="cart-footer">
-      <div class="cart-subtotal">
-        <span>Subtotal</span>
-        <span id="cartSubtotalDrawer">$0.00</span>
-      </div>
-
-      <button class="primary-btn cart-checkout" type="button">Checkout</button>
-      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
-    </div>
-  </aside>
-
-  <!-- THIS makes size switching reliable + updates price/size text -->
-  <script>
-    document.addEventListener("DOMContentLoaded", () => {
-      const wrap = document.getElementById("sizeOptions");
-      const priceEl = document.getElementById("priceText");
-      const sizeEl  = document.getElementById("sizeText");
-      if (!wrap) return;
-
-      function applyFrom(btn) {
-        if (!btn) return;
-        const price = btn.dataset.price;
-        const size = btn.dataset.size;
-        const grams = btn.dataset.grams;
-
-        if (priceEl && price) priceEl.textContent = "$" + Number(price).toFixed(2);
-        if (sizeEl && size && grams) sizeEl.textContent = `Net Wt. ${size} / ${grams} g`;
-      }
-
-      // initial
-      applyFrom(wrap.querySelector(".size-option.active") || wrap.querySelector(".size-option"));
-
-      wrap.addEventListener("click", (e) => {
-        const btn = e.target.closest(".size-option");
-        if (!btn) return;
-
-        wrap.querySelectorAll(".size-option").forEach(b => b.classList.remove("active"));
-        btn.classList.add("active");
-        applyFrom(btn);
-      });
+  async function addToShopifyCart(variantId, qty) {
+    var res = await fetch('https://shop.dnaturalbody.com/cart/add.js', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: Number(qty) }] })
     });
-  </script>
+    if (!res.ok) {
+      var text = await res.text();
+      throw new Error('Add to cart failed: ' + text);
+    }
+    return res.json();
+  }
 
-  <!-- IMPORTANT: this file is inside /body-butters/, so cart.js must go UP one level -->
-  <script src="../cart.js"></script>
+  function openShopifyDrawer() {
+    // The Buy Button UI injects a toggle button; clicking it opens the drawer.
+    var toggle = document.querySelector('.shopify-buy__cart-toggle');
+    if (toggle) toggle.click();
+    else window.location.href = 'https://shop.dnaturalbody.com/cart';
+  }
+
+  function wireSizeButtons() {
+    var wrap = document.getElementById('sizeOptions');
+    if (!wrap) return;
+    wrap.addEventListener('click', function(e) {
+      var btn = e.target.closest('.size-option');
+      if (!btn) return;
+      wrap.querySelectorAll('.size-option').forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+
+      // Update any on-page price text if you have one.
+      var price = btn.getAttribute('data-price');
+      if (price) {
+        var priceEl = document.querySelector('.price') || document.getElementById('productPrice');
+        if (priceEl) {
+          // Keep leading $ if present in markup
+          priceEl.textContent = priceEl.textContent.trim().startsWith('$') ? ('$' + price) : price;
+        }
+      }
+    });
+  }
+
+  function wireAddToCart() {
+    var btn = document.getElementById('addToCartBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async function() {
+      try {
+        btn.disabled = true;
+        var variantId = getSelectedVariantId();
+        if (!variantId) {
+          alert('Please select an option first.');
+          return;
+        }
+        await addToShopifyCart(variantId, getQty());
+        openShopifyDrawer();
+      } catch (err) {
+        console.error(err);
+        alert('Sorry — I could not add that item to the cart. Please try again.');
+      } finally {
+        btn.disabled = false;
+      }
+    });
+  }
+
+  function initUI() {
+    var client = ShopifyBuy.buildClient({
+      domain: 'dpscr1-vz.myshopify.com',
+      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
+    });
+    ShopifyBuy.UI.onReady(client).then(function(ui) {
+      // Create cart + toggle (drawer)
+      var toggleHost = document.getElementById('shopify-toggle-host');
+      if (!toggleHost) {
+        toggleHost = document.createElement('div');
+        toggleHost.id = 'shopify-toggle-host';
+        toggleHost.style.display = 'none';
+        document.body.appendChild(toggleHost);
+      }
+      ui.createComponent('toggle', {
+        node: toggleHost,
+        options: {
+          toggle: {
+            styles: {
+              toggle: {
+                "background-color": "#1d201c",
+                ":hover": {"background-color": "#313630"},
+                ":focus": {"background-color": "#313630"}
+              }
+            }
+          },
+          cart: {
+            text: { total: "Subtotal", button: "Checkout" },
+            styles: {
+              button: {
+                "background-color": "#1d201c",
+                ":hover": {"background-color": "#313630"},
+                ":focus": {"background-color": "#313630"}
+              },
+              // These text colors were set in your snippet; keep readable on Shopify drawer
+              title: { "color": "#212020" },
+              header: { "color": "#212020" },
+              lineItems: { "color": "#212020" },
+              subtotalText: { "color": "#212020" },
+              subtotal: { "color": "#212020" },
+              notice: { "color": "#212020" },
+              currency: { "color": "#212020" },
+              close: { "color": "#212020", ":hover": { "color": "#212020" } },
+              empty: { "color": "#212020" },
+              noteDescription: { "color": "#212020" },
+              discountText: { "color": "#212020" },
+              discountIcon: { "fill": "#212020" },
+              discountAmount: { "color": "#212020" }
+            }
+          },
+          lineItem: {
+            styles: {
+              variantTitle: { "color": "#212020" },
+              title: { "color": "#212020" },
+              price: { "color": "#212020" },
+              fullPrice: { "color": "#212020" },
+              discount: { "color": "#212020" },
+              discountIcon: { "fill": "#212020" },
+              quantity: { "color": "#212020" },
+              quantityIncrement: { "color": "#212020", "border-color": "#212020" },
+              quantityDecrement: { "color": "#212020", "border-color": "#212020" },
+              quantityInput: { "color": "#212020", "border-color": "#212020" }
+            }
+          }
+        }
+      });
+
+      // Wire your header cart icon to open the Shopify drawer
+      var cartBtn = document.getElementById('cartButton');
+      if (cartBtn) {
+        cartBtn.addEventListener('click', function() {
+          openShopifyDrawer();
+        });
+      }
+    });
+  }
+
+  function boot() {
+    wireSizeButtons();
+    wireAddToCart();
+    if (window.ShopifyBuy && window.ShopifyBuy.UI) initUI();
+    else loadScript(initUI);
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
+  else boot();
+})();
+</script>
+</body> is perfect) -->
 </body>
 </html>
-
