@@ -110,172 +110,195 @@
   <!-- hidden node used by Shopify cart toggle -->
   <div id="shopify-cart-toggle" style="display:none;"></div>
 
-  <!-- ✅ SHOPIFY BUY BUTTON + CART DRAWER -->
-  <script>
-  (function () {
-    var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
+ <script>
+(function () {
+  var scriptURL = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
 
-    // ✅ Drawer "Checkout" MUST go to Shopify CART page
-    var SHOPIFY_CART_URL = 'https://shop.dnaturalbody.com/cart';
+  // ✅ where drawer checkout should go
+  var SHOPIFY_CART_URL = 'https://shop.dnaturalbody.com/cart';
 
-    function loadScript() {
-      var script = document.createElement('script');
-      script.async = true;
-      script.src = scriptURL;
-      (document.head || document.body).appendChild(script);
-      script.onload = ShopifyBuyInit;
-    }
+  function loadScript() {
+    var script = document.createElement('script');
+    script.async = true;
+    script.src = scriptURL;
+    (document.head || document.body).appendChild(script);
+    script.onload = ShopifyBuyInit;
+  }
 
-    if (window.ShopifyBuy) {
-      if (window.ShopifyBuy.UI) ShopifyBuyInit();
-      else loadScript();
-    } else {
-      loadScript();
-    }
+  if (window.ShopifyBuy) {
+    if (window.ShopifyBuy.UI) ShopifyBuyInit();
+    else loadScript();
+  } else {
+    loadScript();
+  }
 
-    function ShopifyBuyInit() {
-      // ✅ IMPORTANT FIX: domain must be JUST the Shopify domain (no https, no /cart)
-      var client = ShopifyBuy.buildClient({
-        domain: 'dpscr1-vz.myshopify.com',
-        storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
+  function ShopifyBuyInit() {
+    // ✅ IMPORTANT: domain is JUST the Shopify myshopify domain
+    var client = ShopifyBuy.buildClient({
+      domain: 'dpscr1-vz.myshopify.com',
+      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
+    });
+
+    ShopifyBuy.UI.onReady(client).then(function (ui) {
+
+      // Create the cart drawer
+      ui.createComponent('cart', {
+        options: {
+          cart: {
+            startOpen: false,
+            text: { total: "Subtotal", button: "Checkout" }
+          },
+          toggle: {
+            node: document.getElementById('shopify-cart-toggle'),
+            styles: {
+              toggle: {
+                "background-color": "#1d201c",
+                ":hover": { "background-color": "#313630" },
+                ":focus": { "background-color": "#313630" }
+              }
+            }
+          }
+        }
       });
 
-      ShopifyBuy.UI.onReady(client).then(function (ui) {
+      // ---------- ✅ SAFE GETTERS ----------
+      function getCartComponent() {
+        try {
+          if (window.DN_CART) return window.DN_CART;
+          if (ui && ui.components && ui.components.cart && ui.components.cart[0]) return ui.components.cart[0];
+        } catch (e) {}
+        return null;
+      }
 
-        // ✅ Create CART drawer component
-        var cartComponent = ui.createComponent('cart', {
-          options: {
-            cart: {
-              startOpen: false,
-              text: { total: "Subtotal", button: "Checkout" }
-            },
-            toggle: {
-              node: document.getElementById('shopify-cart-toggle'),
-              styles: {
-                toggle: {
-                  "background-color": "#1d201c",
-                  ":hover": { "background-color": "#313630" },
-                  ":focus": { "background-color": "#313630" }
-                }
-              }
-            }
-          }
-        });
+      function openCartDrawer() {
+        var cart = getCartComponent();
+        if (!cart) return;
 
-        // ---------- ✅ HELPERS ----------
-        function openCartDrawer() {
-          try {
-            if (cartComponent && typeof cartComponent.open === "function") {
-              cartComponent.open();
-              return;
-            }
-            if (cartComponent && typeof cartComponent.toggleVisibility === "function") {
-              cartComponent.toggleVisibility();
-              return;
-            }
-            var fallbackCart = ui.components && ui.components.cart && ui.components.cart[0];
-            if (fallbackCart && typeof fallbackCart.open === "function") fallbackCart.open();
-            else if (fallbackCart && typeof fallbackCart.toggleVisibility === "function") fallbackCart.toggleVisibility();
-          } catch (e) {}
+        try {
+          if (typeof cart.open === "function") cart.open();
+          else if (typeof cart.toggleVisibility === "function") cart.toggleVisibility();
+          else if (typeof cart.isVisible === "boolean" && typeof cart.setVisible === "function") cart.setVisible(true);
+        } catch (e) {}
+      }
+
+      function getItemCount() {
+        try {
+          var cart = getCartComponent();
+          if (!cart || !cart.model || !Array.isArray(cart.model.lineItems)) return 0;
+          return cart.model.lineItems.reduce(function (sum, item) {
+            return sum + (item.quantity || 0);
+          }, 0);
+        } catch (e) {
+          return 0;
+        }
+      }
+
+      function updateCartBadge() {
+        var badge = document.getElementById("cartCount");
+        if (!badge) return;
+
+        var count = getItemCount();
+        badge.textContent = String(count);
+        badge.style.display = count > 0 ? "inline-flex" : "none";
+      }
+
+      // ✅ Keep badge in sync (events if available + polling fallback)
+      function wireBadgeUpdates() {
+        var cart = getCartComponent();
+        if (cart && cart.model && typeof cart.model.on === "function") {
+          cart.model.on("change", updateCartBadge);
+          cart.model.on("update", updateCartBadge);
         }
 
-        function getItemCount() {
-          try {
-            var items = (cartComponent && cartComponent.model && cartComponent.model.lineItems) || [];
-            return items.reduce(function (sum, item) {
-              return sum + (item.quantity || 0);
-            }, 0);
-          } catch (e) {
-            return 0;
-          }
-        }
-
-        function updateCartBadge() {
-          var badge = document.getElementById("cartCount");
-          if (!badge) return;
-
-          var count = getItemCount();
-          badge.textContent = String(count);
-          badge.style.display = count > 0 ? "inline-flex" : "none";
-        }
-
-        // ✅ HARD OVERRIDE: force drawer checkout -> /cart (capture phase)
-        function forceDrawerCheckoutToCartPage() {
-          function intercept(e) {
-            var btn = e.target && e.target.closest && e.target.closest('.shopify-buy__cart__checkout');
-            if (!btn) return;
-
-            e.preventDefault();
-            e.stopPropagation();
-            if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-
-            window.location.assign(SHOPIFY_CART_URL);
-          }
-
-          document.addEventListener('click', intercept, true);
-          document.addEventListener('touchend', intercept, true);
-        }
-
-        // ✅ Keep badge in sync
-        function wireCartModelListeners() {
-          if (!cartComponent || !cartComponent.model || typeof cartComponent.model.on !== "function") return;
-
-          cartComponent.model.on("change", updateCartBadge);
-          cartComponent.model.on("update", updateCartBadge);
-
-          updateCartBadge();
-        }
-
-        // ---------- ✅ PRODUCT BUTTON ----------
-        ui.createComponent('product', {
-          id: '14889665036653',
-          node: document.getElementById('buybutton-cashmere'),
-          options: {
-            product: {
-              contents: {
-                img: false,
-                title: false,
-                price: false,
-              },
-              text: { button: "Add to Cart" },
-              styles: {
-                button: {
-                  "background-color": "#1d201c",
-                  ":hover": { "background-color": "#313630" },
-                  ":focus": { "background-color": "#313630" },
-                  "padding": "14px 18px",
-                  "border-radius": "10px"
-                }
-              }
-            },
-            events: {
-              afterAddVariant: function () {
-                updateCartBadge();
-                openCartDrawer();
-              }
-            }
-          }
-        });
-
-        // ✅ Your 👜 icon opens cart drawer
-        var cartBtn = document.getElementById("cartButton");
-        if (cartBtn) {
-          cartBtn.addEventListener("click", function () {
-            updateCartBadge();
-            openCartDrawer();
-          });
-        }
-
-        // ✅ Activate listeners + override
-        wireCartModelListeners();
+        // polling fallback (Shopify sometimes doesn't fire model events reliably)
+        updateCartBadge();
         setTimeout(updateCartBadge, 400);
-        forceDrawerCheckoutToCartPage();
+        setTimeout(updateCartBadge, 1200);
+        setInterval(updateCartBadge, 1500);
+      }
 
-        window.DN_CART = cartComponent;
+      // ✅ HARD OVERRIDE: ANY checkout click inside Shopify cart goes to /cart
+      function forceDrawerCheckoutToCartPage() {
+        function intercept(e) {
+          var t = e.target;
+
+          // Check if the click happened inside Shopify cart UI
+          var cartRoot = t && t.closest && t.closest('.shopify-buy__cart');
+          if (!cartRoot) return;
+
+          // Find the clicked button/link
+          var clickable = t.closest && t.closest('a,button,input[type="submit"]');
+          if (!clickable) return;
+
+          var txt = (clickable.textContent || "").toLowerCase().trim();
+          var href = (clickable.getAttribute && clickable.getAttribute("href")) || "";
+
+          // Catch "Checkout" buttons/links even if Shopify changes class names
+          var looksLikeCheckout =
+            txt.includes("checkout") ||
+            href.includes("/checkout") ||
+            (clickable.className && String(clickable.className).toLowerCase().includes("checkout")) ||
+            (clickable.name && String(clickable.name).toLowerCase().includes("checkout"));
+
+          if (!looksLikeCheckout) return;
+
+          e.preventDefault();
+          e.stopPropagation();
+          if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+          window.location.assign(SHOPIFY_CART_URL);
+        }
+
+        // capture phase = runs BEFORE Shopify’s own handlers
+        document.addEventListener("click", intercept, true);
+        document.addEventListener("touchstart", intercept, true);
+      }
+
+      // ---------- ✅ PRODUCT BUTTON ----------
+      ui.createComponent('product', {
+        id: '14889665036653',
+        node: document.getElementById('buybutton-cashmere'),
+        options: {
+          product: {
+            contents: { img: false, title: false, price: false },
+            text: { button: "Add to Cart" },
+            styles: {
+              button: {
+                "background-color": "#1d201c",
+                ":hover": { "background-color": "#313630" },
+                ":focus": { "background-color": "#313630" },
+                "padding": "14px 18px",
+                "border-radius": "10px"
+              }
+            }
+          },
+          events: {
+            afterAddVariant: function () {
+              updateCartBadge();
+              openCartDrawer();
+            }
+          }
+        }
       });
-    }
-  })();
-  </script>
+
+      // ✅ Cart icon opens drawer
+      var cartBtn = document.getElementById("cartButton");
+      if (cartBtn) {
+        cartBtn.addEventListener("click", function () {
+          updateCartBadge();
+          openCartDrawer();
+        });
+      }
+
+      // Expose cart + start syncing
+      window.DN_CART = getCartComponent();
+      forceDrawerCheckoutToCartPage();
+      wireBadgeUpdates();
+    });
+  }
+})();
+</script>
+
 
   <!-- =========================
        ✅ Size buttons control hidden Shopify variant
