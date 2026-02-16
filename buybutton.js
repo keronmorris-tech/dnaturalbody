@@ -265,7 +265,11 @@
   window.DNShopify = window.DNShopify || {};
   window.DNShopify.__initialized = false;
 
-  if (window.ShopifyBuy && window.ShopifyBuy.UI) init();
-  else if (window.ShopifyBuy) loadSdk(init);
-  else loadSdk(init);
+  if (window.ShopifyBuy && window.ShopifyBuy.UI) {
+    init();
+  } else if (window.ShopifyBuy) {
+    loadSdk(init);
+  } else {
+    loadSdk(init);
+  }
 })();
