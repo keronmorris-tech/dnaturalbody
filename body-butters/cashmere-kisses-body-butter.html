@@ -164,120 +164,166 @@
 
   <!-- CART OVERLAY + DRAWER (right before 
 <script>
-(function(){
-  const SHOP = 'https://shop.dnaturalbody.com';
+(function() {
+  const SHOP = "https://shop.dnaturalbody.com";
+  const overlay = document.getElementById("cartOverlay");
+  const drawer = document.getElementById("cartDrawer");
+  const openBtn = document.getElementById("cartButton");
+  const closeBtn = document.getElementById("closeCart");
+  const continueBtn = document.getElementById("cartContinue");
+  const checkoutBtn = document.getElementById("shopifyCheckoutBtn");
+  const cartFrame = document.getElementById("shopifyCartFrame");
 
-  function loadShopifySDK(cb){
-    const url='https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-    if(window.ShopifyBuy && window.ShopifyBuy.UI){ cb(); return; }
-    const s=document.createElement('script');
-    s.async=true; s.src=url;
-    s.onload=cb;
-    (document.head||document.body).appendChild(s);
-  }
-
-  function openShopifyDrawer(){
-    const toggleBtn = document.querySelector('.shopify-buy__cart-toggle');
-    if(toggleBtn){ toggleBtn.click(); return; }
-    // Fallback: send to Shopify cart page
-    window.location.href = SHOP + '/cart';
-  }
-
-  async function addToShopifyCart(variantId, qty){
-    const res = await fetch(SHOP + '/cart/add.js', {
-      method:'POST',
-      headers:{'Content-Type':'application/json','Accept':'application/json'},
-      credentials:'include',
-      body: JSON.stringify({ items: [{ id: Number(variantId), quantity: Number(qty||1) }] })
-    });
-    if(!res.ok){
-      const t = await res.text().catch(()=> '');
-      throw new Error('Add to cart failed: ' + res.status + ' ' + t);
+  function openCart() {
+    if (overlay) overlay.classList.add("show");
+    if (drawer) drawer.classList.add("open");
+    // refresh iframe so it shows latest cart
+    if (cartFrame) {
+      const base = SHOP + "/cart";
+      cartFrame.src = base + (base.includes("?") ? "&" : "?") + "t=" + Date.now();
     }
-    return res.json();
+  }
+  function closeCart() {
+    if (overlay) overlay.classList.remove("show");
+    if (drawer) drawer.classList.remove("open");
   }
 
-  function getSelectedVariantId(){
-    const active = document.querySelector('[data-variant].active');
-    if(active && active.dataset && active.dataset.variant) return active.dataset.variant;
+  if (openBtn) openBtn.addEventListener("click", function(e) { e.preventDefault(); openCart(); });
+  if (closeBtn) closeBtn.addEventListener("click", closeCart);
+  if (overlay) overlay.addEventListener("click", closeCart);
+  if (continueBtn) continueBtn.addEventListener("click", closeCart);
+  if (checkoutBtn) checkoutBtn.addEventListener("click", function() { window.location.href = SHOP + "/checkout"; });
 
-    const sel = document.querySelector('select[name="id"], #variantSelect, #variant');
-    if(sel && sel.value) return sel.value;
-
-    const first = document.querySelector('[data-variant]');
-    return first?.dataset?.variant || null;
+  function getSelectedVariantId() {
+    const activeSize = document.querySelector(".size-option.active[data-variant]");
+    if (activeSize) return activeSize.getAttribute("data-variant");
+    const addBtn = document.getElementById("addToCartBtn");
+    if (addBtn && addBtn.dataset && addBtn.dataset.variant) return addBtn.dataset.variant;
+    // fallback: first element with data-variant
+    const any = document.querySelector("[data-variant]");
+    return any ? any.getAttribute("data-variant") : null;
   }
 
-  function getQty(){
-    const qtyEl = document.querySelector('#quantity, input[name="quantity"], #qty');
-    const v = qtyEl ? parseInt(qtyEl.value,10) : 1;
-    return Number.isFinite(v) && v>0 ? v : 1;
+  function addToShopifyCart(variantId, qty) {
+    qty = qty || 1;
+    // Use a hidden iframe to hit Shopify add-to-cart endpoint without CORS headaches
+    const url = SHOP + "/cart/add?id=" + encodeURIComponent(variantId) + "&quantity=" + encodeURIComponent(qty);
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    // After a short delay, open drawer and refresh cart iframe
+    setTimeout(function() {
+      openCart();
+      setTimeout(function() { iframe.remove(); }, 2000);
+    }, 600);
   }
 
-  function initCartDrawer(){
-    const client = ShopifyBuy.buildClient({
-      domain: 'dpscr1-vz.myshopify.com',
-      storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78'
-    });
-
-    ShopifyBuy.UI.onReady(client).then(function(ui){
-      // Create a hidden toggle to ensure the drawer/cart UI exists
-      let host = document.getElementById('shopify-toggle-host');
-      if(!host){
-        host = document.createElement('div');
-        host.id = 'shopify-toggle-host';
-        host.style.display = 'none';
-        document.body.appendChild(host);
+  const addBtn = document.getElementById("addToCartBtn");
+  if (addBtn) {
+    addBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const variantId = getSelectedVariantId();
+      if (!variantId) {
+        alert("Please select an option first.");
+        return;
       }
-      ui.createComponent('toggle', {
-        node: host,
-        options: {
-          toggle: { styles: { toggle: {
-            "background-color":"#1d201c",
-            ":hover":{"background-color":"#313630"},
-            ":focus":{"background-color":"#313630"}
-          }}},
-          cart: { text: { total: "Subtotal", button: "Checkout" } }
-        }
-      });
-
-      // Cart icon opens drawer
-      const cartBtn = document.getElementById('cartButton');
-      if(cartBtn){
-        cartBtn.addEventListener('click', function(e){
-          e.preventDefault();
-          openShopifyDrawer();
-        });
-      }
-
-      // Your page Add to Cart button -> Shopify
-      const addBtn = document.getElementById('addToCartBtn') || document.querySelector('.primary-btn');
-      if(addBtn){
-        addBtn.addEventListener('click', async function(e){
-          e.preventDefault();
-          const variantId = getSelectedVariantId();
-          if(!variantId){ alert('Please select a size/option first.'); return; }
-          try{
-            addBtn.disabled = true;
-            await addToShopifyCart(variantId, getQty());
-            openShopifyDrawer();
-          }catch(err){
-            console.error(err);
-            alert('Sorry — could not add to cart. Please try again.');
-          }finally{
-            addBtn.disabled = false;
-          }
-        });
-      }
+      addToShopifyCart(variantId, 1);
     });
   }
-
-  loadShopifySDK(function(){
-    if(window.ShopifyBuy && window.ShopifyBuy.UI) initCartDrawer();
-  });
 })();
 </script>
 
 </body> is perfect) -->
+  <div class="cart-overlay" id="cartOverlay"></div>
+
+  <aside class="cart-drawer" id="cartDrawer">
+    <div class="cart-drawer-header">
+      <h2>Your Cart</h2>
+      <button id="closeCart" class="cart-close" type="button">&times;</button>
+    </div>
+
+    
+    <div class="cart-items" style="padding:0; height: calc(100vh - 220px);">
+      <iframe id="shopifyCartFrame" title="Cart" src="https://shop.dnaturalbody.com/cart" style="width:100%; height:100%; border:0; background:#fff;"></iframe>
+    </div>
+
+    <div class="cart-footer">
+      <button class="primary-btn cart-checkout" id="shopifyCheckoutBtn" type="button">Checkout</button>
+      <button class="outline-btn cart-continue" id="cartContinue" type="button">Continue Shopping</button>
+    </div>
+</aside>
+
+<script>
+(function() {
+  const SHOP = "https://shop.dnaturalbody.com";
+  const overlay = document.getElementById("cartOverlay");
+  const drawer = document.getElementById("cartDrawer");
+  const openBtn = document.getElementById("cartButton");
+  const closeBtn = document.getElementById("closeCart");
+  const continueBtn = document.getElementById("cartContinue");
+  const checkoutBtn = document.getElementById("shopifyCheckoutBtn");
+  const cartFrame = document.getElementById("shopifyCartFrame");
+
+  function openCart() {
+    if (overlay) overlay.classList.add("show");
+    if (drawer) drawer.classList.add("open");
+    // refresh iframe so it shows latest cart
+    if (cartFrame) {
+      const base = SHOP + "/cart";
+      cartFrame.src = base + (base.includes("?") ? "&" : "?") + "t=" + Date.now();
+    }
+  }
+  function closeCart() {
+    if (overlay) overlay.classList.remove("show");
+    if (drawer) drawer.classList.remove("open");
+  }
+
+  if (openBtn) openBtn.addEventListener("click", function(e) { e.preventDefault(); openCart(); });
+  if (closeBtn) closeBtn.addEventListener("click", closeCart);
+  if (overlay) overlay.addEventListener("click", closeCart);
+  if (continueBtn) continueBtn.addEventListener("click", closeCart);
+  if (checkoutBtn) checkoutBtn.addEventListener("click", function() { window.location.href = SHOP + "/checkout"; });
+
+  function getSelectedVariantId() {
+    const activeSize = document.querySelector(".size-option.active[data-variant]");
+    if (activeSize) return activeSize.getAttribute("data-variant");
+    const addBtn = document.getElementById("addToCartBtn");
+    if (addBtn && addBtn.dataset && addBtn.dataset.variant) return addBtn.dataset.variant;
+    // fallback: first element with data-variant
+    const any = document.querySelector("[data-variant]");
+    return any ? any.getAttribute("data-variant") : null;
+  }
+
+  function addToShopifyCart(variantId, qty) {
+    qty = qty || 1;
+    // Use a hidden iframe to hit Shopify add-to-cart endpoint without CORS headaches
+    const url = SHOP + "/cart/add?id=" + encodeURIComponent(variantId) + "&quantity=" + encodeURIComponent(qty);
+    const iframe = document.createElement("iframe");
+    iframe.style.display = "none";
+    iframe.src = url;
+    document.body.appendChild(iframe);
+    // After a short delay, open drawer and refresh cart iframe
+    setTimeout(function() {
+      openCart();
+      setTimeout(function() { iframe.remove(); }, 2000);
+    }, 600);
+  }
+
+  const addBtn = document.getElementById("addToCartBtn");
+  if (addBtn) {
+    addBtn.addEventListener("click", function(e) {
+      e.preventDefault();
+      const variantId = getSelectedVariantId();
+      if (!variantId) {
+        alert("Please select an option first.");
+        return;
+      }
+      addToShopifyCart(variantId, 1);
+    });
+  }
+})();
+</script>
+
 </body>
 </html>
