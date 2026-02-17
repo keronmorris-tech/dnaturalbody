@@ -8,13 +8,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
-  <!-- Hide Shopify's variant dropdown ONLY inside this buy button area -->
+  <!-- OPTIONAL: hide your static price so you don't show 2 prices -->
   <style>
-    #product-component-1771275419576 .shopify-buy__product__variant-selectors,
-    #product-component-1771275419576 .shopify-buy__option-select-wrapper,
-    #product-component-1771275419576 select.shopify-buy__option-select__select {
-      display: none !important;
-    }
+    #priceText { display: none; }
   </style>
 </head>
 
@@ -60,8 +56,9 @@
         <div class="product-type">Body Butter</div>
 
         <div class="product-meta">
+          <!-- static price hidden by CSS above (Shopify will show live price) -->
           <div class="price" id="priceText">$22.00</div>
-          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+          <div class="size" id="sizeText">Select a size below</div>
         </div>
 
         <p class="product-desc">
@@ -114,25 +111,29 @@
   <!-- Global Shopify Buy Button + Cart wiring -->
   <script src="../buybutton.js"></script>
 
-  <!-- Mount the Cashmere Kisses Buy Button -->
+  <!-- Mount the product (shows size dropdown + live price + qty + add to cart) -->
   <script>
     window.DNShopify = window.DNShopify || {};
 
-    // Wait a tick in case the SDK is still initializing
     (function mountWhenReady(){
       if (!window.DNShopify || !window.DNShopify.mountProduct) {
         return setTimeout(mountWhenReady, 80);
       }
 
       window.DNShopify.mountProduct({
-        id: '14889665036653',
+        id: '14889665036653', // Cashmere Kisses PRODUCT ID
         node: '#product-component-1771275419576',
         options: {
           product: {
             contents: {
               img: false,
               title: false,
-              price: false,
+
+              // ✅ show live price + variant dropdown
+              price: true,
+              options: true,
+
+              // ✅ keep qty + add to cart
               button: false,
               buttonWithQuantity: true
             },
@@ -146,15 +147,31 @@
                 ':focus': { 'background-color': '#313630' },
                 'padding': '14px 18px',
                 'border-radius': '10px'
+              },
+              price: {
+                'font-family': 'Montserrat, sans-serif',
+                'font-size': '18px',
+                'font-weight': '700',
+                'color': '#0b0a0a',
+                'margin': '0 0 10px 0'
+              },
+              select: {
+                'font-family': 'Montserrat, sans-serif',
+                'padding': '10px 12px',
+                'border-radius': '10px',
+                'border': '1px solid rgba(0,0,0,0.2)',
+                'margin-bottom': '10px'
+              },
+              option: {
+                'font-family': 'Montserrat, sans-serif'
               }
             }
           },
-          cart: {
-            popup: false
-          }
+          cart: { popup: false }
         }
       });
     })();
   </script>
+
 </body>
 </html>
