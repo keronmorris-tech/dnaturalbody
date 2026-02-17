@@ -1,28 +1,14 @@
 /* buybutton.js (D'Natural Body)
    Global Shopify Buy Button + Cart Drawer wiring
 
-   What this does:
    - Loads Shopify Buy Button SDK once
    - Creates a single Cart Drawer component
-   - Keeps your header badge (#cartCount) synced to cart quantity
-   - Clicking your cart icon button (#cartButton) opens the cart drawer
-   - The drawer's green "Checkout" button sends customers to
-     https://shop.dnaturalbody.com/cart (WITH the items carried over)
-
-   Requirements in your HTML header:
-   - Cart button:  <button id="cartButton"> ... <span id="cartCount"></span></button>
-   - Hidden toggle node somewhere in body: <div id="shopify-cart-toggle" style="display:none"></div>
-
-   To mount a product button on a page, call:
-     window.DNShopify.mountProduct({
-       id: '14889665036653',
-       node: '#product-component-1771275419576',
-       options: { ...optional Shopify Buy Button options... }
-     });
+   - Keeps header badge (#cartCount) synced
+   - Clicking #cartButton opens drawer
+   - Drawer "Checkout" redirects to Shopify cart page WITH items carried over
 */
 
 (function () {
-  // Prevent double-init if included on multiple pages/components
   if (window.DNShopify && window.DNShopify.__initialized) return;
 
   var CONFIG = {
@@ -31,7 +17,6 @@
     onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
 
-    // Your site IDs
     cartButtonId: 'cartButton',
     cartCountId: 'cartCount',
     toggleNodeId: 'shopify-cart-toggle'
@@ -40,7 +25,9 @@
   var state = {
     ui: null,
     cart: null,
-    client: null
+    client: null,
+    cartReady: false,
+    pendingOpen: false
   };
 
   function loadSdk(cb) {
@@ -52,7 +39,6 @@
   }
 
   function gidToNumericId(gid) {
-    // gid example: gid://shopify/ProductVariant/1234567890
     if (!gid) return null;
     var parts = String(gid).split('/');
     return parts[parts.length - 1] || null;
@@ -84,13 +70,27 @@
     badge.style.display = count > 0 ? 'inline-flex' : 'none';
   }
 
+  function ensureToggleNodeExists() {
+    if (document.getElementById(CONFIG.toggleNodeId)) return;
+    var div = document.createElement('div');
+    div.id = CONFIG.toggleNodeId;
+    div.style.display = 'none';
+    document.body.appendChild(div);
+  }
+
   function openCartDrawer() {
+    // If cart isn't ready yet, queue an open
+    if (!state.cartReady || !state.cart) {
+      state.pendingOpen = true;
+      return;
+    }
+
     try {
-      if (state.cart && typeof state.cart.open === 'function') {
+      if (typeof state.cart.open === 'function') {
         state.cart.open();
         return;
       }
-      if (state.cart && typeof state.cart.toggleVisibility === 'function') {
+      if (typeof state.cart.toggleVisibility === 'function') {
         state.cart.toggleVisibility();
         return;
       }
@@ -98,13 +98,10 @@
       // fallback: click the hidden toggle
       var t = document.querySelector('#' + CSS.escape(CONFIG.toggleNodeId) + ' .shopify-buy__cart-toggle');
       if (t) t.click();
-    } catch (e) {
-      // no-op
-    }
+    } catch (e) {}
   }
 
   function buildCartPermalinkFromDrawer() {
-    // Build: https://shop.dnaturalbody.com/cart/variantId:qty,variantId:qty
     var items = getLineItems();
     if (!items.length) return CONFIG.onlineStoreCartBase;
 
@@ -122,9 +119,6 @@
   }
 
   function interceptDrawerCheckoutToCartPage() {
-    // Shopify Buy Button may render checkout button with either of these:
-    // - .shopify-buy__btn--cart-checkout
-    // - .shopify-buy__cart__checkout
     document.addEventListener('click', function (e) {
       var target = e.target;
       if (!target || !target.closest) return;
@@ -132,7 +126,6 @@
       var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
       if (!btn) return;
 
-      // Stop Buy Button from routing to Storefront checkout
       e.preventDefault();
       e.stopPropagation();
       if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -145,7 +138,6 @@
     var btn = document.getElementById(CONFIG.cartButtonId);
     if (!btn) return;
 
-    // Avoid double binding
     if (btn.dataset.dnCartWired === '1') return;
     btn.dataset.dnCartWired = '1';
 
@@ -156,32 +148,32 @@
     });
   }
 
-  function attachCartModelListeners() {
+  function attachAllCartListeners() {
+    // 1) Listen on cart model (works sometimes)
     try {
-      if (!state.cart || !state.cart.model || !state.cart.model.on) return;
+      if (state.cart && state.cart.model && state.cart.model.on) {
+        state.cart.model.on('change', updateBadge);
+        state.cart.model.on('update', updateBadge);
+      }
+    } catch (e) {}
 
-      state.cart.model.on('change', updateBadge);
-      state.cart.model.on('update', updateBadge);
+    // 2) Listen on UI events (more reliable)
+    try {
+      if (state.ui && typeof state.ui.on === 'function') {
+        state.ui.on('cart:update', function () { updateBadge(); });
+        state.ui.on('cart:open', function () { updateBadge(); });
+      }
+    } catch (e) {}
 
-      // initial + delayed (cart loads async)
-      updateBadge();
-      setTimeout(updateBadge, 600);
-      setTimeout(updateBadge, 1500);
-    } catch (e) {
-      // no-op
-    }
-  }
-
-  function ensureToggleNodeExists() {
-    if (document.getElementById(CONFIG.toggleNodeId)) return;
-    var div = document.createElement('div');
-    div.id = CONFIG.toggleNodeId;
-    div.style.display = 'none';
-    document.body.appendChild(div);
+    // initial + delayed (async load)
+    updateBadge();
+    setTimeout(updateBadge, 600);
+    setTimeout(updateBadge, 1500);
   }
 
   function init() {
     ensureToggleNodeExists();
+    wireCartButton(); // wire early so button never "does nothing"
 
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
@@ -191,7 +183,6 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
-      // Create ONE cart drawer component for the whole page
       state.cart = ui.createComponent('cart', {
         options: {
           cart: {
@@ -199,7 +190,7 @@
             popup: false,
             text: {
               total: 'Subtotal',
-              button: 'Checkout' // label stays "Checkout" but we redirect to /cart
+              button: 'Checkout'
             }
           },
           toggle: {
@@ -215,9 +206,16 @@
         }
       });
 
-      wireCartButton();
-      attachCartModelListeners();
+      state.cartReady = true;
+
+      attachAllCartListeners();
       interceptDrawerCheckoutToCartPage();
+
+      // If user clicked cart before it was ready, open now
+      if (state.pendingOpen) {
+        state.pendingOpen = false;
+        openCartDrawer();
+      }
 
       // Public API
       window.DNShopify = window.DNShopify || {};
@@ -234,16 +232,14 @@
       window.DNShopify.updateBadge = updateBadge;
 
       window.DNShopify.mountProduct = function (cfg) {
-        // cfg: { id: 'PRODUCT_ID', node: '#selector' OR element, options: {} }
         if (!cfg || !cfg.id || !cfg.node) return;
 
         var nodeEl = (typeof cfg.node === 'string') ? document.querySelector(cfg.node) : cfg.node;
         if (!nodeEl) return;
 
         var options = cfg.options || {};
-
-        // Nice default: open the drawer after add
         options.events = options.events || {};
+
         if (!options.events.afterAddVariant) {
           options.events.afterAddVariant = function () {
             updateBadge();
@@ -261,15 +257,10 @@
     });
   }
 
-  // Boot
   window.DNShopify = window.DNShopify || {};
   window.DNShopify.__initialized = false;
 
-  if (window.ShopifyBuy && window.ShopifyBuy.UI) {
-    init();
-  } else if (window.ShopifyBuy) {
-    loadSdk(init);
-  } else {
-    loadSdk(init);
-  }
+  if (window.ShopifyBuy && window.ShopifyBuy.UI) init();
+  else if (window.ShopifyBuy) loadSdk(init);
+  else loadSdk(init);
 })();
