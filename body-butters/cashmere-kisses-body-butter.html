@@ -8,9 +8,87 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
-  <!-- OPTIONAL: hide your static price so you don't show 2 prices -->
   <style>
-    #priceText { display: none; }
+    /* Hide Shopify Buy Button's built-in selector/price UI (we render our own) */
+    #product-component-1771275419576 .shopify-buy__product__variant-selectors,
+    #product-component-1771275419576 .shopify-buy__option-select-wrapper,
+    #product-component-1771275419576 select.shopify-buy__option-select__select,
+    #product-component-1771275419576 .shopify-buy__product__price,
+    #product-component-1771275419576 .shopify-buy__product__actual-price,
+    #product-component-1771275419576 .shopify-buy__product__compare-price {
+      display: none !important;
+    }
+
+    /* Custom "size chips" */
+    .dn-buybox {
+      margin-top: 18px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding-top: 16px;
+    }
+    .dn-price {
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      font-size: 18px;
+      color: #0b0a0a;
+      margin: 0 0 12px 0;
+    }
+    .dn-sizes {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+    .dn-chip {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.18);
+      background: #fff;
+      color: #0b0a0a;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.05s ease;
+    }
+    .dn-chip:active { transform: scale(0.98); }
+    .dn-chip[aria-pressed="true"]{
+      border-color: rgba(0,0,0,0.75);
+      box-shadow: 0 0 0 2px rgba(0,0,0,0.08);
+      font-weight: 700;
+    }
+
+    .dn-row {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .dn-qty {
+      width: 70px;
+      padding: 12px 10px;
+      border-radius: 10px;
+      border: 1px solid rgba(0,0,0,0.2);
+      font-family: 'Montserrat', sans-serif;
+      text-align: center;
+    }
+    .dn-add {
+      background: #1d201c;
+      color: #fff;
+      border: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .dn-add:hover { background: #313630; }
+    .dn-add:disabled { opacity: 0.6; cursor: not-allowed; }
+    .dn-note {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      color: rgba(0,0,0,0.65);
+      margin-top: 6px;
+    }
   </style>
 </head>
 
@@ -36,7 +114,6 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- Cart icon (opens Shopify cart drawer + shows quantity) -->
       <button class="cart-button" id="cartButton" type="button" aria-label="Cart">
         <span class="cart-icon">👜</span>
         <span class="cart-count" id="cartCount" style="display:none;">0</span>
@@ -55,23 +132,12 @@
         <h1>Cashmere Kisses</h1>
         <div class="product-type">Body Butter</div>
 
-        <div class="product-meta">
-          <!-- static price hidden by CSS above (Shopify will show live price) -->
-          <div class="price" id="priceText">$22.00</div>
-          <div class="size" id="sizeText">Select a size below</div>
-        </div>
-
         <p class="product-desc">
           A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
           comforting, and perfect for everyday luxury.
         </p>
 
-        <div class="product-actions">
-          <!-- Shopify Buy Button mounts here -->
-          <div id="product-component-1771275419576"></div>
-          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
-        </div>
-
+        <!-- ✅ Your sections FIRST -->
         <div class="product-sections">
           <details open>
             <summary>Benefits</summary>
@@ -95,6 +161,24 @@
             <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
           </details>
         </div>
+
+        <!-- ✅ Then the buy area -->
+        <div class="dn-buybox">
+          <div class="dn-price" id="dnPrice">$—</div>
+
+          <div class="dn-sizes" id="dnSizes"></div>
+
+          <div class="dn-row">
+            <input class="dn-qty" id="dnQty" type="number" min="1" value="1" />
+            <button class="dn-add" id="dnAdd" type="button" disabled>Add to cart</button>
+            <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+          </div>
+
+          <div class="dn-note" id="dnNote">Select a size to see price.</div>
+
+          <!-- Hidden mount: we still mount Shopify product component (for data + consistency) -->
+          <div id="product-component-1771275419576" style="display:none;"></div>
+        </div>
       </div>
 
     </div>
@@ -105,71 +189,127 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- Hidden node used by Shopify cart toggle (required) -->
   <div id="shopify-cart-toggle" style="display:none;"></div>
-
-  <!-- Global Shopify Buy Button + Cart wiring -->
   <script src="../buybutton.js"></script>
 
-  <!-- Mount the product (shows size dropdown + live price + qty + add to cart) -->
   <script>
-    window.DNShopify = window.DNShopify || {};
+    (function () {
+      var PRODUCT_ID = '14889665036653'; // Cashmere Kisses product id
+      var selectedVariantGid = null;
+      var selectedVariantTitle = '';
+      var selectedPrice = null;
 
-    (function mountWhenReady(){
-      if (!window.DNShopify || !window.DNShopify.mountProduct) {
-        return setTimeout(mountWhenReady, 80);
+      var priceEl = document.getElementById('dnPrice');
+      var sizesEl = document.getElementById('dnSizes');
+      var qtyEl = document.getElementById('dnQty');
+      var addBtn = document.getElementById('dnAdd');
+      var noteEl = document.getElementById('dnNote');
+
+      function formatMoney(amountStr) {
+        // amountStr like "8.00" from Storefront API
+        var n = Number(amountStr);
+        if (!Number.isFinite(n)) return '$—';
+        return '$' + n.toFixed(2);
       }
 
-      window.DNShopify.mountProduct({
-        id: '14889665036653', // Cashmere Kisses PRODUCT ID
-        node: '#product-component-1771275419576',
-        options: {
-          product: {
-            contents: {
-              img: false,
-              title: false,
+      function renderSizes(variants) {
+        sizesEl.innerHTML = '';
+        variants.forEach(function (v, idx) {
+          var title = (v.title || '').trim(); // e.g. "2oz"
+          var btn = document.createElement('button');
+          btn.type = 'button';
+          btn.className = 'dn-chip';
+          btn.textContent = title;
+          btn.setAttribute('aria-pressed', 'false');
 
-              // ✅ show live price + variant dropdown
-              price: true,
-              options: true,
+          btn.addEventListener('click', function () {
+            // set pressed state
+            Array.prototype.forEach.call(sizesEl.querySelectorAll('.dn-chip'), function (b) {
+              b.setAttribute('aria-pressed', 'false');
+            });
+            btn.setAttribute('aria-pressed', 'true');
 
-              // ✅ keep qty + add to cart
-              button: false,
-              buttonWithQuantity: true
-            },
-            text: {
-              button: 'Add to cart'
-            },
-            styles: {
-              button: {
-                'background-color': '#1d201c',
-                ':hover': { 'background-color': '#313630' },
-                ':focus': { 'background-color': '#313630' },
-                'padding': '14px 18px',
-                'border-radius': '10px'
-              },
-              price: {
-                'font-family': 'Montserrat, sans-serif',
-                'font-size': '18px',
-                'font-weight': '700',
-                'color': '#0b0a0a',
-                'margin': '0 0 10px 0'
-              },
-              select: {
-                'font-family': 'Montserrat, sans-serif',
-                'padding': '10px 12px',
-                'border-radius': '10px',
-                'border': '1px solid rgba(0,0,0,0.2)',
-                'margin-bottom': '10px'
-              },
-              option: {
-                'font-family': 'Montserrat, sans-serif'
-              }
-            }
-          },
-          cart: { popup: false }
+            selectedVariantGid = v.id; // gid://shopify/ProductVariant/...
+            selectedVariantTitle = title;
+            selectedPrice = v.price && v.price.amount ? v.price.amount : null;
+
+            priceEl.textContent = formatMoney(selectedPrice);
+            addBtn.disabled = false;
+            noteEl.textContent = 'Selected: ' + selectedVariantTitle;
+          });
+
+          // auto-select first variant
+          if (idx === 0) {
+            setTimeout(function () { btn.click(); }, 0);
+          }
+
+          sizesEl.appendChild(btn);
+        });
+      }
+
+      function addToCart() {
+        var qty = Math.max(1, parseInt(qtyEl.value, 10) || 1);
+
+        if (!window.DNShopify || !window.DNShopify.cart || !selectedVariantGid) return;
+
+        addBtn.disabled = true;
+        addBtn.textContent = 'Adding…';
+
+        // Buy Button cart expects { variantId: <gid>, quantity: <number> }
+        window.DNShopify.cart.addLineItems([
+          { variantId: selectedVariantGid, quantity: qty }
+        ]).then(function () {
+          addBtn.textContent = 'Add to cart';
+          addBtn.disabled = false;
+
+          if (window.DNShopify.openCart) window.DNShopify.openCart();
+        }).catch(function () {
+          addBtn.textContent = 'Add to cart';
+          addBtn.disabled = false;
+          noteEl.textContent = 'Could not add item. Please try again.';
+        });
+      }
+
+      addBtn.addEventListener('click', addToCart);
+
+      function mountAndFetch() {
+        // Ensure DNShopify is ready
+        if (!window.DNShopify || !window.DNShopify.client) {
+          return setTimeout(mountAndFetch, 80);
         }
-      });
+
+        // (Optional) Mount hidden product component (not displayed)
+        if (window.DNShopify.mountProduct) {
+          window.DNShopify.mountProduct({
+            id: PRODUCT_ID,
+            node: '#product-component-1771275419576',
+            options: { cart: { popup: false } }
+          });
+        }
+
+        // Fetch variants + prices via Storefront client
+        window.DNShopify.client.product.fetch(PRODUCT_ID).then(function (product) {
+          if (!product || !product.variants || !product.variants.length) {
+            noteEl.textContent = 'No variants found.';
+            return;
+          }
+
+          // Build a clean list of variants with price
+          var variants = product.variants.map(function (v) {
+            return {
+              id: v.id,
+              title: v.title,
+              price: v.priceV2 || { amount: v.price, currencyCode: 'USD' }
+            };
+          });
+
+          renderSizes(variants);
+        }).catch(function () {
+          noteEl.textContent = 'Could not load pricing. Please refresh.';
+        });
+      }
+
+      mountAndFetch();
     })();
   </script>
 
