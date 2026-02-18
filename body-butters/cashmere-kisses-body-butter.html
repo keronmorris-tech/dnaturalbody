@@ -19,6 +19,105 @@
     #product-component-1771275419576 .shopify-buy__btn {
       display: none !important;
     }
+
+    /* Custom buy box */
+    .dn-buybox {
+      margin-top: 18px;
+      border-top: 1px solid rgba(0,0,0,0.08);
+      padding-top: 16px;
+    }
+
+    .dn-label {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      color: rgba(0,0,0,0.65);
+      margin: 10px 0 8px 0;
+    }
+
+    .dn-sizes {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .dn-chip {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 14px;
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 1px solid rgba(0,0,0,0.25);
+      background: #fff;
+      color: #0b0a0a;
+      cursor: pointer;
+      user-select: none;
+      transition: transform 0.05s ease, background 0.2s ease;
+    }
+    .dn-chip:active { transform: scale(0.98); }
+    .dn-chip[aria-pressed="true"]{
+      background: #0b0a0a;
+      color: #fff;
+      border-color: #0b0a0a;
+      font-weight: 700;
+    }
+
+    .dn-qtywrap {
+      display: inline-flex;
+      align-items: center;
+      border: 1px solid rgba(0,0,0,0.25);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 14px;
+      background: #fff;
+    }
+    .dn-qtybtn {
+      width: 44px;
+      height: 42px;
+      border: 0;
+      background: transparent;
+      font-size: 18px;
+      cursor: pointer;
+      color: #0b0a0a;
+    }
+    .dn-qtynum {
+      width: 54px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      color: #0b0a0a;
+      border-left: 1px solid rgba(0,0,0,0.15);
+      border-right: 1px solid rgba(0,0,0,0.15);
+    }
+
+    .dn-actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .dn-add {
+      background: #1d201c;
+      color: #fff;
+      border: none;
+      padding: 14px 18px;
+      border-radius: 10px;
+      font-family: 'Montserrat', sans-serif;
+      font-weight: 700;
+      cursor: pointer;
+      min-width: 170px;
+    }
+    .dn-add:hover { background: #313630; }
+    .dn-add:disabled { opacity: 0.6; cursor: not-allowed; }
+
+    .dn-note {
+      font-family: 'Montserrat', sans-serif;
+      font-size: 13px;
+      color: rgba(0,0,0,0.65);
+      margin-top: 8px;
+    }
   </style>
 </head>
 
@@ -62,7 +161,7 @@
         <h1>Cashmere Kisses</h1>
         <div class="product-type">Body Butter</div>
 
-        <!-- Dynamic price updates when size changes -->
+        <!-- price updates when size changes -->
         <div class="price" id="dnPriceTop">$—</div>
 
         <p class="product-desc">
@@ -112,9 +211,9 @@
             <a href="../shop-body-butter.html" class="outline-btn">Back</a>
           </div>
 
-          <div class="dn-note" id="dnNote">Select a size to see price.</div>
+          <div class="dn-note" id="dnNote">Loading sizes…</div>
 
-          <!-- Hidden mount keeps Shopify cart system consistent -->
+          <!-- Hidden mount (optional, keeps Buy Button UI consistent, but we don't depend on it for pricing) -->
           <div id="product-component-1771275419576" style="display:none;"></div>
         </div>
       </div>
@@ -132,7 +231,14 @@
 
   <script>
     (function () {
-      var PRODUCT_ID = '14889665036653'; // Cashmere Kisses product id
+      // ✅ CASHMERE KISSES Product ID (numeric)
+      var PRODUCT_ID = '14889665036653';
+
+      // ✅ MUST match your buybutton.js config
+      var SHOP_DOMAIN = 'dpscr1-vz.myshopify.com';
+      var STOREFRONT_TOKEN = 'b6634d4da21c44f64244a1ff19a52d78';
+      // pick a stable API version
+      var STOREFRONT_API = 'https://' + SHOP_DOMAIN + '/api/2024-07/graphql.json';
 
       var selectedVariantGid = null;
       var selectedVariantTitle = '';
@@ -163,9 +269,14 @@
         qty = Math.max(1, newQty);
         qtyEl.textContent = String(qty);
       }
-
       minusBtn.addEventListener('click', function () { setQty(qty - 1); });
       plusBtn.addEventListener('click', function () { setQty(qty + 1); });
+
+      function clearPressed() {
+        Array.prototype.forEach.call(sizesEl.querySelectorAll('.dn-chip'), function (b) {
+          b.setAttribute('aria-pressed', 'false');
+        });
+      }
 
       function renderSizes(variants) {
         sizesEl.innerHTML = '';
@@ -179,15 +290,13 @@
           btn.setAttribute('aria-pressed', 'false');
 
           btn.addEventListener('click', function () {
-            Array.prototype.forEach.call(sizesEl.querySelectorAll('.dn-chip'), function (b) {
-              b.setAttribute('aria-pressed', 'false');
-            });
+            clearPressed();
             btn.setAttribute('aria-pressed', 'true');
 
             selectedVariantGid = v.id;
             selectedVariantTitle = title;
-            selectedVariantPrice = v.price && v.price.amount ? v.price.amount : null;
-            selectedCurrency = (v.price && v.price.currencyCode) ? v.price.currencyCode : (selectedCurrency || 'CAD');
+            selectedVariantPrice = v.price.amount;
+            selectedCurrency = v.price.currencyCode || selectedCurrency;
 
             priceTopEl.textContent = formatMoney(selectedVariantPrice, selectedCurrency);
             addBtn.disabled = false;
@@ -196,12 +305,23 @@
 
           sizesEl.appendChild(btn);
 
+          // auto-select first
           if (idx === 0) setTimeout(function () { btn.click(); }, 0);
         });
+
+        if (!variants.length) {
+          noteEl.textContent = 'No sizes found.';
+        }
       }
 
       function addToCart() {
-        if (!window.DNShopify || !window.DNShopify.cart || !selectedVariantGid) return;
+        if (!selectedVariantGid) return;
+
+        // Wait for DNShopify cart to exist (buybutton.js loads async)
+        if (!window.DNShopify || !window.DNShopify.cart || typeof window.DNShopify.cart.addLineItems !== 'function') {
+          noteEl.textContent = 'Cart is still loading… try again in a second.';
+          return;
+        }
 
         addBtn.disabled = true;
         addBtn.textContent = 'Adding…';
@@ -218,41 +338,84 @@
           noteEl.textContent = 'Could not add item. Please try again.';
         });
       }
-
       addBtn.addEventListener('click', addToCart);
 
-      function mountAndFetch() {
-        if (!window.DNShopify || !window.DNShopify.client) {
-          return setTimeout(mountAndFetch, 80);
-        }
+      // ✅ Reliable variant fetch via Storefront GraphQL
+      function fetchVariants() {
+        noteEl.textContent = 'Loading sizes…';
 
-        if (window.DNShopify.mountProduct) {
-          window.DNShopify.mountProduct({
-            id: PRODUCT_ID,
-            node: '#product-component-1771275419576',
-            options: { cart: { popup: false } }
-          });
-        }
+        var gid = 'gid://shopify/Product/' + PRODUCT_ID;
 
-        window.DNShopify.client.product.fetch(PRODUCT_ID).then(function (product) {
-          if (!product || !product.variants || !product.variants.length) {
-            noteEl.textContent = 'No variants found.';
-            return;
+        var query = `
+          query ProductVariants($id: ID!) {
+            product(id: $id) {
+              variants(first: 50) {
+                edges {
+                  node {
+                    id
+                    title
+                    availableForSale
+                    priceV2 { amount currencyCode }
+                  }
+                }
+              }
+            }
           }
+        `;
 
-          var variants = product.variants.map(function (v) {
-            var p = v.priceV2 || { amount: v.price, currencyCode: 'CAD' };
-            return { id: v.id, title: v.title, price: p };
+        return fetch(STOREFRONT_API, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Shopify-Storefront-Access-Token': STOREFRONT_TOKEN
+          },
+          body: JSON.stringify({ query: query, variables: { id: gid } })
+        })
+        .then(function (res) { return res.json(); })
+        .then(function (json) {
+          var edges = json && json.data && json.data.product
+            && json.data.product.variants && json.data.product.variants.edges
+            ? json.data.product.variants.edges
+            : [];
+
+          var variants = edges.map(function (e) {
+            return {
+              id: e.node.id,
+              title: e.node.title,
+              available: e.node.availableForSale,
+              price: e.node.priceV2
+            };
           });
+
+          // (Optional) filter out unavailable variants:
+          // variants = variants.filter(v => v.available);
 
           renderSizes(variants);
-        }).catch(function () {
+          noteEl.textContent = 'Select a size.';
+        })
+        .catch(function () {
           noteEl.textContent = 'Could not load pricing. Please refresh.';
         });
       }
 
+      // Optional: mount hidden Buy Button product (not required for chips/prices)
+      function mountHiddenProduct() {
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return;
+        window.DNShopify.mountProduct({
+          id: PRODUCT_ID,
+          node: '#product-component-1771275419576',
+          options: { cart: { popup: false } }
+        });
+      }
+
       setQty(1);
-      mountAndFetch();
+      fetchVariants();
+
+      // Try to mount hidden product once buybutton.js is ready (optional)
+      (function waitForDN(){
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(waitForDN, 80);
+        mountHiddenProduct();
+      })();
     })();
   </script>
 
