@@ -4,8 +4,6 @@
 
 html { scroll-behavior: smooth; }
 
-* { box-sizing: border-box; }
-
 body {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
@@ -15,13 +13,6 @@ body {
   background-size: 450px;
   background-attachment: fixed;
   color: #ffffff;
-}
-
-/* Images should never overflow */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
 }
 
 /* =================================
@@ -42,20 +33,21 @@ img {
   z-index: 1000;
 }
 
-/* LOGO */
 .logo {
   height: 100%;
   display: flex;
   align-items: center;
   text-decoration: none;
 }
+
 .logo img {
   height: 220px;
   width: auto;
+  display: block;
 }
+
 .logo:hover { opacity: 0.9; }
 
-/* MAIN NAV + DROPDOWN */
 .main-nav {
   display: flex;
   align-items: center;
@@ -69,11 +61,11 @@ img {
   letter-spacing: 1px;
   position: relative;
 }
+
 .nav-link:hover { opacity: 0.8; }
 
 .nav-item { position: relative; }
 
-/* dropdown menu */
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -83,7 +75,7 @@ img {
   border: 1px solid #222;
   padding: 8px 0;
   display: none;
-  z-index: 2000; /* must be above everything */
+  z-index: 2000;
 }
 
 .dropdown-menu a {
@@ -94,20 +86,21 @@ img {
   font-size: 13px;
   letter-spacing: 0.5px;
 }
+
 .dropdown-menu a:hover { background: #111111; }
 
-/* show dropdown on hover */
 .nav-item.dropdown:hover .dropdown-menu { display: block; }
 
 /* CART ICON */
+
 .cart-button {
+  cursor: pointer;
   background: none;
   border: none;
   display: inline-flex;
   align-items: center;
   gap: 6px;
   color: #ffffff;
-  cursor: pointer;
   font-size: 16px;
 }
 
@@ -125,13 +118,10 @@ img {
 }
 
 /* ================================
-   HOME PAGE (HERO + GRID PREVIEW)
+   HOME PAGE
 =================================== */
 
-.hero {
-  text-align: center;
-  padding: 140px 20px 80px;
-}
+.hero { text-align: center; padding: 140px 20px 80px; }
 
 .hero h1 {
   font-size: 40px;
@@ -140,13 +130,9 @@ img {
   letter-spacing: 2px;
 }
 
-.hero p {
-  font-size: 18px;
-  margin-top: 10px;
-  color: #cccccc;
-}
+.hero p { font-size: 18px; margin-top: 10px; color: #cccccc; }
 
-/* HOME GRID (used on home sections) */
+/* shared grid layout (used on home) */
 .grid {
   display: flex;
   justify-content: center;
@@ -156,7 +142,6 @@ img {
   margin: 0 auto;
 }
 
-/* hero cards */
 .hero-card {
   background: #ffffff;
   color: #000000;
@@ -164,12 +149,10 @@ img {
   border-radius: 18px;
   padding: 18px;
   text-decoration: none;
-
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 10px;
-
   box-shadow: 0 10px 28px rgba(0, 0, 0, 0.18);
   transition: transform 0.25s ease, box-shadow 0.25s ease;
 }
@@ -179,6 +162,7 @@ img {
   height: 150px;
   object-fit: cover;
   border-radius: 14px;
+  display: block;
 }
 
 .hero-card span {
@@ -193,22 +177,11 @@ img {
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.25);
 }
 
-/* simple about + footer */
-.about {
-  padding: 80px 20px;
-  text-align: center;
-}
+.about { padding: 80px 20px; text-align: center; }
 
-.about h2 {
-  font-size: 32px;
-  margin-bottom: 20px;
-}
+.about h2 { font-size: 32px; margin-bottom: 20px; }
 
-.about p {
-  max-width: 600px;
-  margin: 0 auto;
-  color: #dddddd;
-}
+.about p { max-width: 600px; margin: 0 auto; color: #dddddd; }
 
 .footer {
   padding: 40px 20px;
@@ -219,27 +192,22 @@ img {
 }
 
 /* ================================
-   SHOP PAGES (WHITE)
+   SHOP PAGES
 =================================== */
 
 .shop-body {
   background: #ffffff !important;
-  background-image: none !important;
-  background-attachment: initial !important;
-  color: #000000 !important;
+  color: #000000;
 }
 
-/* shop background section */
 .shop-page {
   padding: 80px 20px;
   text-align: center;
-
   background-image: url('images/shop-bg.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
-
-  background-color: rgba(255, 255, 255, 0.92);
+  background-color: rgba(255, 255, 255, 0.9);
   background-blend-mode: lighten;
 }
 
@@ -249,17 +217,6 @@ img {
   color: #000000;
 }
 
-/* IMPORTANT: your shop pages use <div class="grid">, so override it here */
-.shop-page .grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 260px));
-  justify-content: center;
-  gap: 24px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-/* product card */
 .product-card {
   background: #ffffff;
   color: #000000;
@@ -273,12 +230,6 @@ img {
   flex-direction: column;
 }
 
-.shop-page .product-card {
-  width: 100%;
-  max-width: 260px;
-}
-
-/* hover image swap container */
 .product-image-swap {
   position: relative;
   width: 100%;
@@ -294,6 +245,7 @@ img {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  display: block;
   border-radius: 8px;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
@@ -301,15 +253,8 @@ img {
 .product-img-main { opacity: 1; z-index: 1; }
 .product-img-hover { opacity: 0; z-index: 2; }
 
-.product-card:hover .product-img-main {
-  opacity: 0;
-  transform: scale(1.03);
-}
-
-.product-card:hover .product-img-hover {
-  opacity: 1;
-  transform: scale(1.03);
-}
+.product-card:hover .product-img-main { opacity: 0; transform: scale(1.03); }
+.product-card:hover .product-img-hover { opacity: 1; transform: scale(1.03); }
 
 .product-card h2 {
   font-size: 18px;
@@ -327,13 +272,8 @@ img {
   margin-bottom: 4px;
 }
 
-.price {
-  font-weight: 700;
-  font-size: 15px;
-  margin: 4px 0 12px;
-}
+.price { font-weight: 700; font-size: 15px; margin: 4px 0 12px; }
 
-/* generic shop button */
 .btn {
   display: inline-block;
   padding: 8px 16px;
@@ -349,38 +289,15 @@ img {
   background: #ffffff;
 }
 
-.btn:hover {
-  background: #000000;
-  color: #ffffff;
-}
-
-/* ================================
-   ABOUT + CONTACT PAGES (WHITE)
-=================================== */
-
-.about-body,
-.contact-body {
-  background: #ffffff !important;
-  background-image: none !important;
-  color: #000000 !important;
-}
-
-.about-page,
-.contact-page {
-  padding: 80px 20px;
-  max-width: 700px;
-  margin: 0 auto;
-  text-align: center;
-}
+.btn:hover { background: #000000; color: #ffffff; }
 
 /* ================================
    PRODUCT DETAIL PAGES
 =================================== */
 
 .product-body {
-  background: #ffffff !important;
-  background-image: none !important;
-  color: #000000 !important;
+  background: #ffffff;
+  color: #000000;
 }
 
 .product-detail {
@@ -433,32 +350,27 @@ img {
   border-top: 1px solid #eeeeee;
   padding: 10px 0;
 }
+
 .product-sections details:last-of-type {
   border-bottom: 1px solid #eeeeee;
 }
-.product-sections summary {
-  cursor: pointer;
-  font-weight: 600;
-}
+
+.product-sections summary { cursor: pointer; font-weight: 600; }
+
 .product-sections p,
 .product-sections li {
   font-size: 14px;
   color: #555555;
   margin-top: 6px;
 }
-.product-sections ul { padding-left: 16px; }
 
-/* product detail buttons */
-.product-actions {
-  margin-top: 24px;
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
+.product-actions { margin-top: 24px; display: flex; gap: 12px; flex-wrap: wrap; }
+
+.primary-btn,
+.outline-btn { cursor: pointer; }
 
 /* ================================
-   NEW BUY BOX (SIZE PILLS + QTY)
-   Use on ALL product pages
+   NEW: CHIP VARIANTS + QTY (your mockup)
 =================================== */
 
 .dn-buybox {
@@ -491,9 +403,7 @@ img {
   color: #0b0a0a;
   cursor: pointer;
   user-select: none;
-  transition: transform 0.05s ease, background 0.2s ease;
 }
-.dn-chip:active { transform: scale(0.98); }
 
 .dn-chip[aria-pressed="true"]{
   background: #0b0a0a;
@@ -541,12 +451,7 @@ img {
   flex-wrap: wrap;
 }
 
-.primary-btn,
-.outline-btn {
-  cursor: pointer;
-}
-
-.primary-btn {
+.dn-add {
   background: #1d201c;
   color: #fff;
   border: none;
@@ -554,27 +459,12 @@ img {
   border-radius: 10px;
   font-family: 'Montserrat', sans-serif;
   font-weight: 700;
+  cursor: pointer;
+  min-width: 170px;
 }
 
-.primary-btn:hover { background: #313630; }
-
-.outline-btn {
-  display: inline-block;
-  padding: 12px 16px;
-  border-radius: 999px;
-  border: 1px solid #000;
-  color: #000;
-  text-decoration: none;
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  background: #fff;
-}
-
-.outline-btn:hover {
-  background: #000;
-  color: #fff;
-}
+.dn-add:hover { background: #313630; }
+.dn-add:disabled { opacity: 0.6; cursor: not-allowed; }
 
 .dn-note {
   font-family: 'Montserrat', sans-serif;
@@ -584,45 +474,35 @@ img {
 }
 
 /* ================================
-   REMOVE OLD CUSTOM CART DRAWER UI
-   (You are using Shopify drawer now)
+   SHOP GRID FIX (your pages use .grid)
 =================================== */
 
-.cart-overlay,
-.cart-drawer,
-.cart-page,
-.cart-items,
-.cart-footer,
-.cart-subtotal,
-.cart-line,
-.cart-line-img,
-.cart-line-main,
-.cart-remove,
-.cart-checkout,
-.cart-continue {
-  display: none !important;
+.shop-page .grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 260px));
+  justify-content: center;
+  gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* Hide the node we mount for Shopify toggle */
-#shopify-cart-toggle { display: none !important; }
+.shop-page .product-card {
+  width: 100%;
+  max-width: 260px;
+}
 
 /* ================================
    RESPONSIVE
 =================================== */
 
+img { max-width: 100%; height: auto; display: block; }
+
 @media (max-width: 900px) {
-  .header {
-    padding: 12px 16px;
-    height: auto;
-    flex-wrap: wrap;
-  }
-
-  .main-nav {
-    flex-wrap: wrap;
-    gap: 12px;
-  }
-
+  .header { padding: 12px 16px; height: auto; }
+  .header, .main-nav { flex-wrap: wrap; }
   .logo img { height: 160px; }
+  .main-nav { gap: 0.75rem; }
+  .cart-button { margin-left: auto; }
 
   .shop-page .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -633,31 +513,13 @@ img {
 }
 
 @media (max-width: 600px) {
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 10px;
-  }
-
+  .header { flex-direction: column; align-items: flex-start; gap: 0.5rem; }
   .logo img { height: 130px; }
+  .main-nav { width: 100%; flex-wrap: wrap; gap: 0.5rem 1rem; }
+  .cart-button { margin-left: 0; }
 
-  .main-nav {
-    width: 100%;
-    justify-content: flex-start;
-    flex-wrap: wrap;
-    gap: 8px 14px;
-  }
-
-  .product-detail-inner {
-    flex-direction: column;
-    gap: 24px;
-  }
+  .product-detail-inner { flex-direction: column; gap: 1.5rem; }
+  .product-image, .product-info { width: 100%; }
 
   .shop-page .grid { grid-template-columns: 1fr; }
-
-  .primary-btn,
-  .outline-btn {
-    width: 100%;
-    text-align: center;
-  }
 }
