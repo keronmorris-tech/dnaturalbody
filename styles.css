@@ -2,19 +2,26 @@
    GLOBAL RESET + BACKGROUND
 =================================== */
 
-html {
-  scroll-behavior: smooth;
-}
+html { scroll-behavior: smooth; }
+
+* { box-sizing: border-box; }
 
 body {
   margin: 0;
   font-family: 'Montserrat', sans-serif;
   background-color: #000000;
-  background-image: url('images/pattern-d2.png'); /* botanical pattern */
+  background-image: url('images/pattern-d2.png');
   background-repeat: repeat;
   background-size: 450px;
   background-attachment: fixed;
   color: #ffffff;
+}
+
+/* Images should never overflow */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
 }
 
 /* =================================
@@ -27,7 +34,6 @@ body {
   align-items: center;
   height: 100px;
   padding: 0 20px;
-  /* let the dropdown hang below the header */
   overflow: visible;
   background: #000;
   color: #fff;
@@ -37,26 +43,19 @@ body {
 }
 
 /* LOGO */
-
 .logo {
   height: 100%;
   display: flex;
   align-items: center;
   text-decoration: none;
 }
-
 .logo img {
-  height: 220px;              /* you asked to keep logo at 220px */
+  height: 220px;
   width: auto;
-  display: block;
 }
-
-.logo:hover {
-  opacity: 0.9;
-}
+.logo:hover { opacity: 0.9; }
 
 /* MAIN NAV + DROPDOWN */
-
 .main-nav {
   display: flex;
   align-items: center;
@@ -70,17 +69,11 @@ body {
   letter-spacing: 1px;
   position: relative;
 }
+.nav-link:hover { opacity: 0.8; }
 
-.nav-link:hover {
-  opacity: 0.8;
-}
-
-.nav-item {
-  position: relative;
-}
+.nav-item { position: relative; }
 
 /* dropdown menu */
-
 .dropdown-menu {
   position: absolute;
   top: 100%;
@@ -90,7 +83,7 @@ body {
   border: 1px solid #222;
   padding: 8px 0;
   display: none;
-  z-index: 2000;
+  z-index: 2000; /* must be above everything */
 }
 
 .dropdown-menu a {
@@ -101,24 +94,12 @@ body {
   font-size: 13px;
   letter-spacing: 0.5px;
 }
-
-.dropdown-menu a:hover {
-  background: #111111;
-}
+.dropdown-menu a:hover { background: #111111; }
 
 /* show dropdown on hover */
-
-.nav-item.dropdown:hover .dropdown-menu {
-  display: block;
-}
+.nav-item.dropdown:hover .dropdown-menu { display: block; }
 
 /* CART ICON */
-
-.cart-button,
-.cart-checkout,
-.cart-continue {
-  cursor: pointer;
-}
 .cart-button {
   background: none;
   border: none;
@@ -130,9 +111,7 @@ body {
   font-size: 16px;
 }
 
-.cart-icon {
-  font-size: 18px;
-}
+.cart-icon { font-size: 18px; }
 
 .cart-count {
   background: #ffffff;
@@ -167,8 +146,7 @@ body {
   color: #cccccc;
 }
 
-/* shared grid layout */
-
+/* HOME GRID (used on home sections) */
 .grid {
   display: flex;
   justify-content: center;
@@ -179,7 +157,6 @@ body {
 }
 
 /* hero cards */
-
 .hero-card {
   background: #ffffff;
   color: #000000;
@@ -202,7 +179,6 @@ body {
   height: 150px;
   object-fit: cover;
   border-radius: 14px;
-  display: block;
 }
 
 .hero-card span {
@@ -217,8 +193,7 @@ body {
   box-shadow: 0 14px 32px rgba(0, 0, 0, 0.25);
 }
 
-/* simple about + footer used on home, about page, etc. */
-
+/* simple about + footer */
 .about {
   padding: 80px 20px;
   text-align: center;
@@ -244,31 +219,27 @@ body {
 }
 
 /* ================================
-   SHOP PAGES
+   SHOP PAGES (WHITE)
 =================================== */
 
 .shop-body {
   background: #ffffff !important;
-  color: #000000;
+  background-image: none !important;
+  background-attachment: initial !important;
+  color: #000000 !important;
 }
 
-.shop-header {
-  background: #000000 !important;
-  border-bottom: 1px solid #222222;
-}
-
-/* big white/soft background section */
-
+/* shop background section */
 .shop-page {
   padding: 80px 20px;
   text-align: center;
 
-  background-image: url('images/shop-bg.jpg'); /* your white gradient image */
+  background-image: url('images/shop-bg.jpg');
   background-size: cover;
   background-repeat: no-repeat;
   background-position: center;
 
-  background-color: rgba(255, 255, 255, 0.9);
+  background-color: rgba(255, 255, 255, 0.92);
   background-blend-mode: lighten;
 }
 
@@ -278,17 +249,17 @@ body {
   color: #000000;
 }
 
-/* product card grid */
-
-.product-grid {
-  display: flex;
+/* IMPORTANT: your shop pages use <div class="grid">, so override it here */
+.shop-page .grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 260px));
   justify-content: center;
-  flex-wrap: wrap;
   gap: 24px;
+  max-width: 1100px;
+  margin: 0 auto;
 }
 
-/* individual product card */
-
+/* product card */
 .product-card {
   background: #ffffff;
   color: #000000;
@@ -298,13 +269,16 @@ body {
   box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
   padding: 16px;
   text-align: left;
-
   display: flex;
   flex-direction: column;
 }
 
-/* hover image swap container */
+.shop-page .product-card {
+  width: 100%;
+  max-width: 260px;
+}
 
+/* hover image swap container */
 .product-image-swap {
   position: relative;
   width: 100%;
@@ -320,22 +294,12 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  display: block;
   border-radius: 8px;
   transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.product-img-main {
-  opacity: 1;
-  z-index: 1;
-}
-
-.product-img-hover {
-  opacity: 0;
-  z-index: 2;
-}
-
-/* subtle zoom + swap */
+.product-img-main { opacity: 1; z-index: 1; }
+.product-img-hover { opacity: 0; z-index: 2; }
 
 .product-card:hover .product-img-main {
   opacity: 0;
@@ -346,8 +310,6 @@ body {
   opacity: 1;
   transform: scale(1.03);
 }
-
-/* text inside product card */
 
 .product-card h2 {
   font-size: 18px;
@@ -371,8 +333,7 @@ body {
   margin: 4px 0 12px;
 }
 
-/* generic button */
-
+/* generic shop button */
 .btn {
   display: inline-block;
   padding: 8px 16px;
@@ -399,8 +360,9 @@ body {
 
 .about-body,
 .contact-body {
-  background: #ffffff;
-  color: #000000;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #000000 !important;
 }
 
 .about-page,
@@ -416,8 +378,9 @@ body {
 =================================== */
 
 .product-body {
-  background: #ffffff;
-  color: #000000;
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #000000 !important;
 }
 
 .product-detail {
@@ -434,11 +397,7 @@ body {
   flex-wrap: wrap;
 }
 
-/* left side image */
-
-.product-image {
-  flex: 1 1 320px;
-}
+.product-image { flex: 1 1 320px; }
 
 .product-image img {
   width: 100%;
@@ -447,11 +406,7 @@ body {
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
 }
 
-/* right side info */
-
-.product-info {
-  flex: 1 1 320px;
-}
+.product-info { flex: 1 1 320px; }
 
 .product-info h1 {
   font-family: 'Playfair Display', serif;
@@ -473,81 +428,27 @@ body {
   margin-bottom: 16px;
 }
 
-.product-meta .price {
-  font-size: 20px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.product-meta .size {
-  font-size: 13px;
-  color: #777777;
-  margin-bottom: 24px;
-}
-
 /* details / accordion */
-
 .product-sections details {
   border-top: 1px solid #eeeeee;
   padding: 10px 0;
 }
-
-/* ================================
-   PRODUCT DETAIL — SIZE OPTIONS
-=================================== */
-
-.size-picker {
-  margin-bottom: 16px;
-}
-
-.size-label {
-  font-size: 13px;
-  color: #777777;
-  margin-bottom: 6px;
-}
-
-.size-options {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
-.size-option {
-  padding: 6px 12px;
-  border-radius: 999px;
-  border: 1px solid #000000;
-  background: #ffffff;
-  font-size: 13px;
-  cursor: pointer;
-}
-
-.size-option.active {
-  background: #000000;
-  color: #ffffff;
-}
-
 .product-sections details:last-of-type {
   border-bottom: 1px solid #eeeeee;
 }
-
 .product-sections summary {
   cursor: pointer;
   font-weight: 600;
 }
-
 .product-sections p,
 .product-sections li {
   font-size: 14px;
   color: #555555;
   margin-top: 6px;
 }
-
-.product-sections ul {
-  padding-left: 16px;
-}
+.product-sections ul { padding-left: 16px; }
 
 /* product detail buttons */
-
 .product-actions {
   margin-top: 24px;
   display: flex;
@@ -556,390 +457,207 @@ body {
 }
 
 /* ================================
-   CART DRAWER + CART PAGE
+   NEW BUY BOX (SIZE PILLS + QTY)
+   Use on ALL product pages
 =================================== */
 
-.cart-overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s ease;
-  z-index: 1500;
+.dn-buybox {
+  margin-top: 18px;
+  border-top: 1px solid rgba(0,0,0,0.08);
+  padding-top: 16px;
 }
 
-.cart-overlay.is-open {
-  opacity: 1;
-  pointer-events: auto;
+.dn-label {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: rgba(0,0,0,0.65);
+  margin: 10px 0 8px 0;
 }
 
-.cart-drawer {
-  position: fixed;
-  top: 0;
-  right: 0;
-  width: 360px;
-  max-width: 100%;
-  height: 100%;
-  background: #ffffff;
-  color: #000000;
-  transform: translateX(100%);
-  transition: transform 0.25s ease;
-  z-index: 1600;
-  display: flex;
-  flex-direction: column;
-}
-
-.cart-drawer.is-open {
-  transform: translateX(0);
-}
-
-.cart-drawer-header {
-  padding: 16px 20px;
-  border-bottom: 1px solid #eeeeee;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.cart-close {
-  background: none;
-  border: none;
-  font-size: 24px;
-  cursor: pointer;
-}
-
-.cart-items {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
-}
-
-.cart-empty {
-  font-size: 14px;
-  color: #777777;
-}
-
-.cart-footer {
-  padding: 16px 20px 20px;
-  border-top: 1px solid #eeeeee;
-}
-
-.cart-subtotal {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  font-weight: 600;
-}
-
-/* each line item */
-
-.cart-line {
+.dn-sizes {
   display: flex;
   gap: 10px;
-  margin-bottom: 12px;
-  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
 }
 
-.cart-line-img img {
-  width: 60px;
-  height: 60px;
-  object-fit: cover;
-  border-radius: 8px;
-  border: 1px solid #eeeeee;
-}
-
-.cart-line-main {
-  flex: 1;
-}
-
-.cart-line-name {
+.dn-chip {
+  font-family: 'Montserrat', sans-serif;
   font-size: 14px;
-  font-weight: 600;
-}
-
-.cart-line-meta {
-  font-size: 12px;
-  color: #777777;
-}
-
-.cart-line-total {
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.cart-remove {
-  margin-top: 4px;
-  background: none;
-  border: none;
-  color: #bb0000;
-  font-size: 12px;
+  padding: 10px 18px;
+  border-radius: 999px;
+  border: 1px solid rgba(0,0,0,0.25);
+  background: #fff;
+  color: #0b0a0a;
   cursor: pointer;
+  user-select: none;
+  transition: transform 0.05s ease, background 0.2s ease;
+}
+.dn-chip:active { transform: scale(0.98); }
+
+.dn-chip[aria-pressed="true"]{
+  background: #0b0a0a;
+  color: #fff;
+  border-color: #0b0a0a;
+  font-weight: 700;
 }
 
-/* cart page main layout */
-
-.cart-page {
-  padding: 80px 20px;
-  max-width: 1100px;
-  margin: 0 auto;
-  color: #000000;
+.dn-qtywrap {
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid rgba(0,0,0,0.25);
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  background: #fff;
 }
 
-.cart-page h1 {
-  margin-bottom: 24px;
+.dn-qtybtn {
+  width: 44px;
+  height: 42px;
+  border: 0;
+  background: transparent;
+  font-size: 18px;
+  cursor: pointer;
+  color: #0b0a0a;
 }
 
-/* make primary/outline buttons look clickable */
+.dn-qtynum {
+  width: 54px;
+  height: 42px;
+  display: grid;
+  place-items: center;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
+  color: #0b0a0a;
+  border-left: 1px solid rgba(0,0,0,0.15);
+  border-right: 1px solid rgba(0,0,0,0.15);
+}
+
+.dn-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
 
 .primary-btn,
 .outline-btn {
   cursor: pointer;
 }
 
-/* ==========================================
-   GLOBAL LAYOUT HELPERS + RESPONSIVE STYLES
-========================================== */
-
-/* Keep content from hugging the edges on small screens */
-.page-wrapper,
-.section-inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: 0 1.25rem;
+.primary-btn {
+  background: #1d201c;
+  color: #fff;
+  border: none;
+  padding: 14px 18px;
+  border-radius: 10px;
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 700;
 }
 
-/* Images should never overflow the screen */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
+.primary-btn:hover { background: #313630; }
+
+.outline-btn {
+  display: inline-block;
+  padding: 12px 16px;
+  border-radius: 999px;
+  border: 1px solid #000;
+  color: #000;
+  text-decoration: none;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  background: #fff;
 }
 
-/* ------------ TABLET (<= 900px) ------------ */
+.outline-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+.dn-note {
+  font-family: 'Montserrat', sans-serif;
+  font-size: 13px;
+  color: rgba(0,0,0,0.65);
+  margin-top: 8px;
+}
+
+/* ================================
+   REMOVE OLD CUSTOM CART DRAWER UI
+   (You are using Shopify drawer now)
+=================================== */
+
+.cart-overlay,
+.cart-drawer,
+.cart-page,
+.cart-items,
+.cart-footer,
+.cart-subtotal,
+.cart-line,
+.cart-line-img,
+.cart-line-main,
+.cart-remove,
+.cart-checkout,
+.cart-continue {
+  display: none !important;
+}
+
+/* Hide the node we mount for Shopify toggle */
+#shopify-cart-toggle { display: none !important; }
+
+/* ================================
+   RESPONSIVE
+=================================== */
 
 @media (max-width: 900px) {
-  /* Header: give breathing room & allow wrapping */
   .header {
-    padding: 0.75rem 1rem;
+    padding: 12px 16px;
     height: auto;
-  }
-
-  .header,
-  .main-nav {
     flex-wrap: wrap;
   }
 
-  .logo {
-    margin-bottom: 0.5rem;
-  }
-
   .main-nav {
-    gap: 0.75rem;
-  }
-
-  .nav-link {
-    font-size: 0.95rem;
-  }
-
-  .cart-button {
-    margin-left: auto;
-  }
-
-  /* Hero / banner text center on smaller screens */
-  .hero,
-  .image-banner,
-  .hero-content {
-    text-align: center;
-    align-items: center;
-  }
-
-  .hero-text,
-  .banner-text {
-    max-width: 100%;
-  }
-
-  /* Product grids: 2 columns on tablet */
-  .product-grid,
-  .collection-grid,
-  .shop-grid {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 1.5rem;
-  }
-
-  .product-card {
-    padding: 1rem;
-    width: 100%;
-  }
-}
-
-/* ------------ PHONE (<= 600px) ------------ */
-
-@media (max-width: 600px) {
-  /* Header: stack vertically, shrink logo */
-  .header {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
-
-  .logo img {
-    height: 140px;     /* smaller logo on mobile */
-  }
-
-  .main-nav {
-    width: 100%;
-    justify-content: flex-start;
     flex-wrap: wrap;
-    gap: 0.5rem 1rem;
+    gap: 12px;
   }
 
-  .cart-button {
-    margin-left: 0;
-  }
+  .logo img { height: 160px; }
 
-  /* Page titles a bit smaller */
-  h1 {
-    font-size: 1.6rem;
-  }
-
-  h2 {
-    font-size: 1.3rem;
-  }
-
-  /* Product detail page: image on top, text below */
-  .product-detail-inner {
-    flex-direction: column;
-    gap: 1.5rem;
-  }
-
-  .product-image,
-  .product-info {
-    width: 100%;
-  }
-
-  /* Product grid: single column on phones */
-  .product-grid,
-  .collection-grid,
-  .shop-grid {
-    grid-template-columns: 1fr;
-  }
-
-  /* Buttons: full width for easier tapping */
-  .primary-btn,
-  .outline-btn,
-  .cart-checkout,
-  .cart-continue {
-    width: 100%;
-    text-align: center;
-  }
-
-  /* Section spacing */
-  .section,
-  .product-detail,
-  .collection-section,
-  .shop-page,
-  .about-page,
-  .contact-page,
-  .cart-page {
-    padding: 2rem 1.25rem;
-  }
-
-  .footer {
-    padding: 1.5rem 1rem;
-    text-align: center;
-  }
-}
-
-/* ==========================================
-   FIX PACK — SHOP GRID + SHOPIFY DROPDOWN
-   (overrides earlier rules)
-========================================== */
-
-/* 1) Your shop pages use <div class="grid">, but CSS was styling .product-grid.
-      Make .grid behave like the shop product grid on shop pages. */
-.shop-page .grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 260px));
-  justify-content: center;
-  gap: 24px;
-  max-width: 1100px;
-  margin: 0 auto;
-}
-
-/* 2) Make sure cards fill the grid column nicely */
-.shop-page .product-card {
-  width: 100%;
-  max-width: 260px;
-}
-
-/* 3) Mobile/tablet responsiveness for your shop grid */
-@media (max-width: 900px) {
   .shop-page .grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     max-width: 900px;
   }
 
-  .shop-page .product-card {
-    max-width: 100%;
-  }
+  .shop-page .product-card { max-width: 100%; }
 }
 
 @media (max-width: 600px) {
-  .shop-page .grid {
-    grid-template-columns: 1fr;
-  }
-}
-
-/* 4) Since you're removing old size buttons, hide them everywhere */
-.size-picker,
-.size-options,
-.size-option {
-  display: none !important;
-}
-
-/* 5) Shopify Buy Button dropdown + button (matches your vibe) */
-.shopify-buy__option-select__select {
-  width: 100%;
-  padding: 12px 12px;
-  border-radius: 10px;
-  border: 1px solid #ddd;
-  font-family: 'Montserrat', sans-serif;
-  font-size: 14px;
-  background: #fff;
-  color: #000;
-}
-
-.shopify-buy__btn {
-  width: 100% !important;
-  border-radius: 10px !important;
-  padding: 14px 18px !important;
-  font-family: 'Montserrat', sans-serif !important;
-  font-weight: 700 !important;
-  letter-spacing: 1px !important;
-  text-transform: uppercase !important;
-}
-
-/* 6) Keep your header from weird clipping with big logo on smaller screens */
-@media (max-width: 900px) {
   .header {
-    height: auto;
-    padding: 12px 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
   }
 
-  .logo img {
-    height: 160px;
+  .logo img { height: 130px; }
+
+  .main-nav {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px 14px;
+  }
+
+  .product-detail-inner {
+    flex-direction: column;
+    gap: 24px;
+  }
+
+  .shop-page .grid { grid-template-columns: 1fr; }
+
+  .primary-btn,
+  .outline-btn {
+    width: 100%;
+    text-align: center;
   }
 }
-
-@media (max-width: 600px) {
-  .logo img {
-    height: 130px;
-  }
-}
-/* Shopify Buy Button: hide the built-in toggle node we mount */
-#shopify-cart-toggle {
-  display: none !important;
-}
-
