@@ -1,11 +1,10 @@
 /* buybutton.js (D'Natural Body)
-   Global Shopify Buy Button + Cart Drawer wiring
+   Global Shopify Buy Button + Shopify Cart Drawer
 
    - Loads Shopify Buy Button SDK once
-   - Creates a single Cart Drawer component
-   - Keeps header badge (#cartCount) synced
-   - Clicking #cartButton opens drawer
-   - Drawer "Checkout" redirects to Shopify cart page WITH items carried over
+   - Creates ONE Cart Drawer component
+   - Renders Shopify cart icon + count into #shopify-cart-toggle
+   - Drawer "Checkout" redirects to Shopify ONLINE STORE cart page WITH items carried over
 */
 
 (function () {
@@ -16,19 +15,10 @@
     storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
     onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-
-    cartButtonId: 'cartButton',
-    cartCountId: 'cartCount',
     toggleNodeId: 'shopify-cart-toggle'
   };
 
-  var state = {
-    ui: null,
-    cart: null,
-    client: null,
-    cartReady: false,
-    pendingOpen: false
-  };
+  var state = { ui: null, cart: null, client: null };
 
   function loadSdk(cb) {
     var s = document.createElement('script');
@@ -36,6 +26,17 @@
     s.src = CONFIG.sdkUrl;
     (document.head || document.body).appendChild(s);
     s.onload = cb;
+  }
+
+  function ensureToggleNodeExists() {
+    var node = document.getElementById(CONFIG.toggleNodeId);
+    if (node) return node;
+
+    // If you forgot to add it to the header, create it (fallback)
+    var div = document.createElement('div');
+    div.id = CONFIG.toggleNodeId;
+    document.body.appendChild(div);
+    return div;
   }
 
   function gidToNumericId(gid) {
@@ -46,60 +47,16 @@
 
   function getLineItems() {
     try {
-      return (state.cart && state.cart.model && state.cart.model.lineItems) ? state.cart.model.lineItems : [];
+      return (state.cart && state.cart.model && state.cart.model.lineItems)
+        ? state.cart.model.lineItems
+        : [];
     } catch (e) {
       return [];
     }
   }
 
-  function getItemCount() {
-    var items = getLineItems();
-    var count = 0;
-    for (var i = 0; i < items.length; i++) {
-      count += Number(items[i].quantity || 0);
-    }
-    return count;
-  }
-
-  function updateBadge() {
-    var badge = document.getElementById(CONFIG.cartCountId);
-    if (!badge) return;
-
-    var count = getItemCount();
-    badge.textContent = String(count);
-    badge.style.display = count > 0 ? 'inline-flex' : 'none';
-  }
-
-  function ensureToggleNodeExists() {
-    if (document.getElementById(CONFIG.toggleNodeId)) return;
-    var div = document.createElement('div');
-    div.id = CONFIG.toggleNodeId;
-    div.style.display = 'none';
-    document.body.appendChild(div);
-  }
-
-  function openCartDrawer() {
-    if (!state.cartReady || !state.cart) {
-      state.pendingOpen = true;
-      return;
-    }
-
-    try {
-      if (typeof state.cart.open === 'function') {
-        state.cart.open();
-        return;
-      }
-      if (typeof state.cart.toggleVisibility === 'function') {
-        state.cart.toggleVisibility();
-        return;
-      }
-
-      var t = document.querySelector('#' + CSS.escape(CONFIG.toggleNodeId) + ' .shopify-buy__cart-toggle');
-      if (t) t.click();
-    } catch (e) {}
-  }
-
   function buildCartPermalinkFromDrawer() {
+    // Build: https://shop.dnaturalbody.com/cart/variantId:qty,variantId:qty
     var items = getLineItems();
     if (!items.length) return CONFIG.onlineStoreCartBase;
 
@@ -124,6 +81,7 @@
       var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
       if (!btn) return;
 
+      // Stop Buy Button from routing to Storefront checkout
       e.preventDefault();
       e.stopPropagation();
       if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -132,43 +90,8 @@
     }, true);
   }
 
-  function wireCartButton() {
-    var btn = document.getElementById(CONFIG.cartButtonId);
-    if (!btn) return;
-
-    if (btn.dataset.dnCartWired === '1') return;
-    btn.dataset.dnCartWired = '1';
-
-    btn.addEventListener('click', function (e) {
-      e.preventDefault();
-      updateBadge();
-      openCartDrawer();
-    });
-  }
-
-  function attachAllCartListeners() {
-    try {
-      if (state.cart && state.cart.model && state.cart.model.on) {
-        state.cart.model.on('change', updateBadge);
-        state.cart.model.on('update', updateBadge);
-      }
-    } catch (e) {}
-
-    try {
-      if (state.ui && typeof state.ui.on === 'function') {
-        state.ui.on('cart:update', function () { updateBadge(); });
-        state.ui.on('cart:open', function () { updateBadge(); });
-      }
-    } catch (e) {}
-
-    updateBadge();
-    setTimeout(updateBadge, 600);
-    setTimeout(updateBadge, 1500);
-  }
-
   function init() {
-    ensureToggleNodeExists();
-    wireCartButton();
+    var toggleNode = ensureToggleNodeExists();
 
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
@@ -178,6 +101,7 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
+      // Create ONE cart drawer component
       state.cart = ui.createComponent('cart', {
         options: {
           cart: {
@@ -186,28 +110,20 @@
             text: { total: 'Subtotal', button: 'Checkout' }
           },
           toggle: {
-            node: document.getElementById(CONFIG.toggleNodeId),
+            node: toggleNode,
             styles: {
               toggle: {
-                'background-color': '#1d201c',
-                ':hover': { 'background-color': '#313630' },
-                ':focus': { 'background-color': '#313630' }
+                'background-color': 'transparent',
+                'border': '0'
               }
             }
           }
         }
       });
 
-      state.cartReady = true;
-
-      attachAllCartListeners();
       interceptDrawerCheckoutToCartPage();
 
-      if (state.pendingOpen) {
-        state.pendingOpen = false;
-        openCartDrawer();
-      }
-
+      // Public API (optional)
       window.DNShopify = window.DNShopify || {};
       window.DNShopify.__initialized = true;
       window.DNShopify.ui = ui;
@@ -215,11 +131,11 @@
       window.DNShopify.client = state.client;
 
       window.DNShopify.openCart = function () {
-        updateBadge();
-        openCartDrawer();
+        try {
+          if (state.cart && typeof state.cart.open === 'function') return state.cart.open();
+          if (state.cart && typeof state.cart.toggleVisibility === 'function') return state.cart.toggleVisibility();
+        } catch (e) {}
       };
-
-      window.DNShopify.updateBadge = updateBadge;
 
       window.DNShopify.mountProduct = function (cfg) {
         if (!cfg || !cfg.id || !cfg.node) return;
@@ -232,8 +148,7 @@
 
         if (!options.events.afterAddVariant) {
           options.events.afterAddVariant = function () {
-            updateBadge();
-            openCartDrawer();
+            if (window.DNShopify.openCart) window.DNShopify.openCart();
           };
         }
 
