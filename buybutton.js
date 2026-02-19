@@ -1,11 +1,14 @@
 /* buybutton.js (D'Natural Body)
-   Global Shopify Buy Button + Cart Drawer wiring
+   Shopify Buy Button SDK + Cart Drawer + Header Toggle
+   + OPTIONAL custom variant pills UI
 
-   - Loads Shopify Buy Button SDK once
-   - Creates ONE Shopify cart drawer
-   - Renders Shopify cart toggle inside #shopify-cart-toggle (header)
-   - Drawer "Checkout" redirects to Shopify cart page WITH items carried over
-   - Exposes window.DNShopify.mountProduct({id, node, options})
+   Exposes:
+     - window.DNShopify.mountProduct({id,node,options})
+     - window.DNShopify.mountVariantPills({
+         productId, pillsNode, priceNode, addBtn, qtyInput,
+         optionNames: ['size','weight','amount','title'],
+         openCartOnAdd: true
+       })
 */
 
 (function () {
@@ -19,7 +22,13 @@
     toggleNodeId: 'shopify-cart-toggle'
   };
 
-  var state = { ui: null, cart: null, client: null };
+  var state = {
+    ui: null,
+    cart: null,
+    client: null,
+    productsCache: null,
+    productsCachePromise: null
+  };
 
   function loadSdk(cb) {
     var s = document.createElement('script');
@@ -29,29 +38,38 @@
     s.onload = cb;
   }
 
-  function ensureToggleNodeExists() {
-    if (document.getElementById(CONFIG.toggleNodeId)) return;
-    var div = document.createElement('div');
-    div.id = CONFIG.toggleNodeId;
-    document.body.appendChild(div);
-  }
-
   function gidToNumericId(gid) {
     if (!gid) return null;
-    var parts = String(gid).split('/');
-    return parts[parts.length - 1] || null;
+    try {
+      // gid sometimes is base64; sometimes already looks like gid://...
+      if (String(gid).indexOf('gid://') === 0) {
+        var parts = String(gid).split('/');
+        return parts[parts.length - 1] || null;
+      }
+      // try base64 decode
+      var decoded = atob(String(gid));
+      if (decoded && decoded.indexOf('gid://') === 0) {
+        var p = decoded.split('/');
+        return p[p.length - 1] || null;
+      }
+    } catch (e) {}
+
+    // last resort: pull trailing digits
+    var m = String(gid).match(/(\d+)$/);
+    return m ? m[1] : null;
   }
 
   function getLineItems() {
     try {
-      return (state.cart && state.cart.model && state.cart.model.lineItems) ? state.cart.model.lineItems : [];
+      return (state.cart && state.cart.model && state.cart.model.lineItems)
+        ? state.cart.model.lineItems
+        : [];
     } catch (e) {
       return [];
     }
   }
 
   function buildCartPermalinkFromDrawer() {
-    // https://shop.dnaturalbody.com/cart/variantId:qty,variantId:qty
     var items = getLineItems();
     if (!items.length) return CONFIG.onlineStoreCartBase;
 
@@ -60,7 +78,7 @@
       var item = items[i];
       var variantGid = item && item.variant && item.variant.id;
       var variantId = gidToNumericId(variantGid);
-      var qty = Number(item && item.quantity || 0);
+      var qty = Number((item && item.quantity) || 0);
       if (variantId && qty > 0) segments.push(variantId + ':' + qty);
     }
 
@@ -69,24 +87,32 @@
   }
 
   function interceptDrawerCheckoutToCartPage() {
-    document.addEventListener('click', function (e) {
-      var target = e.target;
-      if (!target || !target.closest) return;
+    document.addEventListener(
+      'click',
+      function (e) {
+        var target = e.target;
+        if (!target || !target.closest) return;
 
-      var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
-      if (!btn) return;
+        var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
+        if (!btn) return;
 
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
 
-      window.location.href = buildCartPermalinkFromDrawer();
-    }, true);
+        window.location.href = buildCartPermalinkFromDrawer();
+      },
+      true
+    );
+  }
+
+  function ensureToggleNodeExists() {
+    // IMPORTANT: Do NOT auto-create a hidden toggle anymore.
+    // If you want it in your header, include: <div id="shopify-cart-toggle"></div>
+    return !!document.getElementById(CONFIG.toggleNodeId);
   }
 
   function init() {
-    ensureToggleNodeExists();
-
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
       storefrontAccessToken: CONFIG.storefrontAccessToken
@@ -106,23 +132,25 @@
         }
       });
 
-      // Create header cart icon + count (toggle)
-      ui.createComponent('toggle', {
-        node: document.getElementById(CONFIG.toggleNodeId),
-        options: {
-          toggle: {
-            styles: {
-              toggle: {
-                'background-color': 'transparent',
-                ':hover': { 'background-color': 'transparent' },
-                ':focus': { 'background-color': 'transparent' }
+      // Create header toggle ONLY if node exists
+      if (ensureToggleNodeExists()) {
+        ui.createComponent('toggle', {
+          node: document.getElementById(CONFIG.toggleNodeId),
+          options: {
+            toggle: {
+              styles: {
+                toggle: {
+                  'background-color': 'transparent',
+                  ':hover': { 'background-color': 'transparent' },
+                  ':focus': { 'background-color': 'transparent' }
+                }
               }
             }
           }
-        }
-      });
+        });
+      }
 
-interceptDrawerCheckoutToCartPage();
+      interceptDrawerCheckoutToCartPage();
 
       window.DNShopify = window.DNShopify || {};
       window.DNShopify.__initialized = true;
@@ -133,16 +161,12 @@ interceptDrawerCheckoutToCartPage();
       window.DNShopify.openCart = function () {
         try {
           if (state.cart && typeof state.cart.open === 'function') state.cart.open();
-          else {
-            var t = document.querySelector('#' + CONFIG.toggleNodeId + ' .shopify-buy__cart-toggle');
-            if (t) t.click();
-          }
         } catch (e) {}
       };
 
       window.DNShopify.mountProduct = function (cfg) {
         if (!cfg || !cfg.id || !cfg.node) return;
-        var nodeEl = (typeof cfg.node === 'string') ? document.querySelector(cfg.node) : cfg.node;
+        var nodeEl = typeof cfg.node === 'string' ? document.querySelector(cfg.node) : cfg.node;
         if (!nodeEl) return;
 
         var options = cfg.options || {};
@@ -158,6 +182,168 @@ interceptDrawerCheckoutToCartPage();
           node: nodeEl,
           moneyFormat: '${{amount}}',
           options: options
+        });
+      };
+
+      // ---------- Variant Pills ----------
+      function fetchAllProductsOnce() {
+        if (state.productsCache) return Promise.resolve(state.productsCache);
+        if (state.productsCachePromise) return state.productsCachePromise;
+
+        state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
+          state.productsCache = products || [];
+          return state.productsCache;
+        });
+
+        return state.productsCachePromise;
+      }
+
+      function findProductByNumericId(numericId) {
+        var wanted = String(numericId);
+        return fetchAllProductsOnce().then(function (products) {
+          for (var i = 0; i < products.length; i++) {
+            var p = products[i];
+            var num = gidToNumericId(p && p.id);
+            if (num && String(num) === wanted) return p;
+          }
+          return null;
+        });
+      }
+
+      function defaultMoney(amountStr) {
+        var n = Number(amountStr);
+        if (isNaN(n)) return '$0.00';
+        return '$' + n.toFixed(2);
+      }
+
+      window.DNShopify.mountVariantPills = function (cfg) {
+        if (!cfg || !cfg.productId) return;
+
+        var pillsNode = typeof cfg.pillsNode === 'string' ? document.querySelector(cfg.pillsNode) : cfg.pillsNode;
+        var priceNode = typeof cfg.priceNode === 'string' ? document.querySelector(cfg.priceNode) : cfg.priceNode;
+        var addBtn = typeof cfg.addBtn === 'string' ? document.querySelector(cfg.addBtn) : cfg.addBtn;
+        var qtyInput = typeof cfg.qtyInput === 'string' ? document.querySelector(cfg.qtyInput) : cfg.qtyInput;
+
+        if (!pillsNode || !priceNode || !addBtn) return;
+
+        var optionNames = (cfg.optionNames && cfg.optionNames.length)
+          ? cfg.optionNames.map(function (s) { return String(s).toLowerCase(); })
+          : ['size', 'weight', 'amount', 'title'];
+
+        var selectedVariant = null;
+
+        function setBtnEnabled(on) {
+          addBtn.disabled = !on;
+          addBtn.classList.toggle('disabled', !on);
+        }
+
+        function setActive(btnEl) {
+          var btns = pillsNode.querySelectorAll('.size-pill');
+          for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
+          if (btnEl) btnEl.classList.add('active');
+        }
+
+        function renderPillsFromVariants(product) {
+          pillsNode.innerHTML = '';
+
+          // Choose which option index to use
+          var optionIndex = -1;
+          if (product && product.options && product.options.length) {
+            for (var oi = 0; oi < product.options.length; oi++) {
+              var name = String(product.options[oi].name || '').toLowerCase();
+              if (optionNames.indexOf(name) !== -1) {
+                optionIndex = oi;
+                break;
+              }
+            }
+            // if none match, but there is exactly 1 option, use it
+            if (optionIndex === -1 && product.options.length === 1) optionIndex = 0;
+          }
+
+          // Build unique labels from variants
+          var labels = [];
+          var labelToVariant = {};
+          (product.variants || []).forEach(function (v) {
+            var label = null;
+            if (optionIndex >= 0 && v.options && v.options[optionIndex]) label = v.options[optionIndex];
+            if (!label) label = v.title || 'Default';
+
+            // normalize
+            label = String(label).trim();
+            if (!label) label = 'Default';
+
+            if (!labelToVariant[label]) {
+              labels.push(label);
+              labelToVariant[label] = v;
+            }
+          });
+
+          // If still nothing, hard fail
+          if (!labels.length) {
+            priceNode.textContent = defaultMoney('0');
+            setBtnEnabled(false);
+            return;
+          }
+
+          labels.forEach(function (label, idx) {
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'size-pill';
+            btn.textContent = label;
+            btn.dataset.value = label;
+
+            btn.addEventListener('click', function () {
+              var v = labelToVariant[label];
+              if (!v) return;
+              selectedVariant = v;
+              setActive(btn);
+              priceNode.textContent = defaultMoney(selectedVariant.price);
+              setBtnEnabled(true);
+            });
+
+            pillsNode.appendChild(btn);
+
+            // auto-select first
+            if (idx === 0) {
+              // click after appended so class toggles work
+              setTimeout(function(){ btn.click(); }, 0);
+            }
+          });
+
+          // Hook add button
+          addBtn.addEventListener('click', function () {
+            if (!selectedVariant) return;
+            var qty = 1;
+            if (qtyInput) {
+              var q = Number(qtyInput.value);
+              if (!isNaN(q) && q > 0) qty = Math.floor(q);
+            }
+
+            // Add into the drawer cart
+            try {
+              state.cart.addLineItems([{ variantId: selectedVariant.id, quantity: qty }]);
+              if (cfg.openCartOnAdd !== false) window.DNShopify.openCart();
+            } catch (e) {}
+          });
+        }
+
+        // Fetch product by numeric ID
+        setBtnEnabled(false);
+        priceNode.textContent = '$0.00';
+
+        findProductByNumericId(cfg.productId).then(function (product) {
+          if (!product) {
+            // If not found, try to fetch a smaller set again (sometimes cache)
+            return fetchAllProductsOnce().then(function(){ return findProductByNumericId(cfg.productId); });
+          }
+          return product;
+        }).then(function (product) {
+          if (!product) {
+            // Still not found
+            setBtnEnabled(false);
+            return;
+          }
+          renderPillsFromVariants(product);
         });
       };
     });
