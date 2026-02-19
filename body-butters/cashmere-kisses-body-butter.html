@@ -6,15 +6,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
-
-  <!-- ✅ Hide Shopify's variant dropdown ONLY inside this buy button area -->
-  <style>
-    #buybutton-cashmere .shopify-buy__product__variant-selectors,
-    #buybutton-cashmere .shopify-buy__option-select-wrapper,
-    #buybutton-cashmere select.shopify-buy__option-select__select {
-      display: none !important;
-    }
-  </style>
 </head>
 
 <body class="product-body">
@@ -39,8 +30,9 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- ✅ Cart icon opens the Shopify cart drawer -->
-      </nav>
+      <!-- Shopify Cart Icon + Count -->
+      <div id="shopify-cart-toggle"></div>
+    </nav>
   </header>
 
   <section class="product-detail">
@@ -66,8 +58,6 @@
 
         <div class="product-actions">
           <div id="product-component-14889665036653"></div>
-<!-- ✅ Shopify Buy Button mounts here -->
-          <div id="buybutton-cashmere"></div>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
 
@@ -104,12 +94,7 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- hidden node used by Shopify cart toggle -->
-  <div id="shopify-cart-toggle" style="display:none;"></div>
-
-
-
-    <script src="../buybutton.js"></script>
+  <script src="../buybutton.js"></script>
 
   <script>
     (function() {
@@ -130,9 +115,7 @@
                 quantity: true,
                 button: true
               },
-              text: {
-                button: 'Add to cart'
-              }
+              text: { button: 'Add to cart' }
             },
             cart: { popup: false }
           }
