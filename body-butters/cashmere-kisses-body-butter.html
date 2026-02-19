@@ -30,8 +30,8 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- Shopify Cart Icon + Count -->
-      <div id="shopify-cart-toggle"></div>
+      <!-- Shopify Cart Toggle (icon + count) -->
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
     </nav>
   </header>
 
@@ -46,21 +46,12 @@
         <h1>Cashmere Kisses</h1>
         <div class="product-type">Body Butter</div>
 
-        <div class="product-meta">
-          <div class="price" id="priceText">$22.00</div>
-          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
-        </div>
-
         <p class="product-desc">
           A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
           comforting, and perfect for everyday luxury.
         </p>
 
-        <div class="product-actions">
-          <div id="product-component-14889665036653"></div>
-          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
-        </div>
-
+        <!-- DETAILS FIRST -->
         <div class="product-sections">
           <details open>
             <summary>Benefits</summary>
@@ -84,6 +75,12 @@
             <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
           </details>
         </div>
+
+        <!-- ADD TO CART AFTER DETAILS -->
+        <div class="product-actions">
+          <div id="product-component-14889665036653"></div>
+          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+        </div>
       </div>
 
     </div>
@@ -97,9 +94,10 @@
   <script src="../buybutton.js"></script>
 
   <script>
-    (function() {
+    (function () {
       function mount() {
         if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+
         window.DNShopify.mountProduct({
           id: '14889665036653',
           node: '#product-component-14889665036653',
@@ -111,7 +109,7 @@
                 img: false,
                 title: false,
                 price: true,
-                options: true,
+                options: true,   // shows size + price updates
                 quantity: true,
                 button: true
               },
@@ -124,6 +122,5 @@
       mount();
     })();
   </script>
-
 </body>
 </html>
