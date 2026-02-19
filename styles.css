@@ -388,26 +388,13 @@ body {
 
 
 /* =========================
-   PRODUCT SIZE PILLS + QTY
+   CUSTOM SIZE PILLS + QTY
 ========================= */
-.size-block{
-  margin: 18px 0 16px;
-}
+.shopify-hidden{ display:none !important; }
 
-.size-block .label{
-  font-size: 12px;
-  letter-spacing: .12em;
-  text-transform: uppercase;
-  opacity: .75;
-  margin-bottom: 8px;
-}
-
-.size-options{
-  display:flex;
-  gap:10px;
-  flex-wrap:wrap;
-  margin: 6px 0 12px;
-}
+.size-block{ margin-top: 18px; }
+.size-label{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity:.7; margin-bottom:8px; }
+.size-options{ display:flex; gap:10px; flex-wrap:wrap; margin:8px 0 12px; }
 
 .size-pill{
   border:1px solid #222;
@@ -426,47 +413,37 @@ body {
   border-color:#111;
 }
 
-.price-row{
-  margin: 6px 0 12px;
-}
-
 .variant-price{
-  font-size:18px;
-  font-weight:700;
+  font-size: 18px;
+  font-weight: 700;
+  margin: 6px 0 10px;
 }
 
-.variant-note{
-  margin-top:8px;
-  font-size:12px;
-  opacity:.75;
-}
+.qty-row{ margin: 10px 0 14px; }
+.qty-label{ font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity:.7; margin-bottom:8px; }
 
-.qty-row{
-  margin: 10px 0 14px;
-}
-
-.qty-control{
+.qty-controls{
   display:flex;
   align-items:center;
   gap:10px;
 }
 
 .qty-btn{
-  width: 38px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid #222;
-  background: #fff;
+  width:40px;
+  height:40px;
+  border-radius:10px;
+  border:1px solid #222;
+  background:#fff;
   color:#000;
-  font-size: 18px;
+  font-size:18px;
   cursor:pointer;
 }
 
 .qty-input{
-  width: 70px;
-  height: 38px;
-  border-radius: 10px;
-  border: 1px solid #222;
+  width:60px;
+  height:40px;
+  border-radius:10px;
+  border:1px solid #222;
   text-align:center;
   font-weight:700;
 }
@@ -482,7 +459,6 @@ body {
   width:220px;
 }
 
-.btn-primary:disabled{
-  opacity:.5;
-  cursor:not-allowed;
-}
+.btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
+
+.variant-note{ margin-top:8px; font-size:12px; opacity:.75; }
