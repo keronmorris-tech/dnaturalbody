@@ -171,7 +171,26 @@
         });
 
         // 2) Build custom size pills + price + qty using the same Shopify client
-        window.DNShopify.client.product.fetch(PRODUCT_ID).then(function(product){
+
+        function fetchProductFlexible(id){
+          var client = window.DNShopify.client;
+          // Storefront SDKs sometimes expect a gid; Buy Button UI accepts numeric.
+          // Try a few formats, then fall back to fetchAll.
+          return client.product.fetch(String(id)).catch(function(){
+            return client.product.fetch('gid://shopify/Product/' + String(id));
+          }).catch(function(){
+            return client.product.fetchAll(250).then(function(all){
+              var match = all.find(function(p){
+                var pid = (p && p.id) ? String(p.id) : '';
+                return pid.endsWith('/' + String(id)) || pid.endsWith(String(id));
+              });
+              if (!match) throw new Error('Product not found');
+              return match;
+            });
+          });
+        }
+
+        fetchProductFlexible(PRODUCT_ID).then(function(product){
           var sizeWrap = document.getElementById('dn-size-options');
           var priceEl = document.getElementById('dn-variant-price');
           var noteEl  = document.getElementById('dn-variant-note');
@@ -179,11 +198,16 @@
 
           if (!sizeWrap || !priceEl || !addBtn) return;
 
+          // Find the option index that represents size.
+          // If Shopify names it differently (e.g., "Weight" or "Title"),
+          // we still want clickable pills. If there is only 1 option, use it.
           var sizeOptionIndex = -1;
-          for (var i=0;i<product.options.length;i++){
-            var name = (product.options[i].name || '').toLowerCase();
-            if (name === 'size') { sizeOptionIndex = i; break; }
+          var opts = product.options || [];
+          for (var i=0;i<opts.length;i++){
+            var name = (opts[i].name || '').toLowerCase().trim();
+            if (name === 'size' || name === 'weight' || name === 'amount') { sizeOptionIndex = i; break; }
           }
+          if (sizeOptionIndex === -1 && opts.length === 1) sizeOptionIndex = 0;
 
           function selectVariantBySize(sizeVal){
             var match = product.variants.find(function(v){
@@ -216,6 +240,14 @@
           }
 
           var values = product.options[sizeOptionIndex].values || [];
+          if (!values.length) {
+            // Edge case: option exists but no values surfaced.
+            selectedVariant = product.variants[0];
+            priceEl.textContent = money(selectedVariant.price);
+            noteEl.textContent = 'Selected: ' + (selectedVariant.title || 'Default');
+            addBtn.disabled = false;
+            return;
+          }
           values.forEach(function(val){
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -228,6 +260,12 @@
 
           // Auto-select first
           if (values.length) selectVariantBySize(values[0]);
+        }).catch(function(){
+          // If anything fails, don't strand the user with a grey button.
+          var addBtn = document.getElementById('dn-add-to-cart');
+          var noteEl  = document.getElementById('dn-variant-note');
+          if (noteEl) noteEl.textContent = 'Unable to load sizes right now. Please refresh.';
+          if (addBtn) addBtn.disabled = true;
         });
 
         // Qty controls
