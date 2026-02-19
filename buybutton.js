@@ -210,10 +210,28 @@
         });
       }
 
-      function defaultMoney(amountStr) {
-        var n = Number(amountStr);
+      function defaultMoney(value) {
+        // value can be: "22.00" OR {amount:"22.00"} OR {amount:"22.00", currencyCode:"CAD"} OR {amount: {amount:"22.00"}} etc.
+        try {
+          if (value && typeof value === 'object') {
+            if (value.amount != null) value = value.amount;
+            else if (value.price != null) value = value.price;
+            else if (value.priceV2 && value.priceV2.amount != null) value = value.priceV2.amount;
+          }
+        } catch (e) {}
+        var n = Number(value);
         if (isNaN(n)) return '$0.00';
         return '$' + n.toFixed(2);
+      }
+
+      function getVariantPrice(variant) {
+        if (!variant) return null;
+        // Prefer priceV2.amount when present
+        if (variant.priceV2 && variant.priceV2.amount != null) return variant.priceV2.amount;
+        if (variant.price && typeof variant.price === 'object' && variant.price.amount != null) return variant.price.amount;
+        if (variant.price != null) return variant.price;
+        if (variant.amount != null) return variant.amount;
+        return null;
       }
 
       window.DNShopify.mountVariantPills = function (cfg) {
@@ -297,7 +315,7 @@
               if (!v) return;
               selectedVariant = v;
               setActive(btn);
-              priceNode.textContent = defaultMoney(selectedVariant.price);
+              priceNode.textContent = defaultMoney(getVariantPrice(selectedVariant));
               setBtnEnabled(true);
             });
 
@@ -310,22 +328,44 @@
             }
           });
 
-          // Hook add button
+          // Hook add button (replace any old listeners safely)
+          try {
+            var oldBtn = addBtn;
+            var newBtn = oldBtn.cloneNode(true);
+            oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+            addBtn = newBtn;
+          } catch (e) {}
+
+          var noteNode = typeof cfg.noteNode === 'string' ? document.querySelector(cfg.noteNode) : cfg.noteNode;
+
           addBtn.addEventListener('click', function () {
             if (!selectedVariant) return;
+
             var qty = 1;
             if (qtyInput) {
               var q = Number(qtyInput.value);
               if (!isNaN(q) && q > 0) qty = Math.floor(q);
             }
 
+            if (noteNode) noteNode.textContent = '';
+
             // Add into the drawer cart
             try {
-              state.cart.addLineItems([{ variantId: selectedVariant.id, quantity: qty }]);
-              if (cfg.openCartOnAdd !== false) window.DNShopify.openCart();
-            } catch (e) {}
-          });
-        }
+              var payload = [{ variantId: selectedVariant.id, quantity: qty }];
+              var p = state.cart.addLineItems(payload);
+
+              // open cart after add resolves (more reliable)
+              Promise.resolve(p).then(function () {
+                if (cfg.openCartOnAdd !== false) window.DNShopify.openCart();
+              }).catch(function (err) {
+                if (noteNode) noteNode.textContent = 'Could not add to cart. Please try again.';
+                try { console.error(err); } catch (e) {}
+              });
+            } catch (e) {
+              if (noteNode) noteNode.textContent = 'Could not add to cart. Please try again.';
+              try { console.error(e); } catch (x) {}
+            }
+          });        }
 
         // Fetch product by numeric ID
         setBtnEnabled(false);
