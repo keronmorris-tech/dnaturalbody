@@ -6,6 +6,17 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
+
+  <!-- ✅ Hide Shopify's variant dropdown ONLY inside this buy button area -->
+  <style>
+    #buybutton-cashmere .shopify-buy__product__variant-selectors,
+    #buybutton-cashmere .shopify-buy__option-select-wrapper,
+    #buybutton-cashmere select.shopify-buy__option-select__select {
+      display: none !important;
+    }
+    /* hide Shopify-rendered UI (we use custom size pills + button) */
+    #product-component-14889665036653 { display:none !important; }
+  </style>
 </head>
 
 <body class="product-body">
@@ -48,7 +59,28 @@
 
         <div class="product-meta">
           <div class="price" id="priceText">$22.00</div>
-          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div></div>
+
+        <!-- Size pills (custom UI) -->
+        <div class="size-block">
+          <div class="label">Size</div>
+          <div id="size-options" class="size-options"></div>
+
+          <div class="price-row">
+            <span id="variant-price" class="variant-price">$0.00</span>
+          </div>
+
+          <div class="qty-row">
+            <div class="label">Quantity</div>
+            <div class="qty-control">
+              <button type="button" id="qty-minus" class="qty-btn">−</button>
+              <input id="qty-input" class="qty-input" type="number" min="1" value="1" />
+              <button type="button" id="qty-plus" class="qty-btn">+</button>
+            </div>
+          </div>
+
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>Add to cart</button>
+          <div id="variant-note" class="variant-note"></div>
         </div>
 
         <p class="product-desc">
@@ -57,7 +89,8 @@
         </p>
 
         <div class="product-actions">
-          <!-- Shopify Buy Button mounts here -->
+          <div id="product-component-14889665036653"></div>
+<!-- ✅ Shopify Buy Button mounts here -->
           <div id="buybutton-cashmere"></div>
           <a href="../shop-body-butter.html" class="outline-btn">Back</a>
         </div>
@@ -101,9 +134,17 @@
     (function() {
       function mount() {
         if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+        
+  <script>
+    (function() {
+      function mount() {
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+
+        // Keep Shopify product component mounted (tracking/inventory plumbing),
+        // but hide its UI (we render our own size pills + button).
         window.DNShopify.mountProduct({
           id: '14889665036653',
-          node: '#buybutton-cashmere',
+          node: '#product-component-14889665036653',
           options: {
             product: {
               buttonDestination: 'cart',
@@ -111,22 +152,36 @@
               contents: {
                 img: false,
                 title: false,
-                price: true,
-                options: true,
-                quantity: true,
-                button: true
-              },
-              text: {
-                button: 'Add to cart'
+                price: false,
+                options: false,
+                quantity: false,
+                button: false
               }
             },
             cart: { popup: false }
           }
         });
+
+        // Custom size buttons + price + add-to-cart -> same Shopify drawer cart
+        if (window.DNShopify.mountSizePills) {
+          window.DNShopify.mountSizePills({
+            productId: '14889665036653',
+            sizeWrapId: 'size-options',
+            priceId: 'variant-price',
+            noteId: 'variant-note',
+            addBtnId: 'add-to-cart',
+            qtyMinusId: 'qty-minus',
+            qtyPlusId: 'qty-plus',
+            qtyInputId: 'qty-input'
+          });
+        }
       }
       mount();
     })();
   </script>
+</body>
+</html>
+
 
 </body>
 </html>
