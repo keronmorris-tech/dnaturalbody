@@ -3,9 +3,9 @@
 
    - Loads Shopify Buy Button SDK once
    - Creates ONE cart drawer component (Shopify's)
-   - Renders Shopify's cart toggle in #shopify-cart-toggle (in your header)
+   - Renders Shopify cart toggle (icon + count) into #shopify-cart-toggle in your header
    - Drawer "Checkout" redirects to Shopify CART page WITH items carried over
-   - Exposes window.DNShopify.mountProduct({id, node, options}) for product buttons
+   - Exposes window.DNShopify.mountProduct({id, node, options})
 */
 
 (function () {
@@ -27,13 +27,6 @@
     s.src = CONFIG.sdkUrl;
     (document.head || document.body).appendChild(s);
     s.onload = cb;
-  }
-
-  function ensureToggleNodeExists() {
-    if (document.getElementById(CONFIG.toggleNodeId)) return;
-    var div = document.createElement('div');
-    div.id = CONFIG.toggleNodeId;
-    document.body.appendChild(div);
   }
 
   function gidToNumericId(gid) {
@@ -69,13 +62,12 @@
 
   function interceptDrawerCheckoutToCartPage() {
     document.addEventListener('click', function (e) {
-      var target = e.target;
-      if (!target || !target.closest) return;
+      var t = e.target;
+      if (!t || !t.closest) return;
 
-      var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
+      var btn = t.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
       if (!btn) return;
 
-      // Stop Buy Button from routing to Storefront checkout
       e.preventDefault();
       e.stopPropagation();
       if (e.stopImmediatePropagation) e.stopImmediatePropagation();
@@ -85,8 +77,6 @@
   }
 
   function init() {
-    ensureToggleNodeExists();
-
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
       storefrontAccessToken: CONFIG.storefrontAccessToken
@@ -95,7 +85,14 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
-      // Create ONE cart drawer
+      var toggleNode = document.getElementById(CONFIG.toggleNodeId);
+      if (!toggleNode) {
+        // If a page forgot to include it, create it at end of body (still works)
+        toggleNode = document.createElement('div');
+        toggleNode.id = CONFIG.toggleNodeId;
+        document.body.appendChild(toggleNode);
+      }
+
       state.cart = ui.createComponent('cart', {
         options: {
           cart: {
@@ -104,7 +101,7 @@
             text: { total: 'Subtotal', button: 'Checkout' }
           },
           toggle: {
-            node: document.getElementById(CONFIG.toggleNodeId),
+            node: toggleNode,
             styles: {
               toggle: {
                 'background-color': 'transparent',
@@ -118,7 +115,6 @@
 
       interceptDrawerCheckoutToCartPage();
 
-      // Public API
       window.DNShopify = window.DNShopify || {};
       window.DNShopify.__initialized = true;
       window.DNShopify.ui = ui;
@@ -126,9 +122,7 @@
       window.DNShopify.client = state.client;
 
       window.DNShopify.openCart = function () {
-        try {
-          if (state.cart && typeof state.cart.open === 'function') state.cart.open();
-        } catch (e) {}
+        try { if (state.cart && typeof state.cart.open === 'function') state.cart.open(); } catch (e) {}
       };
 
       window.DNShopify.mountProduct = function (cfg) {
@@ -140,7 +134,6 @@
         var options = cfg.options || {};
         options.events = options.events || {};
 
-        // Open drawer after add
         if (!options.events.afterAddVariant) {
           options.events.afterAddVariant = function () {
             if (window.DNShopify && window.DNShopify.openCart) window.DNShopify.openCart();
