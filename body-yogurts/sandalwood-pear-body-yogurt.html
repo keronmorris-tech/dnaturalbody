@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sandalwood Pear | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+        <div id="shopify-cart-toggle" class="shopify-cart-toggle"></div>
+</nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Sandalwood-Pear-body-yogurt.jpg" alt="Sandalwood Pear">
+      </div>
+
+      <div class="product-info">
+        <h1>Sandalwood Pear</h1>
+        <div class="product-type">Body Yogurt</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$20.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        
+        <div class="size-picker">
+          <p class="size-label">Choose your size:</p>
+          <div class="size-options" id="sizeOptions">
+            <button class="size-option active" type="button" data-size="8 oz" data-grams="227" data-price="20.00" data-variant="53019126923629">8 oz</button><button class="size-option" type="button" data-size="4 oz" data-grams="113" data-price="20.00" data-variant="53019126956397">4 oz</button>
+          </div>
+        </div>
+        
+
+        <p class="product-desc">A creamy, quick-absorbing body yogurt that blends cozy sandalwood with juicy pear
+          for a soft, skin-hugging scent and everyday moisture.</p>
+
+        <div class="product-actions">
+          <div id="product-component-14892480725357"></div>
+<button class="primary-btn" id="addToCartBtn" type="button"
+            data-title="Sandalwood Pear"
+            data-image="../images/Sandalwood-Pear-body-yogurt.jpg"
+            data-price="20.00"
+            >
+            Add to Cart
+          </button>
+          <a href="../shop-body-yogurt.html" class="outline-btn">Back</a>
+        </div>
+
+        <div class="product-sections">
+<details open><summary>Benefits</summary><p>Benefits<br>• Lightweight gel-cream texture sinks in fast.<br>• Softens and smooths without stickiness.<br>• Warm-woody yet fresh-fruity scent that works day or night.</p></details>
+<details><summary>Ingredients</summary><p>Ingredients<br>Water (Aqua), Glycerin, Caprylic/Capric Triglyceride,<br>            Cetearyl Alcohol, Cetearyl Olivate (and) Sorbitan Olivate,<br>            Jojoba Oil, Fragrance (Parfum), Carbomer, Triethanolamine,<br>            Phenoxyethanol (and) Ethylhexylglycerin.</p></details>
+<details><summary>How to Use</summary><p>How to Use<br>Smooth over clean skin as your daily moisturizer,<br>            or layer under matching body butter for extra nourishment.</p></details>
+</div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script src="../cart.js"></script>
+  <script src="../buybutton.js"></script>
+
+  <script>
+    (function() {
+      function mount() {
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+        window.DNShopify.mountProduct({
+          id: '14892480725357',
+          node: '#product-component-14892480725357',
+          options: {
+            product: {
+              buttonDestination: 'cart',
+              layout: 'vertical',
+              contents: {
+                img: false,
+                title: false,
+                price: true,
+                options: true,
+                quantity: true,
+                button: true
+              },
+              text: {
+                button: 'Add to cart'
+              }
+            },
+            cart: { popup: false }
+          }
+        });
+      }
+      mount();
+    })();
+  </script>
+
+</body>
+</html>

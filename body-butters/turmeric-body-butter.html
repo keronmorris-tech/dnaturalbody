@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Turmeric Brightening Body Butter | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+        <div id="shopify-cart-toggle" class="shopify-cart-toggle"></div>
+</nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/turmeric-body-butter.jpg" alt="Turmeric Brightening Body Butter">
+      </div>
+
+      <div class="product-info">
+        <h1>Turmeric Brightening Body Butter</h1>
+        <div class="product-type">Body Butter</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
+
+        
+
+        <p class="product-desc">A rich, creamy body butter infused with turmeric and comforting botanicals to help
+          nourish dry skin and promote a soft, healthy-looking glow.</p>
+
+        <div class="product-actions">
+          <div id="product-component-14892427477357"></div>
+<button class="primary-btn" id="addToCartBtn" type="button"
+            data-title="Turmeric Brightening Body Butter"
+            data-image="../images/turmeric-body-butter.jpg"
+            data-price="22.00"
+            data-variant="53018930938221">
+            Add to Cart
+          </button>
+          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+        </div>
+
+        <div class="product-sections">
+<details open><summary>Benefits</summary><p>Benefits<br>Formulated to wrap the skin in moisture, support the skin’s barrier, and leave a<br>              smoother, more radiant-looking finish over time.</p></details>
+<details><summary>Ingredients</summary><p>Ingredients<br>Full formula:<br>Distilled Water (48.5%), Frankincense Hydrosol, Glycerin, Turmeric Oil, Coconut Oil,<br>              Shea Butter, Mango Butter, BTMS-50, Cetyl Alcohol, Liquid Germall Plus,<br>              Turmeric Extract, Licorice Root Extract, Vitamin E Oil, Fragrance.<br>What each key ingredient does:<br>Distilled Water (48.5%)<br>– Provides lightweight hydration and helps disperse all the skin-loving ingredients evenly.<br>Frankincense Hydrosol<br>– A gentle botanical water that helps soothe and refresh the skin’s surface.<br>Glycerin<br>– A humectant that attracts moisture to the skin, helping it feel soft and comfortably hydrated.<br>Turmeric Oil<br>– Known for its antioxidant properties and its ability to support a more even, radiant-looking tone.<br>Coconut Oil<br>– Helps condition and soften dry areas, adding a smooth, nourishing slip.<br>Shea Butter<br>– Rich, buttery moisture that helps support the skin barrier and protect against dryness.<br>Mango Butter<br>– Lightweight butter that melts into skin to improve softness and suppleness.<br>BTMS-50<br>– A conditioning emulsifier that gives the butter a silky, spreadable texture and helps lock in moisture.<br>Cetyl Alcohol<br>– A fatty (non-drying) alcohol that adds creaminess and helps skin feel smooth and cushioned.<br>Liquid Germall Plus<br>– Broad-spectrum preservative that helps keep the formula fresh and safe to use.<br>Turmeric Extract<br>– Antioxidant support that helps brighten the look of dull skin.<br>Licorice Root Extract<br>– Known to help improve the appearance of uneven tone and boost overall radiance.<br>Vitamin E Oil<br>– An antioxidant that supports the skin’s protective barrier and helps condition dry skin.</p></details>
+<details><summary>How to Use</summary><p>How to Use<br>Apply to clean, dry skin, massaging in circular motions until fully absorbed.<br>              Focus on areas that tend to be drier, like legs, arms, elbows, and knees.<br>              Use daily for best results.</p></details>
+</div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script src="../cart.js"></script>
+  <script src="../buybutton.js"></script>
+
+  <script>
+    (function() {
+      function mount() {
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+        window.DNShopify.mountProduct({
+          id: '14892427477357',
+          node: '#product-component-14892427477357',
+          options: {
+            product: {
+              buttonDestination: 'cart',
+              layout: 'vertical',
+              contents: {
+                img: false,
+                title: false,
+                price: true,
+                options: true,
+                quantity: true,
+                button: true
+              },
+              text: {
+                button: 'Add to cart'
+              }
+            },
+            cart: { popup: false }
+          }
+        });
+      }
+      mount();
+    })();
+  </script>
+
+</body>
+</html>
