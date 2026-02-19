@@ -7,13 +7,32 @@
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
-  <!-- ✅ Hide Shopify's variant dropdown ONLY inside this buy button area -->
   <style>
-    #buybutton-cashmere .shopify-buy__product__variant-selectors,
-    #buybutton-cashmere .shopify-buy__option-select-wrapper,
-    #buybutton-cashmere select.shopify-buy__option-select__select {
+    /* Hide Shopify default variant dropdown if any product component is mounted */
+    #product-component-14889665036653 .shopify-buy__product__variant-selectors,
+    #product-component-14889665036653 .shopify-buy__option-select-wrapper,
+    #product-component-14889665036653 select.shopify-buy__option-select__select,
+    #product-component-14889665036653 .shopify-buy__product__quantity,
+    #product-component-14889665036653 .shopify-buy__btn {
       display: none !important;
     }
+
+    /* Purchase block spacing */
+    .purchase-block { margin-top: 22px; }
+    .purchase-label { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .7; margin-bottom: 8px; }
+
+    .size-options{ display:flex; gap:10px; flex-wrap:wrap; margin:10px 0 14px; }
+    .size-pill{ border:1px solid #222; background:#fff; color:#000; padding:10px 16px; border-radius:999px; cursor:pointer; font-weight:600; font-size:14px; }
+    .size-pill.active{ background:#111; color:#fff; border-color:#111; }
+
+    .variant-price{ font-size:18px; font-weight:700; margin: 6px 0 10px; }
+
+    .qty-row{ display:flex; align-items:center; gap:10px; margin: 8px 0 14px; }
+    .qty-btn{ width:42px; height:42px; border:1px solid #222; background:#fff; border-radius:10px; cursor:pointer; font-size:18px; }
+    .qty-input{ width:64px; height:42px; border:1px solid #222; border-radius:10px; text-align:center; font-weight:700; }
+
+    .btn-primary{ background:#111; color:#fff; border:none; padding:14px 18px; border-radius:10px; cursor:pointer; font-weight:700; width:220px; }
+    .btn-primary:disabled{ opacity:.5; cursor:not-allowed; }
   </style>
 </head>
 
@@ -39,8 +58,8 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- ✅ Cart icon opens the Shopify cart drawer -->
-      <div id="shopify-cart-toggle" class="shopify-cart-toggle"></div>
+      <!-- ✅ Cart icon + count renders here (header) -->
+      <div id="shopify-cart-toggle"></div>
     </nav>
   </header>
 
@@ -65,13 +84,7 @@
           comforting, and perfect for everyday luxury.
         </p>
 
-        
-        <div class="product-actions">
-          <!-- Hidden Shopify product component (keeps Shopify variant/inventory plumbing) -->
-          <div id="product-component-14889665036653" class="shopify-hidden"></div>
-
-          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
-        </div>
+        <a href="../shop-body-butter.html" class="outline-btn">Back</a>
 
         <div class="product-sections">
           <details open>
@@ -97,24 +110,24 @@
           </details>
         </div>
 
-        <!-- Purchase (custom UI: size pills + live price + qty + add to cart) -->
-        <div class="size-block" id="dn-purchase">
-          <div class="size-label">Size</div>
-          <div id="dn-size-options" class="size-options"></div>
+        <!-- ✅ PURCHASE BLOCK LAST -->
+        <div class="purchase-block">
+          <div class="purchase-label">Size</div>
+          <div id="size-options" class="size-options"></div>
 
-          <div id="dn-variant-price" class="variant-price">$22.00</div>
+          <div id="variant-price" class="variant-price">$0.00</div>
 
+          <div class="purchase-label">Quantity</div>
           <div class="qty-row">
-            <div class="qty-label">Quantity</div>
-            <div class="qty-controls">
-              <button type="button" class="qty-btn" id="dn-qty-minus">−</button>
-              <input type="number" id="dn-qty" class="qty-input" value="1" min="1" inputmode="numeric" />
-              <button type="button" class="qty-btn" id="dn-qty-plus">+</button>
-            </div>
+            <button class="qty-btn" type="button" id="qty-minus">−</button>
+            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
+            <button class="qty-btn" type="button" id="qty-plus">+</button>
           </div>
 
-          <button id="dn-add-to-cart" class="btn-primary" type="button" disabled>Add to cart</button>
-          <div id="dn-variant-note" class="variant-note"></div>
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>Add to cart</button>
+
+          <!-- Hidden Shopify product component (keeps Shopify wiring available) -->
+          <div id="product-component-14889665036653" style="display:none;"></div>
         </div>
 
       </div>
@@ -130,230 +143,55 @@
   <script src="../buybutton.js"></script>
 
   <script>
-    (function() {
-      var PRODUCT_ID = '14889665036653';
-      var selectedVariant = null;
-
-      function money(amount) {
-        return '$' + Number(amount).toFixed(2);
+    (function(){
+      // qty controls
+      var qtyInput = document.getElementById('qty-input');
+      function clampQty(n){
+        n = Number(n);
+        if (isNaN(n) || n < 1) n = 1;
+        return Math.floor(n);
       }
+      document.getElementById('qty-minus').addEventListener('click', function(){
+        qtyInput.value = clampQty(qtyInput.value) - 1;
+        if (Number(qtyInput.value) < 1) qtyInput.value = 1;
+      });
+      document.getElementById('qty-plus').addEventListener('click', function(){
+        qtyInput.value = clampQty(qtyInput.value) + 1;
+      });
+      qtyInput.addEventListener('blur', function(){ qtyInput.value = clampQty(qtyInput.value); });
 
-      function setActiveSize(value) {
-        document.querySelectorAll('#dn-size-options .size-pill').forEach(function(btn){
-          btn.classList.toggle('active', btn.dataset.value === value);
-        });
-      }
-
-      function mount() {
-        if (!window.DNShopify || !window.DNShopify.mountProduct || !window.DNShopify.client || !window.DNShopify.cart) {
-          return setTimeout(mount, 80);
+      function mountWhenReady(){
+        if (!window.DNShopify || !window.DNShopify.mountProduct || !window.DNShopify.mountVariantPills) {
+          return setTimeout(mountWhenReady, 80);
         }
 
-        // 1) Mount hidden Shopify product component (keeps Shopify plumbing)
+        // Mount hidden product component (optional)
         window.DNShopify.mountProduct({
-          id: PRODUCT_ID,
+          id: '14889665036653',
           node: '#product-component-14889665036653',
           options: {
             product: {
               buttonDestination: 'cart',
-              layout: 'vertical',
-              contents: {
-                img: false,
-                title: false,
-                price: false,
-                options: true,   // keep variant binding internally
-                quantity: false,
-                button: false
-              }
+              contents: { img:false, title:false, price:false, options:false, quantity:false, button:false }
             },
             cart: { popup: false }
           }
         });
 
-        // 2) Build custom size pills + price + qty using the same Shopify client
-
-        function fetchProductFlexible(id){
-          var client = window.DNShopify.client;
-
-          function numericFromOpaque(opaqueId){
-            // opaqueId is usually base64("gid://shopify/Product/123")
-            try {
-              var decoded = atob(String(opaqueId));
-              var parts = decoded.split('/');
-              return parts[parts.length - 1] || null;
-            } catch (e) {
-              return null;
-            }
-          }
-
-          // Some ShopifyBuy versions only accept opaque/base64 IDs for fetch().
-          // We try a few formats, then fall back to fetchAll and match by numeric id.
-          return client.product.fetch(String(id)).catch(function(){
-            return client.product.fetch('gid://shopify/Product/' + String(id));
-          }).catch(function(){
-            return client.product.fetchAll(250).then(function(all){
-              var wanted = String(id);
-              var match = null;
-
-              for (var i=0; i<all.length; i++){
-                var p = all[i];
-                var opaque = p && p.id ? String(p.id) : '';
-                var num = numericFromOpaque(opaque);
-
-                // Some SDKs may return gid strings instead of base64
-                if (!num && opaque.indexOf('gid://') === 0) {
-                  var parts = opaque.split('/');
-                  num = parts[parts.length - 1] || null;
-                }
-
-                if (num === wanted) { match = p; break; }
-              }
-
-              if (!match) throw new Error('Product not found');
-              return match;
-            });
-          });
-        }
-
-        fetchProductFlexible(PRODUCT_ID).then(function(product){
-          var sizeWrap = document.getElementById('dn-size-options');
-          var priceEl = document.getElementById('dn-variant-price');
-          var noteEl  = document.getElementById('dn-variant-note');
-          var addBtn  = document.getElementById('dn-add-to-cart');
-
-          if (!sizeWrap || !priceEl || !addBtn) return;
-
-          // Always default to first variant so the button is never stuck grey
-          selectedVariant = (product.variants && product.variants.length) ? product.variants[0] : null;
-          if (selectedVariant) {
-            priceEl.textContent = money(selectedVariant.price);
-            document.getElementById('priceText').textContent = money(selectedVariant.price);
-            addBtn.disabled = false;
-          }
-
-          // Build "size" pills from the most reliable source:
-          // 1) If a Size/Weight option exists, use its values
-          // 2) Otherwise, derive labels from variant titles (e.g., "8oz")
-          sizeWrap.innerHTML = '';
-
-          function labelFromVariant(v){
-            var t = String(v && v.title || '').toLowerCase();
-            var m = t.match(/(\d+(?:\.\d+)?)\s*oz/);
-            if (m) return m[1] + 'oz';
-            return (v && v.title) ? v.title : 'Default';
-          }
-
-          // Try to find a size-ish option index (including "title")
-          var sizeOptionIndex = -1;
-          var opts = product.options || [];
-          for (var i=0;i<opts.length;i++){
-            var name = (opts[i].name || '').toLowerCase().trim();
-            if (name === 'size' || name === 'weight' || name === 'amount' || name === 'title') { sizeOptionIndex = i; break; }
-          }
-          if (sizeOptionIndex === -1 && opts.length === 1) sizeOptionIndex = 0;
-
-          // Collect pill labels
-          var values = [];
-          if (sizeOptionIndex !== -1 && product.options[sizeOptionIndex] && product.options[sizeOptionIndex].values) {
-            values = product.options[sizeOptionIndex].values.slice();
-          }
-          if (!values.length && product.variants && product.variants.length) {
-            // Derive from variants, unique
-            var seen = {};
-            values = product.variants.map(labelFromVariant).filter(function(v){
-              if (seen[v]) return false;
-              seen[v] = true;
-              return true;
-            });
-          }
-
-          function selectByLabel(label){
-            var match = null;
-            // If we have a real option index, try matching by option value first
-            if (sizeOptionIndex !== -1) {
-              match = (product.variants || []).find(function(v){
-                return v.options && v.options[sizeOptionIndex] === label;
-              }) || null;
-            }
-            // Otherwise match by derived label from title
-            if (!match) {
-              match = (product.variants || []).find(function(v){
-                return labelFromVariant(v) === label;
-              }) || null;
-            }
-            if (!match) match = (product.variants && product.variants[0]) ? product.variants[0] : null;
-            if (!match) return;
-
-            selectedVariant = match;
-            setActiveSize(label);
-
-            priceEl.textContent = money(selectedVariant.price);
-            document.getElementById('priceText').textContent = money(selectedVariant.price);
-
-            // Optional: if label is like 8oz/4oz/2oz update Net Wt line
-            var grams = (label === '8oz') ? '227 g' : (label === '4oz') ? '113 g' : (label === '2oz') ? '57 g' : '';
-            var sizeText = grams ? ('Net Wt. ' + label + ' / ' + grams) : ('Net Wt. ' + label);
-            document.getElementById('sizeText').textContent = sizeText;
-
-            noteEl.textContent = 'Selected: ' + label;
-            addBtn.disabled = false;
-          }
-
-          // Render pills (even if there is only one option)
-          if (values.length) {
-            values.forEach(function(val){
-              var btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'size-pill';
-              btn.textContent = val;
-              btn.dataset.value = val;
-              btn.addEventListener('click', function(){ selectByLabel(val); });
-              sizeWrap.appendChild(btn);
-            });
-            selectByLabel(values[0]);
-          } else if (selectedVariant) {
-            var only = labelFromVariant(selectedVariant);
-            var b = document.createElement('button');
-            b.type = 'button';
-            b.className = 'size-pill active';
-            b.textContent = only;
-            b.dataset.value = only;
-            sizeWrap.appendChild(b);
-            selectByLabel(only);
-          }
-        }).catch(function(){
-          // If anything fails, don't strand the user with a grey button.
-          var addBtn = document.getElementById('dn-add-to-cart');
-          var noteEl  = document.getElementById('dn-variant-note');
-          if (noteEl) noteEl.textContent = 'Unable to load sizes right now. Please refresh.';
-          if (addBtn) addBtn.disabled = true;
-        });
-
-        // Qty controls
-        var qtyInput = document.getElementById('dn-qty');
-        document.getElementById('dn-qty-minus').addEventListener('click', function(){
-          var v = Math.max(1, Number(qtyInput.value || 1) - 1);
-          qtyInput.value = v;
-        });
-        document.getElementById('dn-qty-plus').addEventListener('click', function(){
-          var v = Math.max(1, Number(qtyInput.value || 1) + 1);
-          qtyInput.value = v;
-        });
-
-        // Add to cart -> Shopify drawer cart
-        document.getElementById('dn-add-to-cart').addEventListener('click', function(){
-          if (!selectedVariant) return;
-          var qty = Math.max(1, Number(document.getElementById('dn-qty').value || 1));
-
-          window.DNShopify.cart.addLineItems([{ variantId: selectedVariant.id, quantity: qty }]).then(function(){
-            if (window.DNShopify.openCart) window.DNShopify.openCart();
-          });
+        // Mount custom size pills + add-to-cart into drawer
+        window.DNShopify.mountVariantPills({
+          productId: '14889665036653',
+          pillsNode: '#size-options',
+          priceNode: '#variant-price',
+          addBtn: '#add-to-cart',
+          qtyInput: '#qty-input',
+          optionNames: ['size','weight','amount','title'],
+          openCartOnAdd: true
         });
       }
 
-      mount();
+      mountWhenReady();
     })();
   </script>
-
 </body>
 </html>
