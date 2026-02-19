@@ -198,68 +198,104 @@
 
           if (!sizeWrap || !priceEl || !addBtn) return;
 
-          // Find the option index that represents size.
-          // If Shopify names it differently (e.g., "Weight" or "Title"),
-          // we still want clickable pills. If there is only 1 option, use it.
+          // Always default to first variant so the button is never stuck grey
+          selectedVariant = (product.variants && product.variants.length) ? product.variants[0] : null;
+          if (selectedVariant) {
+            priceEl.textContent = money(selectedVariant.price);
+            document.getElementById('priceText').textContent = money(selectedVariant.price);
+            addBtn.disabled = false;
+          }
+
+          // Build "size" pills from the most reliable source:
+          // 1) If a Size/Weight option exists, use its values
+          // 2) Otherwise, derive labels from variant titles (e.g., "8oz")
+          sizeWrap.innerHTML = '';
+
+          function labelFromVariant(v){
+            var t = String(v && v.title || '').toLowerCase();
+            var m = t.match(/(\d+(?:\.\d+)?)\s*oz/);
+            if (m) return m[1] + 'oz';
+            return (v && v.title) ? v.title : 'Default';
+          }
+
+          // Try to find a size-ish option index (including "title")
           var sizeOptionIndex = -1;
           var opts = product.options || [];
           for (var i=0;i<opts.length;i++){
             var name = (opts[i].name || '').toLowerCase().trim();
-            if (name === 'size' || name === 'weight' || name === 'amount') { sizeOptionIndex = i; break; }
+            if (name === 'size' || name === 'weight' || name === 'amount' || name === 'title') { sizeOptionIndex = i; break; }
           }
           if (sizeOptionIndex === -1 && opts.length === 1) sizeOptionIndex = 0;
 
-          function selectVariantBySize(sizeVal){
-            var match = product.variants.find(function(v){
-              return v.options && v.options[sizeOptionIndex] === sizeVal;
+          // Collect pill labels
+          var values = [];
+          if (sizeOptionIndex !== -1 && product.options[sizeOptionIndex] && product.options[sizeOptionIndex].values) {
+            values = product.options[sizeOptionIndex].values.slice();
+          }
+          if (!values.length && product.variants && product.variants.length) {
+            // Derive from variants, unique
+            var seen = {};
+            values = product.variants.map(labelFromVariant).filter(function(v){
+              if (seen[v]) return false;
+              seen[v] = true;
+              return true;
             });
+          }
+
+          function selectByLabel(label){
+            var match = null;
+            // If we have a real option index, try matching by option value first
+            if (sizeOptionIndex !== -1) {
+              match = (product.variants || []).find(function(v){
+                return v.options && v.options[sizeOptionIndex] === label;
+              }) || null;
+            }
+            // Otherwise match by derived label from title
+            if (!match) {
+              match = (product.variants || []).find(function(v){
+                return labelFromVariant(v) === label;
+              }) || null;
+            }
+            if (!match) match = (product.variants && product.variants[0]) ? product.variants[0] : null;
             if (!match) return;
+
             selectedVariant = match;
+            setActiveSize(label);
 
-            setActiveSize(sizeVal);
-
-            // Update displayed price + meta
             priceEl.textContent = money(selectedVariant.price);
-            var grams = (sizeVal === '8oz') ? '227 g' : (sizeVal === '4oz') ? '113 g' : (sizeVal === '2oz') ? '57 g' : '';
             document.getElementById('priceText').textContent = money(selectedVariant.price);
-            document.getElementById('sizeText').textContent = grams ? ('Net Wt. ' + sizeVal + ' / ' + grams) : ('Net Wt. ' + sizeVal);
 
-            noteEl.textContent = 'Selected: ' + sizeVal;
+            // Optional: if label is like 8oz/4oz/2oz update Net Wt line
+            var grams = (label === '8oz') ? '227 g' : (label === '4oz') ? '113 g' : (label === '2oz') ? '57 g' : '';
+            var sizeText = grams ? ('Net Wt. ' + label + ' / ' + grams) : ('Net Wt. ' + label);
+            document.getElementById('sizeText').textContent = sizeText;
+
+            noteEl.textContent = 'Selected: ' + label;
             addBtn.disabled = false;
           }
 
-          // Render buttons
-          sizeWrap.innerHTML = '';
-          if (sizeOptionIndex === -1) {
-            // No Size option — just pick first variant
-            selectedVariant = product.variants[0];
-            priceEl.textContent = money(selectedVariant.price);
-            noteEl.textContent = 'Selected: ' + (selectedVariant.title || 'Default');
-            addBtn.disabled = false;
-            return;
+          // Render pills (even if there is only one option)
+          if (values.length) {
+            values.forEach(function(val){
+              var btn = document.createElement('button');
+              btn.type = 'button';
+              btn.className = 'size-pill';
+              btn.textContent = val;
+              btn.dataset.value = val;
+              btn.addEventListener('click', function(){ selectByLabel(val); });
+              sizeWrap.appendChild(btn);
+            });
+            selectByLabel(values[0]);
+          } else if (selectedVariant) {
+            var only = labelFromVariant(selectedVariant);
+            var b = document.createElement('button');
+            b.type = 'button';
+            b.className = 'size-pill active';
+            b.textContent = only;
+            b.dataset.value = only;
+            sizeWrap.appendChild(b);
+            selectByLabel(only);
           }
-
-          var values = product.options[sizeOptionIndex].values || [];
-          if (!values.length) {
-            // Edge case: option exists but no values surfaced.
-            selectedVariant = product.variants[0];
-            priceEl.textContent = money(selectedVariant.price);
-            noteEl.textContent = 'Selected: ' + (selectedVariant.title || 'Default');
-            addBtn.disabled = false;
-            return;
-          }
-          values.forEach(function(val){
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'size-pill';
-            btn.textContent = val;
-            btn.dataset.value = val;
-            btn.addEventListener('click', function(){ selectVariantBySize(val); });
-            sizeWrap.appendChild(btn);
-          });
-
-          // Auto-select first
-          if (values.length) selectVariantBySize(values[0]);
         }).catch(function(){
           // If anything fails, don't strand the user with a grey button.
           var addBtn = document.getElementById('dn-add-to-cart');
