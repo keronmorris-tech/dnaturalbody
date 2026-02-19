@@ -174,16 +174,41 @@
 
         function fetchProductFlexible(id){
           var client = window.DNShopify.client;
-          // Storefront SDKs sometimes expect a gid; Buy Button UI accepts numeric.
-          // Try a few formats, then fall back to fetchAll.
+
+          function numericFromOpaque(opaqueId){
+            // opaqueId is usually base64("gid://shopify/Product/123")
+            try {
+              var decoded = atob(String(opaqueId));
+              var parts = decoded.split('/');
+              return parts[parts.length - 1] || null;
+            } catch (e) {
+              return null;
+            }
+          }
+
+          // Some ShopifyBuy versions only accept opaque/base64 IDs for fetch().
+          // We try a few formats, then fall back to fetchAll and match by numeric id.
           return client.product.fetch(String(id)).catch(function(){
             return client.product.fetch('gid://shopify/Product/' + String(id));
           }).catch(function(){
             return client.product.fetchAll(250).then(function(all){
-              var match = all.find(function(p){
-                var pid = (p && p.id) ? String(p.id) : '';
-                return pid.endsWith('/' + String(id)) || pid.endsWith(String(id));
-              });
+              var wanted = String(id);
+              var match = null;
+
+              for (var i=0; i<all.length; i++){
+                var p = all[i];
+                var opaque = p && p.id ? String(p.id) : '';
+                var num = numericFromOpaque(opaque);
+
+                // Some SDKs may return gid strings instead of base64
+                if (!num && opaque.indexOf('gid://') === 0) {
+                  var parts = opaque.split('/');
+                  num = parts[parts.length - 1] || null;
+                }
+
+                if (num === wanted) { match = p; break; }
+              }
+
               if (!match) throw new Error('Product not found');
               return match;
             });
