@@ -1,158 +1,132 @@
-/* buybutton.js (D'Natural Body)
-   Global Shopify Buy Button + Cart Drawer wiring
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Cashmere Kisses | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+</head>
 
-   - Loads Shopify Buy Button SDK once
-   - Creates ONE cart drawer component (Shopify's)
-   - Renders Shopify cart toggle (icon + count) into #shopify-cart-toggle in your header
-   - Drawer "Checkout" redirects to Shopify CART page WITH items carried over
-   - Exposes window.DNShopify.mountProduct({id, node, options})
-*/
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
 
-(function () {
-  if (window.DNShopify && window.DNShopify.__initialized) return;
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
 
-  var CONFIG = {
-    myshopifyDomain: 'dpscr1-vz.myshopify.com',
-    storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
-    sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-    toggleNodeId: 'shopify-cart-toggle'
-  };
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
 
-  var state = { ui: null, cart: null, client: null };
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
 
-  function loadSdk(cb) {
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = CONFIG.sdkUrl;
-    (document.head || document.body).appendChild(s);
-    s.onload = cb;
-  }
+      <!-- ✅ Shopify cart toggle renders here (icon + count) -->
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
+    </nav>
+  </header>
 
-  function gidToNumericId(gid) {
-    if (!gid) return null;
-    var parts = String(gid).split('/');
-    return parts[parts.length - 1] || null;
-  }
+  <section class="product-detail">
+    <div class="product-detail-inner">
 
-  function getLineItems() {
-    try {
-      return (state.cart && state.cart.model && state.cart.model.lineItems) ? state.cart.model.lineItems : [];
-    } catch (e) {
-      return [];
-    }
-  }
+      <div class="product-image">
+        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses">
+      </div>
 
-  function buildCartPermalinkFromDrawer() {
-    var items = getLineItems();
-    if (!items.length) return CONFIG.onlineStoreCartBase;
+      <div class="product-info">
+        <h1>Cashmere Kisses</h1>
+        <div class="product-type">Body Butter</div>
 
-    var segments = [];
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var variantGid = item && item.variant && item.variant.id;
-      var variantId = gidToNumericId(variantGid);
-      var qty = Number(item && item.quantity || 0);
-      if (variantId && qty > 0) segments.push(variantId + ':' + qty);
-    }
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 8 oz / 227 g</div>
+        </div>
 
-    if (!segments.length) return CONFIG.onlineStoreCartBase;
-    return CONFIG.onlineStoreCartBase + '/' + segments.join(',');
-  }
+        <p class="product-desc">
+          A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
+          comforting, and perfect for everyday luxury.
+        </p>
 
-  function interceptDrawerCheckoutToCartPage() {
-    document.addEventListener('click', function (e) {
-      var t = e.target;
-      if (!t || !t.closest) return;
+        <div class="product-actions">
+          <!-- Shopify Buy Button mounts here -->
+          <div id="buybutton-cashmere"></div>
+          <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+        </div>
 
-      var btn = t.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
-      if (!btn) return;
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Cushions dry skin with rich, creamy moisture.<br>
+              • Adds a soft, comforting scent that hugs the skin.<br>
+              • Helps improve the look and feel of rough areas over time.
+            </p>
+          </details>
 
-      e.preventDefault();
-      e.stopPropagation();
-      if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter, Cocoa Butter,
+              Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
+            </p>
+          </details>
 
-      window.location.href = buildCartPermalinkFromDrawer();
-    }, true);
-  }
+          <details>
+            <summary>How to Use</summary>
+            <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
+          </details>
+        </div>
+      </div>
 
-  function init() {
-    state.client = ShopifyBuy.buildClient({
-      domain: CONFIG.myshopifyDomain,
-      storefrontAccessToken: CONFIG.storefrontAccessToken
-    });
+    </div>
+  </section>
 
-    ShopifyBuy.UI.onReady(state.client).then(function (ui) {
-      state.ui = ui;
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
 
-      var toggleNode = document.getElementById(CONFIG.toggleNodeId);
-      if (!toggleNode) {
-        // If a page forgot to include it, create it at end of body (still works)
-        toggleNode = document.createElement('div');
-        toggleNode.id = CONFIG.toggleNodeId;
-        document.body.appendChild(toggleNode);
-      }
+  <script src="../buybutton.js"></script>
 
-      state.cart = ui.createComponent('cart', {
-        options: {
-          cart: {
-            startOpen: false,
-            popup: false,
-            text: { total: 'Subtotal', button: 'Checkout' }
-          },
-          toggle: {
-            node: toggleNode,
-            styles: {
-              toggle: {
-                'background-color': 'transparent',
-                ':hover': { 'background-color': 'transparent' },
-                ':focus': { 'background-color': 'transparent' }
+  <script>
+    (function() {
+      function mount() {
+        if (!window.DNShopify || !window.DNShopify.mountProduct) return setTimeout(mount, 80);
+        window.DNShopify.mountProduct({
+          id: '14889665036653',
+          node: '#buybutton-cashmere',
+          options: {
+            product: {
+              buttonDestination: 'cart',
+              layout: 'vertical',
+              contents: {
+                img: false,
+                title: false,
+                price: true,
+                options: true,
+                quantity: true,
+                button: true
+              },
+              text: {
+                button: 'Add to cart'
               }
-            }
+            },
+            cart: { popup: false }
           }
-        }
-      });
-
-      interceptDrawerCheckoutToCartPage();
-
-      window.DNShopify = window.DNShopify || {};
-      window.DNShopify.__initialized = true;
-      window.DNShopify.ui = ui;
-      window.DNShopify.cart = state.cart;
-      window.DNShopify.client = state.client;
-
-      window.DNShopify.openCart = function () {
-        try { if (state.cart && typeof state.cart.open === 'function') state.cart.open(); } catch (e) {}
-      };
-
-      window.DNShopify.mountProduct = function (cfg) {
-        if (!cfg || !cfg.id || !cfg.node) return;
-
-        var nodeEl = (typeof cfg.node === 'string') ? document.querySelector(cfg.node) : cfg.node;
-        if (!nodeEl) return;
-
-        var options = cfg.options || {};
-        options.events = options.events || {};
-
-        if (!options.events.afterAddVariant) {
-          options.events.afterAddVariant = function () {
-            if (window.DNShopify && window.DNShopify.openCart) window.DNShopify.openCart();
-          };
-        }
-
-        ui.createComponent('product', {
-          id: String(cfg.id),
-          node: nodeEl,
-          moneyFormat: '${{amount}}',
-          options: options
         });
-      };
-    });
-  }
+      }
+      mount();
+    })();
+  </script>
 
-  window.DNShopify = window.DNShopify || {};
-  window.DNShopify.__initialized = false;
-
-  if (window.ShopifyBuy && window.ShopifyBuy.UI) init();
-  else loadSdk(init);
-})();
+</body>
+</html>
