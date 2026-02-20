@@ -321,25 +321,47 @@
             }
           });
 
-          // Hook add button
-          addBtn.addEventListener('click', function () {
-            if (!selectedVariant) return;
-            var qty = 1;
-            if (qtyInput) {
-              var q = Number(qtyInput.value);
-              if (!isNaN(q) && q > 0) qty = Math.floor(q);
-            }
+// Hook add button
+addBtn.addEventListener('click', function () {
+  if (!selectedVariant) return;
 
-            // Add into the drawer cart
-            try {
-              var p = state.cart.addLineItems([{ variantId: selectedVariant.id, quantity: qty }]);
-              if (p && typeof p.then === 'function') {
-                p.then(function(){ if (cfg.openCartOnAdd !== false) window.DNShopify.openCart(); });
-              } else {
-                if (cfg.openCartOnAdd !== false) window.DNShopify.openCart();
-              }
-            } catch (e) {}
-          });
+  // Read quantity (default 1)
+  var qty = 1;
+  if (qtyInput) {
+    var q = Number(qtyInput.value);
+    if (!isNaN(q) && q > 0) qty = Math.floor(q);
+  }
+
+  try {
+    // Make sure the Shopify cart + client are ready
+    if (!state.cart || !state.cart.props || !state.cart.props.client || !state.cart.model) {
+      console.error('Shopify cart is not ready');
+      return;
+    }
+
+    var lineItem = {
+      variantId: String(selectedVariant.id),
+      quantity: qty
+    };
+
+    // ✅ Add to the SAME checkout the drawer is using
+    var p = state.cart.props.client.checkout.addLineItems(state.cart.model.id, [lineItem]);
+
+    if (p && typeof p.then === 'function') {
+      p.then(function () {
+        if (cfg.openCartOnAdd !== false && window.DNShopify && typeof window.DNShopify.openCart === 'function') {
+          window.DNShopify.openCart();
+        }
+      });
+    } else {
+      if (cfg.openCartOnAdd !== false && window.DNShopify && typeof window.DNShopify.openCart === 'function') {
+        window.DNShopify.openCart();
+      }
+    }
+  } catch (e) {
+    console.error('Error adding item to Shopify cart', e);
+  }
+});
         }
 
         // Fetch product by numeric ID
