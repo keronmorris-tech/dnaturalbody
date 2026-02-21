@@ -1,4 +1,4 @@
-<!doctype html>
+<!doctype html> 
 <html lang="en">
 <head>
   <meta charset="utf-8" />
@@ -194,32 +194,14 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-    <!-- Global Shopify cart + toggle wiring -->
+  <!-- Global Shopify cart + toggle wiring -->
   <script src="../buybutton.js"></script>
 
   <script>
     (function () {
-      var SHOP_DOMAIN = 'dpscr1-vz.myshopify.com';
-      var STOREFRONT_TOKEN = 'b6634d4da21c44f64244a1ff19a52d78';
-      var PRODUCT_ID = '14889665036653';           // numeric product ID for Cashmere Kisses
-      var CART_FALLBACK = 'https://shop.dnaturalbody.com/cart';
-
+      // numeric product ID for Cashmere Kisses
+      var PRODUCT_ID = '14889665036653';
       var optionNameCandidates = ['size', 'weight', 'amount', 'title'];
-
-      function loadSdk(cb) {
-        if (window.ShopifyBuy && window.ShopifyBuy.buildClient) return cb();
-        var s = document.createElement('script');
-        s.async = true;
-        s.src = 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js';
-        s.onload = cb;
-        document.head.appendChild(s);
-      }
-
-      function formatMoney(amount) {
-        var n = Number(amount);
-        if (isNaN(n)) n = 0;
-        return '$' + n.toFixed(2);
-      }
 
       function clampQty(n) {
         n = Number(n);
@@ -227,52 +209,31 @@
         return Math.floor(n);
       }
 
-      function addToDrawerCheckout(selectedVariant, qty) {
-        // Use the same checkout as the drawer, if available
-        var d = window.DNShopify || {};
-        var cart = d.cart;
-        var client = d.client;
-
-        if (!cart || !client || !cart.model || !cart.model.id) {
-          // drawer not ready -> fallback to online store cart URL
-          var gid = String(selectedVariant.id || '');
-          var numericId = gid.split('/').pop();
-          if (!numericId) return;
-          window.location.href = CART_FALLBACK + '/' + numericId + ':' + qty;
+      // Wait for DNShopify (created by buybutton.js)
+      function waitForDNShopify(cb) {
+        if (window.DNShopify && window.DNShopify.client && window.DNShopify.cart && window.DNShopify.mountVariantPills) {
+          cb();
           return;
         }
-
-        var lineItem = {
-          variantId: String(selectedVariant.id),
-          quantity: qty
-        };
-
-        var p = client.checkout.addLineItems(cart.model.id, [lineItem]);
-        if (p && typeof p.then === 'function') {
-          p.then(function () {
-            if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-              window.DNShopify.openCart();
-            }
-          }).catch(function (err) {
-            console.error('Error adding line items to checkout', err);
-          });
-        } else {
-          // If no promise, just try to open the cart
-          if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-            window.DNShopify.openCart();
+        var tries = 0;
+        var maxTries = 50;
+        var timer = setInterval(function () {
+          if (window.DNShopify && window.DNShopify.client && window.DNShopify.cart && window.DNShopify.mountVariantPills) {
+            clearInterval(timer);
+            cb();
+          } else if (++tries >= maxTries) {
+            clearInterval(timer);
+            console.error('DNShopify not ready, variant pills skipped');
           }
-        }
+        }, 100);
       }
 
       function initPage() {
         var qtyInput = document.getElementById('qty-input');
         var qtyMinus = document.getElementById('qty-minus');
         var qtyPlus  = document.getElementById('qty-plus');
-        var pillsWrap = document.getElementById('size-options');
-        var priceEl   = document.getElementById('variant-price');
-        var addBtn    = document.getElementById('add-to-cart');
 
-        if (!qtyInput || !qtyMinus || !qtyPlus || !pillsWrap || !priceEl || !addBtn) return;
+        if (!qtyInput || !qtyMinus || !qtyPlus) return;
 
         // Quantity controls
         qtyInput.value = '1';
@@ -287,85 +248,16 @@
           qtyInput.value = clampQty(qtyInput.value);
         });
 
-        loadSdk(function () {
-          var client = ShopifyBuy.buildClient({
-            domain: SHOP_DOMAIN,
-            storefrontAccessToken: STOREFRONT_TOKEN
-          });
-
-          client.product.fetch(PRODUCT_ID).then(function (product) {
-            var options = product.options || [];
-            var sizeIndex = 0;
-
-            if (options.length) {
-              var idx = -1;
-              for (var i = 0; i < options.length; i++) {
-                var name = (options[i].name || '').toLowerCase();
-                if (optionNameCandidates.indexOf(name) !== -1) {
-                  idx = i;
-                  break;
-                }
-              }
-              if (idx === -1) idx = 0;
-              sizeIndex = idx;
-            }
-
-            var variantsByLabel = {};
-            (product.variants || []).forEach(function (v) {
-              var opts = v.options || [];
-              var label = opts[sizeIndex] || v.title || 'Default';
-              label = String(label).trim() || 'Default';
-              variantsByLabel[label] = v;
-            });
-
-            var labels = Object.keys(variantsByLabel);
-            if (!labels.length) {
-              var first = product.variants && product.variants[0];
-              if (first) {
-                var basePrice = first.priceV2 ? first.priceV2.amount : first.price;
-                priceEl.textContent = formatMoney(basePrice);
-              }
-              addBtn.disabled = true;
-              return;
-            }
-
-            var selectedVariant = null;
-
-            function setActive(btn) {
-              var all = pillsWrap.querySelectorAll('.size-pill');
-              Array.prototype.forEach.call(all, function (b) {
-                b.classList.toggle('active', b === btn);
-              });
-            }
-
-            labels.forEach(function (label, idx) {
-              var btn = document.createElement('button');
-              btn.type = 'button';
-              btn.className = 'size-pill';
-              btn.textContent = label;
-
-              btn.addEventListener('click', function () {
-                selectedVariant = variantsByLabel[label];
-
-                setActive(btn);
-
-                var vPrice = selectedVariant.priceV2 ? selectedVariant.priceV2.amount : selectedVariant.price;
-                priceEl.textContent = formatMoney(vPrice);
-
-                addBtn.disabled = false;
-              });
-
-              pillsWrap.appendChild(btn);
-              if (idx === 0) btn.click(); // auto-select first size
-            });
-
-            addBtn.addEventListener('click', function () {
-              if (!selectedVariant) return;
-              var qty = clampQty(qtyInput.value || 1);
-              addToDrawerCheckout(selectedVariant, qty);
-            });
-          }).catch(function (err) {
-            console.error('Error fetching product for size pills', err);
+        // Hook up size pills + Add to cart using shared Shopify client & drawer
+        waitForDNShopify(function () {
+          window.DNShopify.mountVariantPills({
+            productId: PRODUCT_ID,
+            pillsNode: '#size-options',
+            priceNode: '#variant-price',
+            addBtn: '#add-to-cart',
+            qtyInput: '#qty-input',
+            optionNames: optionNameCandidates,
+            openCartOnAdd: true
           });
         });
       }
