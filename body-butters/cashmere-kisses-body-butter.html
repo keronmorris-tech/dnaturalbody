@@ -140,10 +140,10 @@
 
   <script>
   (function () {
-    // --- Shopify details for your store + product ---
+    // Shopify details
     var SHOP_DOMAIN = 'dpscr1-vz.myshopify.com';
     var STOREFRONT_TOKEN = 'b6634d4da21c44f64244a1ff19a52d78';
-    var PRODUCT_TITLE = 'Cashmere Kisses';
+    var PRODUCT_ID = '14889665036653'; // numeric product ID for Cashmere Kisses
 
     var optionNameCandidates = ['size', 'weight', 'amount', 'title'];
 
@@ -197,23 +197,7 @@
           storefrontAccessToken: STOREFRONT_TOKEN
         });
 
-        // ✅ Fetch ALL products and locate "Cashmere Kisses" by title
-        client.product.fetchAll().then(function (products) {
-          var product = null;
-          for (var i = 0; i < products.length; i++) {
-            var t = (products[i].title || '').toLowerCase();
-            if (t === PRODUCT_TITLE.toLowerCase()) {
-              product = products[i];
-              break;
-            }
-          }
-
-          if (!product) {
-            console.error('Cashmere Kisses product not found in fetchAll()');
-            addBtn.disabled = true;
-            return;
-          }
-
+        client.product.fetch(PRODUCT_ID).then(function (product) {
           var options = product.options || [];
           var sizeIndex = 0;
 
@@ -250,6 +234,7 @@
           }
 
           var selectedVariant = null;
+          var currentLabel = null;
 
           function setActive(btn) {
             var all = pillsWrap.querySelectorAll('.size-pill');
@@ -258,7 +243,7 @@
             });
           }
 
-          // ✅ Build the size pills from product options
+          // Build the size pills from product variants
           labels.forEach(function (label, idx) {
             var btn = document.createElement('button');
             btn.type = 'button';
@@ -267,15 +252,13 @@
 
             btn.addEventListener('click', function () {
               selectedVariant = variantsByLabel[label];
+              currentLabel = label;
 
-              // Update style
               setActive(btn);
 
-              // Update price
               var vPrice = selectedVariant.priceV2 ? selectedVariant.priceV2.amount : selectedVariant.price;
               priceEl.textContent = formatMoney(vPrice);
 
-              // Enable button
               addBtn.disabled = false;
             });
 
@@ -283,33 +266,44 @@
             if (idx === 0) btn.click(); // auto-select first size
           });
 
-          // ✅ Add to your existing Buy Button cart + open drawer
+          // Use the hidden Shopify Buy Button component to handle cart + drawer
           addBtn.addEventListener('click', function () {
-            if (!selectedVariant) return;
+            if (!selectedVariant || !currentLabel) return;
 
             var qty = clampQty(qtyInput.value || 1);
 
-            var cart = window.DNShopify && window.DNShopify.cart;
-            if (!cart || typeof cart.addLineItems !== 'function') {
-              console.error('DNShopify cart not ready');
+            var root = document.getElementById('product-component-14889665036653');
+            if (!root) {
+              console.error('Hidden Shopify product component not found');
               return;
             }
 
-            var lineItem = {
-              variantId: String(selectedVariant.id), // keep GID as-is
-              quantity: qty
-            };
+            var hiddenSelect = root.querySelector('select.shopify-buy__option-select__select');
+            var hiddenQty = root.querySelector('input[type="number"], input.shopify-buy__quantity-input');
+            var hiddenBtn = root.querySelector('.shopify-buy__btn');
 
-            cart.addLineItems([lineItem]).then(function () {
-              if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-                window.DNShopify.openCart();
-              }
-            }).catch(function (err) {
-              console.error('Error adding item to Shopify cart', err);
-            });
+            if (!hiddenSelect || !hiddenBtn) {
+              console.error('Hidden Shopify controls not ready');
+              return;
+            }
+
+            // Select the correct variant in the hidden dropdown
+            hiddenSelect.value = currentLabel;
+            var changeEvent = new Event('change', { bubbles: true });
+            hiddenSelect.dispatchEvent(changeEvent);
+
+            // Sync quantity
+            if (hiddenQty) {
+              hiddenQty.value = qty;
+              var inputEvent = new Event('change', { bubbles: true });
+              hiddenQty.dispatchEvent(inputEvent);
+            }
+
+            // Click Shopify's own Add to cart button (this opens your drawer + updates icon)
+            hiddenBtn.click();
           });
         }).catch(function (err) {
-          console.error('Error fetching products for size pills', err);
+          console.error('Error fetching product for size pills', err);
         });
       });
     }
@@ -320,6 +314,6 @@
       initPage();
     }
   })();
-</script>
+  </script>
 </body>
 </html>
