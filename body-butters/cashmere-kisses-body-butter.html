@@ -1,210 +1,14 @@
-<!doctype html>
-<html lang="en">
-<head>
-  <meta charset="utf-8" />
-  <title>Cashmere Kisses | D'NATURAL BODY</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="../styles.css">
-
-  <style>
-    /* Hide Shopify default variant dropdown / qty / button inside the hidden product component */
-    #product-component-14889665036653 .shopify-buy__product__variant-selectors,
-    #product-component-14889665036653 .shopify-buy__option-select-wrapper,
-    #product-component-14889665036653 select.shopify-buy__option-select__select,
-    #product-component-14889665036653 .shopify-buy__product__quantity,
-    #product-component-14889665036653 .shopify-buy__btn {
-      display: none !important;
-    }
-
-    .purchase-block { margin-top: 22px; }
-    .purchase-label {
-      font-size: 12px;
-      letter-spacing: .12em;
-      text-transform: uppercase;
-      opacity: .7;
-      margin-bottom: 8px;
-    }
-
-    .size-options {
-      display:flex;
-      gap:10px;
-      flex-wrap:wrap;
-      margin:10px 0 14px;
-    }
-    .size-pill {
-      border:1px solid #222;
-      background:#fff;
-      color:#000;
-      padding:10px 16px;
-      border-radius:999px;
-      cursor:pointer;
-      font-weight:600;
-      font-size:14px;
-    }
-    .size-pill.active {
-      background:#111;
-      color:#fff;
-      border-color:#111;
-    }
-
-    .variant-price {
-      font-size:18px;
-      font-weight:700;
-      margin:6px 0 10px;
-    }
-
-    .qty-row{
-      display:flex;
-      align-items:center;
-      gap:10px;
-      margin: 8px 0 14px;
-    }
-    .qty-btn{
-      width:42px;
-      height:42px;
-      border:1px solid #222;
-      background:#fff;
-      border-radius:10px;
-      cursor:pointer;
-      font-size:18px;
-    }
-    .qty-input{
-      width:64px;
-      height:42px;
-      border:1px solid #222;
-      border-radius:10px;
-      text-align:center;
-      font-weight:700;
-    }
-
-    .btn-primary{
-      background:#111;
-      color:#fff;
-      border:none;
-      padding:14px 18px;
-      border-radius:10px;
-      cursor:pointer;
-      font-weight:700;
-      width:220px;
-    }
-    .btn-primary:disabled{
-      opacity:.5;
-      cursor:not-allowed;
-    }
-  </style>
-</head>
-
-<body class="product-body">
-  <header class="header">
-    <a href="../index.html" class="logo">
-      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
-    </a>
-
-    <nav class="main-nav">
-      <a href="../index.html" class="nav-link">Home</a>
-
-      <div class="nav-item dropdown">
-        <a href="../shop.html" class="nav-link">Shop ▾</a>
-        <div class="dropdown-menu">
-          <a href="../shop.html">View All</a>
-          <a href="../shop-body-butter.html">Body Butter</a>
-          <a href="../shop-body-scrub.html">Body Scrub</a>
-          <a href="../shop-body-yogurt.html">Body Yogurt</a>
-        </div>
-      </div>
-
-      <a href="../about.html" class="nav-link">About</a>
-      <a href="../contact.html" class="nav-link">Contact</a>
-
-      <!-- Cart icon + count (from buybutton.js) -->
-      <div id="shopify-cart-toggle"></div>
-    </nav>
-  </header>
-
-  <section class="product-detail">
-    <div class="product-detail-inner">
-
-      <div class="product-image">
-        <img src="../images/Cashmere-kisses-body-butter.jpg" alt="Cashmere Kisses">
-      </div>
-
-      <div class="product-info">
-        <h1>Cashmere Kisses</h1>
-        <div class="product-type">Body Butter</div>
-
-        <p class="product-desc">
-          A soft, cozy blend that feels like your favorite cashmere sweater on the skin — smoothing,
-          comforting, and perfect for everyday luxury.
-        </p>
-
-        <a href="../shop-body-butter.html" class="outline-btn">Back</a>
-
-        <div class="product-sections">
-          <details open>
-            <summary>Benefits</summary>
-            <p>
-              • Cushions dry skin with rich, creamy moisture.<br>
-              • Adds a soft, comforting scent that hugs the skin.<br>
-              • Helps improve the look and feel of rough areas over time.
-            </p>
-          </details>
-
-          <details>
-            <summary>Ingredients</summary>
-            <p>
-              59.5% Distilled Water, Glycerin, Jojoba Oil, Shea Butter, Mango Butter, Cocoa Butter,
-              Cetyl Alcohol, BTMS-50, Liquid Germall Plus, Fragrance/Essential Oil.
-            </p>
-          </details>
-
-          <details>
-            <summary>How to Use</summary>
-            <p>Apply from neck to toes after bathing, or anytime you want that soft-cashmere feel.</p>
-          </details>
-        </div>
-
-        <!-- PURCHASE BLOCK -->
-        <div class="purchase-block">
-          <div class="purchase-label">Size</div>
-          <div id="size-options" class="size-options"></div>
-
-          <div id="variant-price" class="variant-price">$0.00</div>
-
-          <div class="purchase-label">Quantity</div>
-          <div class="qty-row">
-            <button class="qty-btn" type="button" id="qty-minus">−</button>
-            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
-            <button class="qty-btn" type="button" id="qty-plus">+</button>
-          </div>
-
-          <button id="add-to-cart" class="btn-primary" type="button" disabled>Add to cart</button>
-
-          <!-- Hidden Shopify product component (not shown, just here if needed later) -->
-          <div id="product-component-14889665036653" style="display:none;"></div>
-        </div>
-
-      </div>
-
-    </div>
-  </section>
-
-  <footer class="footer">
-    <p>© 2026 D'NATURAL BODY</p>
-    <p>Email: dnaturalbody@outlook.com</p>
-  </footer>
-
-  <!-- keep your global buybutton.js for header cart etc. -->
+  <!-- Global Shopify cart + toggle wiring -->
   <script src="../buybutton.js"></script>
 
   <script>
     (function () {
       var SHOP_DOMAIN = 'dpscr1-vz.myshopify.com';
       var STOREFRONT_TOKEN = 'b6634d4da21c44f64244a1ff19a52d78';
-      var PRODUCT_ID = '14889665036653';          // Cashmere Kisses product
-      var CART_BASE = 'https://shop.dnaturalbody.com/cart';
+      var PRODUCT_ID = '14889665036653';           // numeric product ID for Cashmere Kisses
+      var CART_FALLBACK = 'https://shop.dnaturalbody.com/cart';
 
-      var optionNameCandidates = ['size','weight','amount','title'];
+      var optionNameCandidates = ['size', 'weight', 'amount', 'title'];
 
       function loadSdk(cb) {
         if (window.ShopifyBuy && window.ShopifyBuy.buildClient) return cb();
@@ -225,6 +29,43 @@
         n = Number(n);
         if (isNaN(n) || n < 1) n = 1;
         return Math.floor(n);
+      }
+
+      function addToDrawerCheckout(selectedVariant, qty) {
+        // Use the same checkout as the drawer, if available
+        var d = window.DNShopify || {};
+        var cart = d.cart;
+        var client = d.client;
+
+        if (!cart || !client || !cart.model || !cart.model.id) {
+          // drawer not ready -> fallback to online store cart URL
+          var gid = String(selectedVariant.id || '');
+          var numericId = gid.split('/').pop();
+          if (!numericId) return;
+          window.location.href = CART_FALLBACK + '/' + numericId + ':' + qty;
+          return;
+        }
+
+        var lineItem = {
+          variantId: String(selectedVariant.id),
+          quantity: qty
+        };
+
+        var p = client.checkout.addLineItems(cart.model.id, [lineItem]);
+        if (p && typeof p.then === 'function') {
+          p.then(function () {
+            if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
+              window.DNShopify.openCart();
+            }
+          }).catch(function (err) {
+            console.error('Error adding line items to checkout', err);
+          });
+        } else {
+          // If no promise, just try to open the cart
+          if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
+            window.DNShopify.openCart();
+          }
+        }
       }
 
       function initPage() {
@@ -273,11 +114,11 @@
               sizeIndex = idx;
             }
 
-            // label -> variant
             var variantsByLabel = {};
             (product.variants || []).forEach(function (v) {
               var opts = v.options || [];
               var label = opts[sizeIndex] || v.title || 'Default';
+              label = String(label).trim() || 'Default';
               variantsByLabel[label] = v;
             });
 
@@ -322,19 +163,10 @@
               if (idx === 0) btn.click(); // auto-select first size
             });
 
-            // Add to cart: redirect to Online Store cart URL
             addBtn.addEventListener('click', function () {
               if (!selectedVariant) return;
-
               var qty = clampQty(qtyInput.value || 1);
-
-              // variant ID is gid like "gid://shopify/ProductVariant/123"
-              var gid = String(selectedVariant.id || '');
-              var numericId = gid.split('/').pop();
-              if (!numericId) return;
-
-              var url = CART_BASE + '/' + numericId + ':' + qty;
-              window.location.href = url;
+              addToDrawerCheckout(selectedVariant, qty);
             });
           }).catch(function (err) {
             console.error('Error fetching product for size pills', err);
