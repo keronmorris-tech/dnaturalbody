@@ -143,8 +143,7 @@
       // --- Shopify details for your store + product ---
       var SHOP_DOMAIN = 'dpscr1-vz.myshopify.com';
       var STOREFRONT_TOKEN = 'b6634d4da21c44f64244a1ff19a52d78';
-      var PRODUCT_ID_NUMERIC = '14889665036653';
-      var PRODUCT_GID = 'gid://shopify/Product/' + PRODUCT_ID_NUMERIC;
+      var PRODUCT_ID = '14889665036653';   // numeric product ID
 
       var optionNameCandidates = ['size', 'weight', 'amount', 'title'];
 
@@ -198,7 +197,7 @@
             storefrontAccessToken: STOREFRONT_TOKEN
           });
 
-          client.product.fetch(PRODUCT_GID).then(function (product) {
+          client.product.fetch(PRODUCT_ID).then(function (product) {
             var options = product.options || [];
             var sizeIndex = 0;
 
@@ -268,36 +267,39 @@
               if (idx === 0) btn.click(); // auto-select first size
             });
 
-// When Add to cart is clicked, add into Shopify Buy Button cart + open drawer
-addBtn.addEventListener('click', function () {
-  if (!selectedVariant) return;
+            // When Add to cart is clicked, add into Shopify Buy Button cart + open drawer
+            addBtn.addEventListener('click', function () {
+              if (!selectedVariant) return;
 
-  var qty = clampQty(qtyInput.value || 1);
+              var qty = clampQty(qtyInput.value || 1);
 
-  // Get the existing Buy Button cart component from DNShopify
-  var d = window.DNShopify || {};
-  var ui = d.ui;
-  var uiCart = ui && ui.components && ui.components.cart && ui.components.cart[0];
+              // Get the existing Buy Button cart component from DNShopify
+              var d = window.DNShopify || {};
+              var ui = d.ui;
+              var uiCart = ui && ui.components && ui.components.cart && ui.components.cart[0];
 
-  if (!uiCart || typeof uiCart.addLineItems !== 'function') {
-    console.error('Shopify cart UI not ready or addLineItems missing');
-    return;
-  }
+              if (!uiCart || typeof uiCart.addLineItems !== 'function') {
+                console.error('Shopify cart UI not ready or addLineItems missing');
+                return;
+              }
 
-  var lineItem = {
-    variantId: String(selectedVariant.id), // keep the GID as-is
-    quantity: qty
-  };
+              var lineItem = {
+                variantId: String(selectedVariant.id),
+                quantity: qty
+              };
 
-  uiCart.addLineItems([lineItem]).then(function () {
-    // now that the cart UI knows about the new line item, open the drawer
-    if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-      window.DNShopify.openCart();
-    }
-  }).catch(function (err) {
-    console.error('Error adding item to Shopify cart', err);
-  });
-});
+              uiCart.addLineItems([lineItem]).then(function () {
+                if (window.DNShopify && typeof window.DNShopify.openCart === 'function') {
+                  window.DNShopify.openCart();
+                }
+              }).catch(function (err) {
+                console.error('Error adding item to Shopify cart', err);
+              });
+            });
+          }).catch(function (err) {
+            console.error('Error fetching product for size pills', err);
+          });
+        });
       }
 
       if (document.readyState === 'loading') {
