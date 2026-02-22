@@ -186,15 +186,15 @@
       state.ui = ui;
 
       // Global cart drawer (BACK TO IFRAME: true → Shopify styles + layout)
-      state.cart = ui.createComponent('cart', {
-        options: {
-          cart: {
-            iframe: true,
-            popup: true,
-            startOpen: false
-          }
-        }
-      });
+state.cart = ui.createComponent('cart', {
+  options: {
+    cart: {
+      iframe: true,
+      popup: false,   // ✅ same-tab checkout
+      startOpen: false
+    }
+  }
+});
 
       // Header toggle, if node exists
       if (ensureToggleNodeExists()) {
