@@ -17,7 +17,8 @@
 
    Result:
    - Add to cart => adds item to the drawer cart AND opens the drawer.
-   - Checkout button in the drawer => goes to Shopify checkout page (default behavior).
+   - Checkout button INSIDE the drawer => goes to Shopify checkout page
+     (handled by Shopify Buy Button UI).
 */
 
 (function () {
@@ -27,7 +28,6 @@
   var CONFIG = {
     myshopifyDomain: 'dpscr1-vz.myshopify.com',
     storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
     toggleNodeId: 'shopify-cart-toggle'
   };
@@ -138,6 +138,23 @@
     });
   }
 
+  function openCartDrawer(cart) {
+    cart = cart || state.cart;
+    try {
+      if (cart && typeof cart.open === 'function') {
+        cart.open();
+        return;
+      }
+      // Fallback: click Shopify's own toggle button
+      var t = document.querySelector(
+        '#' + CSS.escape(CONFIG.toggleNodeId) + ' .shopify-buy__cart-toggle'
+      );
+      if (t) t.click();
+    } catch (e) {
+      console.warn('DNShopify: could not open cart drawer', e);
+    }
+  }
+
   // ------------------- LOAD ONE PRODUCT BY ID -------------------
 
   function fetchProductByNumericId(numericId) {
@@ -148,7 +165,7 @@
 
     var idStr = String(numericId);
 
-    // 1) Try numeric ID (Shopify UI snippets use numeric ids)
+    // 1) Try numeric ID
     return state.client.product
       .fetch(idStr)
       .then(function (product) {
@@ -293,7 +310,8 @@
 
         ensureCartReady().then(function (cart) {
           if (!cart || !cart.model || !cart.model.id || !state.client) {
-            throw new Error('Cart drawer not ready');
+            console.error('DNShopify: cart drawer not ready; item not added');
+            return;
           }
 
           var checkoutId = cart.model.id;
@@ -311,30 +329,21 @@
 
           if (p && typeof p.then === 'function') {
             p.then(function () {
-              if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
-                cart.open();
+              if (cfg.openCartOnAdd !== false) {
+                openCartDrawer(cart);
               }
             }).catch(function (err) {
-              console.error('DNShopify: error adding line items, falling back to cart URL', err);
-              var numericId = gidToNumericId(selectedVariant.id);
-              if (numericId) {
-                window.location.href =
-                  CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-              }
+              console.error('DNShopify: error adding line items', err);
+              // NO redirect here – user stays on page
             });
           } else {
             // No promise returned – assume it worked, just open the cart
-            if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
-              cart.open();
+            if (cfg.openCartOnAdd !== false) {
+              openCartDrawer(cart);
             }
           }
         }).catch(function (err) {
-          console.error('DNShopify: cart not ready, falling back to cart URL', err);
-          var numericId = gidToNumericId(selectedVariant.id);
-          if (numericId) {
-            window.location.href =
-              CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-          }
+          console.error('DNShopify: cart not ready', err);
         });
       });
     }
@@ -408,9 +417,7 @@
 
       window.DNShopify.openCart = function () {
         ensureCartReady().then(function (cart) {
-          if (cart && typeof cart.open === 'function') {
-            cart.open();
-          }
+          openCartDrawer(cart);
         }).catch(function () {});
       };
 
