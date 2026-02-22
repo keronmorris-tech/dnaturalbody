@@ -164,6 +164,7 @@
         } catch (e) {}
       };
 
+      // ------- Standard Buy Button products (if you ever need them) -------
       window.DNShopify.mountProduct = function (cfg) {
         if (!cfg || !cfg.id || !cfg.node) return;
         var nodeEl = typeof cfg.node === 'string' ? document.querySelector(cfg.node) : cfg.node;
@@ -254,25 +255,6 @@
           if (btnEl) btnEl.classList.add('active');
         }
 
-        // Wait for cart/checkout to be ready before adding items
-        function waitForCartReady(callback, tries) {
-          tries = tries || 0;
-          if (
-            state.cart &&
-            state.cart.model &&
-            state.cart.props &&
-            state.cart.props.client
-          ) {
-            callback();
-          } else if (tries < 50) {
-            setTimeout(function () {
-              waitForCartReady(callback, tries + 1);
-            }, 50);
-          } else {
-            console.error('Shopify cart failed to initialize');
-          }
-        }
-
         function renderPillsFromVariants(product) {
           pillsNode.innerHTML = '';
 
@@ -341,7 +323,7 @@
             }
           });
 
-          // Hook add button (only once per mount)
+          // Hook add button (once per mount)
           addBtn.addEventListener('click', function () {
             if (!selectedVariant) return;
 
@@ -352,14 +334,21 @@
               if (!isNaN(q) && q > 0) qty = Math.floor(q);
             }
 
-            waitForCartReady(function () {
-              try {
-                var lineItem = {
-                  variantId: String(selectedVariant.id),
-                  quantity: qty
-                };
+            // Prefer cart drawer checkout if it's alive
+            try {
+              var hasDrawerCheckout =
+                state.cart &&
+                state.cart.props &&
+                state.cart.props.client &&
+                state.cart.model &&
+                state.cart.model.id;
 
-                // Add to the SAME checkout the drawer is using
+              var lineItem = {
+                variantId: String(selectedVariant.id),
+                quantity: qty
+              };
+
+              if (hasDrawerCheckout) {
                 var p = state.cart.props.client.checkout.addLineItems(
                   state.cart.model.id,
                   [lineItem]
@@ -374,8 +363,17 @@
                     ) {
                       window.DNShopify.openCart();
                     }
+                  }).catch(function (err) {
+                    console.error('Error adding item to Shopify cart, falling back to cart URL', err);
+                    // fallback: go to online store cart page with just this item
+                    var numericId = gidToNumericId(selectedVariant.id);
+                    if (numericId) {
+                      window.location.href =
+                        CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
+                    }
                   });
                 } else {
+                  // no promise, just open drawer
                   if (
                     cfg.openCartOnAdd !== false &&
                     window.DNShopify &&
@@ -384,10 +382,19 @@
                     window.DNShopify.openCart();
                   }
                 }
-              } catch (e) {
-                console.error('Error adding item to Shopify cart', e);
+              } else {
+                // Drawer/cart didn't initialize → go to Online Store cart page
+                var numericId = gidToNumericId(selectedVariant.id);
+                if (numericId) {
+                  window.location.href =
+                    CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
+                } else {
+                  console.error('Shopify cart not ready and could not resolve variant id');
+                }
               }
-            });
+            } catch (e) {
+              console.error('Error adding item to Shopify cart', e);
+            }
           });
         }
 
@@ -397,7 +404,7 @@
 
         findProductByNumericId(cfg.productId).then(function (product) {
           if (!product) {
-            // If not found, try to fetch a smaller set again (sometimes cache)
+            // If not found, try again after the cache is hydrated
             return fetchAllProductsOnce().then(function () {
               return findProductByNumericId(cfg.productId);
             });
