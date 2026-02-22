@@ -35,9 +35,7 @@
   var state = {
     client: null,
     ui: null,
-    cart: null,
-    productsCache: null,
-    productsCachePromise: null
+    cart: null
   };
 
   // ------------------- SDK LOADER -------------------
@@ -123,8 +121,8 @@
   // ------------------- CART HELPERS -------------------
 
   function ensureCartReady() {
-    // In this setup the cart is created synchronously in init(),
-    // but this keeps us safe if mountVariantPills gets called ASAP.
+    // Cart is created synchronously in init, but in case mountVariantPills
+    // runs very quickly, we poll a few times.
     return new Promise(function (resolve) {
       if (state.cart) return resolve(state.cart);
 
@@ -140,34 +138,25 @@
     });
   }
 
-  // ------------------- PRODUCT FETCHING (for pills) -------------------
+  // ------------------- LOAD ONE PRODUCT BY ID -------------------
 
-  function fetchAllProductsOnce() {
-    if (state.productsCache) return Promise.resolve(state.productsCache);
-    if (state.productsCachePromise) return state.productsCachePromise;
+  function fetchProductByNumericId(numericId) {
+    if (!state.client || !state.client.product) {
+      console.error('DNShopify: client.product API not available');
+      return Promise.resolve(null);
+    }
 
-    state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
-      state.productsCache = products || [];
-      return state.productsCache;
-    }).catch(function (err) {
-      console.error('Error fetching all Shopify products for pills:', err);
-      state.productsCache = [];
-      return state.productsCache;
-    });
+    var gid = 'gid://shopify/Product/' + String(numericId);
 
-    return state.productsCachePromise;
-  }
-
-  function findProductByNumericId(numericId) {
-    var wanted = String(numericId);
-    return fetchAllProductsOnce().then(function (products) {
-      for (var i = 0; i < products.length; i++) {
-        var p = products[i];
-        var num = gidToNumericId(p && p.id);
-        if (num && String(num) === wanted) return p;
-      }
-      return null;
-    });
+    return state.client.product
+      .fetch(gid)
+      .then(function (product) {
+        return product || null;
+      })
+      .catch(function (err) {
+        console.error('DNShopify: error fetching product', numericId, err);
+        return null;
+      });
   }
 
   // ------------------- VARIANT PILLS -------------------
@@ -299,19 +288,38 @@
             quantity: qty
           };
 
-          return client.checkout.addLineItems(checkoutId, [lineItem]).then(function () {
+          var p;
+          try {
+            p = client.checkout.addLineItems(checkoutId, [lineItem]);
+          } catch (err) {
+            console.error('DNShopify: addLineItems threw synchronously', err);
+          }
+
+          if (p && typeof p.then === 'function') {
+            p.then(function () {
+              if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
+                cart.open();
+              }
+            }).catch(function (err) {
+              console.error('DNShopify: error adding line items, falling back to cart URL', err);
+              var numericId = gidToNumericId(selectedVariant.id);
+              if (numericId) {
+                window.location.href =
+                  CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
+              }
+            });
+          } else {
+            // No promise returned – assume it worked, just open the cart
             if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
               cart.open();
             }
-          });
+          }
         }).catch(function (err) {
-          console.error('Error adding item to Shopify cart; falling back to cart URL.', err);
-
-          // Fallback: send them to the Online Store cart with just this item
+          console.error('DNShopify: cart not ready, falling back to cart URL', err);
           var numericId = gidToNumericId(selectedVariant.id);
           if (numericId) {
-            var url = CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-            window.location.href = url;
+            window.location.href =
+              CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
           }
         });
       });
@@ -321,26 +329,19 @@
     setBtnEnabled(false);
     priceNode.textContent = '$0.00';
 
-    // Fetch product by numeric id
-    findProductByNumericId(cfg.productId).then(function (product) {
-      if (!product) {
-        // If not found yet, make sure the cache is hydrated and try again
-        return fetchAllProductsOnce().then(function () {
-          return findProductByNumericId(cfg.productId);
-        });
-      }
-      return product;
-    }).then(function (product) {
-      if (!product) {
-        console.error('DNShopify.mountVariantPills: could not find product with id', cfg.productId);
+    fetchProductByNumericId(cfg.productId)
+      .then(function (product) {
+        if (!product) {
+          console.error('DNShopify.mountVariantPills: could not find product with id', cfg.productId);
+          setBtnEnabled(false);
+          return;
+        }
+        renderPillsFromProduct(product);
+      })
+      .catch(function (err) {
+        console.error('DNShopify: unexpected error in mountVariantPills', err);
         setBtnEnabled(false);
-        return;
-      }
-      renderPillsFromProduct(product);
-    }).catch(function (err) {
-      console.error('Error setting up variant pills:', err);
-      setBtnEnabled(false);
-    });
+      });
   }
 
   // ------------------- INIT -------------------
@@ -354,7 +355,7 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
-      // 1. Create cart drawer (synchronously in this SDK)
+      // 1. Create cart drawer
       state.cart = ui.createComponent('cart', {
         options: {
           cart: {
