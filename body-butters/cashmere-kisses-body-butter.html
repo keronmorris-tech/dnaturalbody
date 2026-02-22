@@ -203,7 +203,36 @@
   <!-- IMPORTANT: Do NOT include the Shopify SDK script directly on this page.
        buybutton.js will load it once and share it across the site. -->
   <script src="../buybutton.js"></script>
+<!-- Force Shopify checkout to stay in the same tab -->
+<script>
+  (function () {
+    // avoid patching twice
+    if (window.__DN_FORCE_SAME_TAB__) return;
+    window.__DN_FORCE_SAME_TAB__ = true;
 
+    var nativeOpen = window.open;
+
+    window.open = function (url, name, specs) {
+      try {
+        // Only catch Shopify checkout/cart URLs
+        if (
+          typeof url === 'string' &&
+          (
+            url.indexOf('myshopify.com') !== -1 ||      // your myshopify domain
+            url.indexOf('shop.dnaturalbody.com') !== -1 // your custom storefront
+          )
+        ) {
+          // Use same tab instead of opening a new one
+          window.location.href = url;
+          return window;
+        }
+      } catch (e) {
+        // if anything weird happens, fall back to normal
+      }
+      return nativeOpen.apply(this, arguments);
+    };
+  })();
+</script>
   <!-- Page-specific logic: quantity controls + mount variant pills -->
   <script>
     (function () {
