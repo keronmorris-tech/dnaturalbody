@@ -16,6 +16,7 @@
       opacity: .7;
       margin-bottom: 8px;
     }
+
     .qty-row {
       display:flex;
       align-items:center;
@@ -39,6 +40,7 @@
       text-align:center;
       font-weight:700;
     }
+
     .btn-primary {
       background:#111;
       color:#fff;
@@ -53,6 +55,10 @@
     .btn-primary:disabled {
       opacity:.5;
       cursor:not-allowed;
+    }
+
+    .size-options {
+      display:none;
     }
   </style>
 </head>
@@ -87,18 +93,21 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Peach-please-body-scrub.jpg" alt="Peach Please Body Scrub">
+        <img src="../images/peach-please-body-scrub.jpg" alt="Peach Please">
       </div>
 
       <div class="product-info">
         <h1>Peach Please</h1>
         <div class="product-type">Body Scrub</div>
-        <p class="product-price">$22.00</p>
-        <p class="product-meta">Net Wt. 12 oz</p>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 12 oz</div>
+        </div>
 
         <p class="product-desc">
-          A juicy peach-scented scrub that buffs away dullness and leaves your skin
-          soft, smooth, and sweetly scented.
+          A juicy, sugar-based exfoliating scrub that gently buffs away dull skin,
+          leaving your body soft, hydrated, and smelling like ripe, sweet peaches.
         </p>
 
         <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
@@ -107,25 +116,25 @@
           <details open>
             <summary>Benefits</summary>
             <p>
-              • Gently removes dead skin build-up.<br>
-              • Helps reveal soft, touchable skin.<br>
-              • Peachy fragrance for a fresh-out-the-shower glow.
+              • Smooths away rough, flaky patches.<br>
+              • Leaves skin nourished, moisturized, and glowy.<br>
+              • Fun, fruity scent that lingers softly on the skin.
             </p>
           </details>
 
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils,
-              Vitamin E, Mica, Preservative.
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica,
+              Preservative, Vitamin E.
             </p>
           </details>
 
           <details>
             <summary>How to Use</summary>
             <p>
-              Massage onto damp skin in circular motions, then rinse.
-              Use 2–3 times a week or as needed.
+              Apply to damp skin in the shower, scrub gently in circular motions, and rinse well.
+              Use 2–3 times per week.
             </p>
           </details>
         </div>
@@ -142,10 +151,11 @@
             Add to cart
           </button>
 
-          <div id="product-component-14892491800941" style="display:none;"></div>
+          <div id="size-options" class="size-options"></div>
         </div>
 
       </div>
+
     </div>
   </section>
 
@@ -155,10 +165,10 @@
   </footer>
 
   <script src="../buybutton.js"></script>
+
   <script>
     (function () {
-      var PRODUCT_ID = '14892491800941';
-      var HIDDEN_NODE_ID = 'product-component-14892491800941';
+      var PRODUCT_ID_NUMERIC = '14892491800941';
 
       function clampQty(n) {
         n = Number(n);
@@ -192,74 +202,25 @@
         });
       }
 
-      function initShopifyBridge() {
+      function initVariantBinding() {
         function waitForDNShopify() {
           if (
             window.DNShopify &&
             window.DNShopify.__initialized &&
-            typeof window.DNShopify.mountProduct === 'function'
+            typeof window.DNShopify.mountVariantPills === 'function'
           ) {
-            window.DNShopify.mountProduct({
-              id: PRODUCT_ID,
-              node: '#' + HIDDEN_NODE_ID,
-              options: {
-                product: {
-                  buttonDestination: 'cart',
-                  layout: 'vertical',
-                  contents: {
-                    img: false,
-                    title: false,
-                    price: false,
-                    options: true,
-                    quantity: true,
-                    button: true
-                  },
-                  text: { button: 'Add to cart' }
-                },
-                cart: { popup: false }
-              }
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',
+              priceNode: '#priceText',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
             });
-
-            bridgeVisibleButton();
           } else {
             setTimeout(waitForDNShopify, 50);
           }
-        }
-
-        function bridgeVisibleButton() {
-          var visibleBtn = document.getElementById('add-to-cart');
-          var qtyInput  = document.getElementById('qty-input');
-          if (!visibleBtn) return;
-
-          visibleBtn.disabled = true;
-
-          function connect() {
-            var root = document.getElementById(HIDDEN_NODE_ID);
-            if (!root) { setTimeout(connect, 60); return; }
-
-            var hiddenBtn = root.querySelector('.shopify-buy__btn');
-            var hiddenQty = root.querySelector('.shopify-buy__quantity-input');
-
-            if (!hiddenBtn) { setTimeout(connect, 80); return; }
-
-            visibleBtn.disabled = false;
-
-            visibleBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              var qty = clampQty(qtyInput && qtyInput.value);
-              if (qtyInput) qtyInput.value = qty;
-
-              if (hiddenQty) {
-                hiddenQty.value = String(qty);
-                var evt = new Event('change', { bubbles: true });
-                hiddenQty.dispatchEvent(evt);
-              }
-
-              hiddenBtn.click();
-            });
-          }
-
-          connect();
         }
 
         waitForDNShopify();
@@ -267,7 +228,7 @@
 
       function initPage() {
         initQtyControls();
-        initShopifyBridge();
+        initVariantBinding();
       }
 
       if (document.readyState === 'loading') {
