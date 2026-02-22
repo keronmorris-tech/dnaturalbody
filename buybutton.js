@@ -30,6 +30,8 @@
     productsCachePromise: null
   };
 
+  /* ----------------- helpers ----------------- */
+
   function loadSdk(cb) {
     var s = document.createElement('script');
     s.async = true;
@@ -109,6 +111,86 @@
     return !!document.getElementById(CONFIG.toggleNodeId);
   }
 
+  /* -------- toast for "item added" -------- */
+
+  function showToast(message) {
+    var text = message || 'Item was added to your cart.';
+
+    var toast = document.getElementById('dn-cart-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.id = 'dn-cart-toast';
+      toast.style.position = 'fixed';
+      toast.style.top = '16px';
+      toast.style.left = '50%';
+      toast.style.transform = 'translateX(-50%)';
+      toast.style.background = 'rgba(0,0,0,0.9)';
+      toast.style.color = '#fff';
+      toast.style.padding = '10px 18px';
+      toast.style.borderRadius = '999px';
+      toast.style.fontSize = '14px';
+      toast.style.fontFamily = 'Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
+      toast.style.zIndex = '9999';
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.25s ease';
+      toast.style.pointerEvents = 'none';
+      document.body.appendChild(toast);
+    }
+
+    toast.textContent = text;
+    toast.style.opacity = '1';
+
+    clearTimeout(showToast._hideTimer);
+    showToast._hideTimer = setTimeout(function () {
+      toast.style.opacity = '0';
+    }, 2200);
+  }
+
+  /* ---------- product cache helpers ---------- */
+
+  function fetchAllProductsOnce() {
+    if (state.productsCache) return Promise.resolve(state.productsCache);
+    if (state.productsCachePromise) return state.productsCachePromise;
+
+    state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
+      state.productsCache = products || [];
+      return state.productsCache;
+    });
+
+    return state.productsCachePromise;
+  }
+
+  function findProductByNumericId(numericId) {
+    var wanted = String(numericId);
+    return fetchAllProductsOnce().then(function (products) {
+      for (var i = 0; i < products.length; i++) {
+        var p = products[i];
+        var num = gidToNumericId(p && p.id);
+        if (num && String(num) === wanted) return p;
+      }
+      return null;
+    });
+  }
+
+  function getVariantPrice(v) {
+    if (!v) return null;
+    if (typeof v.price === 'string' || typeof v.price === 'number') return String(v.price);
+    if (v.priceV2) {
+      if (typeof v.priceV2 === 'string' || typeof v.priceV2 === 'number') return String(v.priceV2);
+      if (v.priceV2.amount) return String(v.priceV2.amount);
+    }
+    if (v.price && v.price.amount) return String(v.price.amount);
+    return null;
+  }
+
+  function defaultMoney(amountStr) {
+    var n = Number(amountStr);
+    if (isNaN(n)) return '$0.00';
+    return '$' + n.toFixed(2);
+  }
+
+  /* ------------- init + globals ------------- */
+
   function init() {
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
@@ -159,11 +241,15 @@
         try {
           if (state.cart && typeof state.cart.open === 'function') {
             state.cart.open();
+          } else if (state.cart && typeof state.cart.toggleVisibility === 'function') {
+            state.cart.toggleVisibility();
           }
-        } catch (e) {}
+        } catch (e) {
+          console.warn('DNShopify: unable to open cart drawer', e);
+        }
       };
 
-      // ------- Standard Buy Button products (if you ever need them) -------
+      /* ------- Standard Buy Button products (optional) ------- */
       window.DNShopify.mountProduct = function (cfg) {
         if (!cfg || !cfg.id || !cfg.node) return;
         var nodeEl = typeof cfg.node === 'string' ? document.querySelector(cfg.node) : cfg.node;
@@ -185,50 +271,8 @@
         });
       };
 
-      // ---------- Variant Pills ----------
+      /* ---------- Variant Pills (custom UI) ---------- */
 
-      function fetchAllProductsOnce() {
-        if (state.productsCache) return Promise.resolve(state.productsCache);
-        if (state.productsCachePromise) return state.productsCachePromise;
-
-        state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
-          state.productsCache = products || [];
-          return state.productsCache;
-        });
-
-        return state.productsCachePromise;
-      }
-
-      function findProductByNumericId(numericId) {
-        var wanted = String(numericId);
-        return fetchAllProductsOnce().then(function (products) {
-          for (var i = 0; i < products.length; i++) {
-            var p = products[i];
-            var num = gidToNumericId(p && p.id);
-            if (num && String(num) === wanted) return p;
-          }
-          return null;
-        });
-      }
-
-      function getVariantPrice(v) {
-        if (!v) return null;
-        if (typeof v.price === 'string' || typeof v.price === 'number') return String(v.price);
-        if (v.priceV2) {
-          if (typeof v.priceV2 === 'string' || typeof v.priceV2 === 'number') return String(v.priceV2);
-          if (v.priceV2.amount) return String(v.priceV2.amount);
-        }
-        if (v.price && v.price.amount) return String(v.price.amount);
-        return null;
-      }
-
-      function defaultMoney(amountStr) {
-        var n = Number(amountStr);
-        if (isNaN(n)) return '$0.00';
-        return '$' + n.toFixed(2);
-      }
-
-      // ---------- PUBLIC: mountVariantPills ----------
       window.DNShopify.mountVariantPills = function (cfg) {
         if (!cfg || !cfg.productId) return;
 
@@ -244,6 +288,7 @@
           : ['size', 'weight', 'amount', 'title'];
 
         var selectedVariant = null;
+        var currentProduct  = null;
 
         function setBtnEnabled(on) {
           addBtn.disabled = !on;
@@ -256,41 +301,66 @@
           if (btnEl) btnEl.classList.add('active');
         }
 
-        // Simple top-center toast
-        function showToast(productTitle) {
-          var msg = (productTitle ? productTitle : 'Item') + ' was added to your cart.';
+        function addToCart(selectedVariant, qty) {
+          if (!selectedVariant) return;
 
-          var toast = document.getElementById('dn-cart-toast');
-          if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'dn-cart-toast';
-            toast.style.position = 'fixed';
-            toast.style.top = '16px';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.background = 'rgba(0,0,0,0.9)';
-            toast.style.color = '#fff';
-            toast.style.padding = '10px 18px';
-            toast.style.borderRadius = '999px';
-            toast.style.fontSize = '14px';
-            toast.style.fontFamily = 'Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            toast.style.zIndex = '9999';
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.25s ease';
-            toast.style.pointerEvents = 'none';
-            document.body.appendChild(toast);
+          var lineItem = {
+            variantId: String(selectedVariant.id),
+            quantity: qty
+          };
+
+          try {
+            var cart = state.cart;
+            var client = (cart && cart.props && cart.props.client) || state.client;
+            var checkoutId = cart && cart.model && cart.model.id;
+
+            if (client && client.checkout && checkoutId) {
+              var p = client.checkout.addLineItems(checkoutId, [lineItem]);
+
+              if (p && typeof p.then === 'function') {
+                p.then(function () {
+                  showToast((currentProduct && currentProduct.title) || 'Item');
+                  if (
+                    cfg.openCartOnAdd !== false &&
+                    window.DNShopify &&
+                    typeof window.DNShopify.openCart === 'function'
+                  ) {
+                    window.DNShopify.openCart();
+                  }
+                }).catch(function (err) {
+                  console.error('DNShopify: error adding via cart drawer, falling back to cart URL', err);
+                  var numericId = gidToNumericId(selectedVariant.id);
+                  if (numericId) {
+                    window.location.href =
+                      CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
+                  }
+                });
+              } else {
+                // No promise returned – just show toast + open cart
+                showToast((currentProduct && currentProduct.title) || 'Item');
+                if (
+                  cfg.openCartOnAdd !== false &&
+                  window.DNShopify &&
+                  typeof window.DNShopify.openCart === 'function'
+                ) {
+                  window.DNShopify.openCart();
+                }
+              }
+            } else {
+              console.warn('DNShopify: cart drawer not ready, redirecting to Online Store cart');
+              var numericId2 = gidToNumericId(selectedVariant.id);
+              if (numericId2) {
+                window.location.href =
+                  CONFIG.onlineStoreCartBase + '/' + numericId2 + ':' + qty;
+              }
+            }
+          } catch (e) {
+            console.error('DNShopify: unexpected error adding to cart', e);
           }
-
-          toast.textContent = msg;
-          toast.style.opacity = '1';
-
-          clearTimeout(showToast._hideTimer);
-          showToast._hideTimer = setTimeout(function () {
-            toast.style.opacity = '0';
-          }, 2200);
         }
 
         function renderPillsFromVariants(product) {
+          currentProduct = product || null;
           pillsNode.innerHTML = '';
 
           var optionIndex = -1;
@@ -359,72 +429,14 @@
               if (!isNaN(q) && q > 0) qty = Math.floor(q);
             }
 
-            try {
-              var hasDrawerCheckout =
-                state.cart &&
-                state.cart.props &&
-                state.cart.props.client &&
-                state.cart.model &&
-                state.cart.model.id;
-
-              var lineItem = {
-                variantId: String(selectedVariant.id),
-                quantity: qty
-              };
-
-              if (hasDrawerCheckout) {
-                var p = state.cart.props.client.checkout.addLineItems(
-                  state.cart.model.id,
-                  [lineItem]
-                );
-
-                if (p && typeof p.then === 'function') {
-                  p.then(function () {
-                    showToast(product && product.title);
-
-                    if (
-                      cfg.openCartOnAdd !== false &&
-                      window.DNShopify &&
-                      typeof window.DNShopify.openCart === 'function'
-                    ) {
-                      window.DNShopify.openCart();
-                    }
-                  }).catch(function (err) {
-                    console.error('Error adding item to Shopify cart, falling back to cart URL', err);
-                    var numericId = gidToNumericId(selectedVariant.id);
-                    if (numericId) {
-                      window.location.href =
-                        CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-                    }
-                  });
-                } else {
-                  showToast(product && product.title);
-                  if (
-                    cfg.openCartOnAdd !== false &&
-                    window.DNShopify &&
-                    typeof window.DNShopify.openCart === 'function'
-                  ) {
-                    window.DNShopify.openCart();
-                  }
-                }
-              } else {
-                var numericId = gidToNumericId(selectedVariant.id);
-                if (numericId) {
-                  window.location.href =
-                    CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-                } else {
-                  console.error('Shopify cart not ready and could not resolve variant id');
-                }
-              }
-            } catch (e) {
-              console.error('Error adding item to Shopify cart', e);
-            }
+            addToCart(selectedVariant, qty);
           });
         }
 
         setBtnEnabled(false);
         priceNode.textContent = '$0.00';
 
+        // fetch product and then render pills
         findProductByNumericId(cfg.productId).then(function (product) {
           if (!product) {
             return fetchAllProductsOnce().then(function () {
