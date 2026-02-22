@@ -8,7 +8,6 @@
   <link rel="stylesheet" href="../styles.css">
 
   <style>
-    /* Purchase block + qty + button (same as Cashmere) */
     .purchase-block { margin-top: 22px; }
     .purchase-label {
       font-size: 12px;
@@ -57,6 +56,11 @@
       opacity:.5;
       cursor:not-allowed;
     }
+
+    /* Hidden size pills container (scrubs are one-size but we still use it to wire Shopify) */
+    .size-options {
+      display:none;
+    }
   </style>
 </head>
 
@@ -82,7 +86,6 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
-      <!-- Cart toggle (from buybutton.js) -->
       <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
     </nav>
   </header>
@@ -91,14 +94,17 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Berry-boujee-body-scrub.jpg" alt="Berry Boujee Body Scrub">
+        <img src="../images/Berry-Boujee-body-scrub.jpg" alt="Berry Boujee">
       </div>
 
       <div class="product-info">
         <h1>Berry Boujee</h1>
         <div class="product-type">Body Scrub</div>
-        <p class="product-price">$22.00</p>
-        <p class="product-meta">Net Wt. 12 oz</p>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 12 oz</div>
+        </div>
 
         <p class="product-desc">
           A juicy, sugar-based exfoliating scrub that gently buffs away dull skin,
@@ -111,30 +117,29 @@
           <details open>
             <summary>Benefits</summary>
             <p>
+              • Berry-sweet scent for a fun, feel-good shower ritual.<br>
               • Exfoliates without stripping moisture.<br>
-              • Leaves skin smooth, nourished, and glowing.<br>
-              • Berry-sweet scent for a fun, feel-good shower ritual.
+              • Leaves skin smooth, nourished, and glowing.
             </p>
           </details>
 
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils,
-              Vitamin E, Mica (for colour), Preservative.
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica (for colour),
+              Preservative, Vitamin E.
             </p>
           </details>
 
           <details>
             <summary>How to Use</summary>
             <p>
-              On damp skin, massage a small amount in circular motions from neck to toes.
-              Rinse well. Use 2–3 times per week for best results.
+              Massage onto damp skin in circular motions, then rinse thoroughly.
+              Use 2–3 times per week for soft, glowing skin. Avoid broken or freshly shaved skin.
             </p>
           </details>
         </div>
 
-        <!-- PURCHASE BLOCK (bottom, like Cashmere) -->
         <div class="purchase-block">
           <div class="purchase-label">Quantity</div>
           <div class="qty-row">
@@ -147,11 +152,12 @@
             Add to cart
           </button>
 
-          <!-- Hidden Shopify product component -->
-          <div id="product-component-14889683222893" style="display:none;"></div>
+          <!-- Hidden size pills (used only to satisfy DNShopify.mountVariantPills) -->
+          <div id="size-options" class="size-options"></div>
         </div>
 
       </div>
+
     </div>
   </section>
 
@@ -160,14 +166,11 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- Global Shopify wiring (cart drawer + DNShopify helpers) -->
   <script src="../buybutton.js"></script>
 
-  <!-- Page-specific: quantity controls + hook visible button -> hidden Shopify component -->
   <script>
     (function () {
-      var PRODUCT_ID = '14889683222893';
-      var HIDDEN_NODE_ID = 'product-component-14889683222893';
+      var PRODUCT_ID_NUMERIC = '14889683222893';
 
       function clampQty(n) {
         n = Number(n);
@@ -201,75 +204,25 @@
         });
       }
 
-      function initShopifyBridge() {
+      function initVariantBinding() {
         function waitForDNShopify() {
           if (
             window.DNShopify &&
             window.DNShopify.__initialized &&
-            typeof window.DNShopify.mountProduct === 'function'
+            typeof window.DNShopify.mountVariantPills === 'function'
           ) {
-            // Mount hidden Shopify product
-            window.DNShopify.mountProduct({
-              id: PRODUCT_ID,
-              node: '#' + HIDDEN_NODE_ID,
-              options: {
-                product: {
-                  buttonDestination: 'cart',
-                  layout: 'vertical',
-                  contents: {
-                    img: false,
-                    title: false,
-                    price: false,
-                    options: true,
-                    quantity: true,
-                    button: true
-                  },
-                  text: { button: 'Add to cart' }
-                },
-                cart: { popup: false }
-              }
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',   // hidden, but required
+              priceNode: '#priceText',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
             });
-
-            bridgeVisibleButton();
           } else {
             setTimeout(waitForDNShopify, 50);
           }
-        }
-
-        function bridgeVisibleButton() {
-          var visibleBtn = document.getElementById('add-to-cart');
-          var qtyInput  = document.getElementById('qty-input');
-          if (!visibleBtn) return;
-
-          visibleBtn.disabled = true;
-
-          function connect() {
-            var root = document.getElementById(HIDDEN_NODE_ID);
-            if (!root) { setTimeout(connect, 60); return; }
-
-            var hiddenBtn = root.querySelector('.shopify-buy__btn');
-            var hiddenQty = root.querySelector('.shopify-buy__quantity-input');
-
-            if (!hiddenBtn) { setTimeout(connect, 80); return; }
-
-            visibleBtn.disabled = false;
-
-            visibleBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              var qty = clampQty(qtyInput && qtyInput.value);
-              if (qtyInput) qtyInput.value = qty;
-
-              if (hiddenQty) {
-                hiddenQty.value = String(qty);
-                var evt = new Event('change', { bubbles: true });
-                hiddenQty.dispatchEvent(evt);
-              }
-
-              hiddenBtn.click(); // Shopify handles add + our cart drawer opens via afterAddVariant
-            });
-          }
-
-          connect();
         }
 
         waitForDNShopify();
@@ -277,7 +230,7 @@
 
       function initPage() {
         initQtyControls();
-        initShopifyBridge();
+        initVariantBinding();
       }
 
       if (document.readyState === 'loading') {
