@@ -1,17 +1,23 @@
 /* buybutton.js (D'Natural Body)
    Shopify Buy Button SDK + Cart Drawer + Header Toggle
-   + OPTIONAL custom variant pills UI
+   + custom variant pills UI.
 
-   Exposes:
-     - window.DNShopify.mountVariantPills({
-         productId,      // numeric product id, e.g. "14889665036653"
-         pillsNode,      // selector or element for the size pills container
-         priceNode,      // selector or element where the price shows
-         addBtn,         // selector or element for the Add to Cart button
-         qtyInput,       // selector or element for the quantity input
-         optionNames,    // optional: ['size','weight','amount','title']
-         openCartOnAdd   // optional: default true
-       })
+   Behavior:
+   - Creates ONE global cart drawer.
+   - Renders Shopify's cart toggle into #shopify-cart-toggle.
+   - Exposes window.DNShopify.mountVariantPills({
+       productId,      // numeric product id, e.g. "14889665036653"
+       pillsNode,      // selector or element for the size pills container
+       priceNode,      // selector or element where the price shows
+       addBtn,         // selector or element for the Add to Cart button
+       qtyInput,       // selector or element for the quantity input
+       optionNames,    // optional: ['size','weight','amount','title']
+       openCartOnAdd   // optional: default true
+     })
+
+   Result:
+   - Add to cart => adds item to the drawer cart AND opens the drawer.
+   - Checkout button in the drawer => goes to Shopify checkout page (default behavior).
 */
 
 (function () {
@@ -21,6 +27,7 @@
   var CONFIG = {
     myshopifyDomain: 'dpscr1-vz.myshopify.com',
     storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
+    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
     toggleNodeId: 'shopify-cart-toggle'
   };
@@ -29,7 +36,6 @@
     client: null,
     ui: null,
     cart: null,
-    cartPromise: null,
     productsCache: null,
     productsCachePromise: null
   };
@@ -37,14 +43,38 @@
   // ------------------- SDK LOADER -------------------
 
   function loadSdk(cb) {
+    // If already loaded, just go
+    if (window.ShopifyBuy && window.ShopifyBuy.UI) {
+      cb();
+      return;
+    }
+
+    // Reuse existing script if present
+    var existing = document.querySelector(
+      'script[src*="buy-button-storefront.min.js"]'
+    );
+    if (existing) {
+      if (existing.dataset.dnLoaded === '1') {
+        cb();
+      } else {
+        existing.addEventListener('load', function () {
+          existing.dataset.dnLoaded = '1';
+          cb();
+        });
+      }
+      return;
+    }
+
     var s = document.createElement('script');
     s.async = true;
     s.src = CONFIG.sdkUrl;
+    s.onload = function () {
+      s.dataset.dnLoaded = '1';
+      cb();
+    };
     (document.head || document.body).appendChild(s);
-    s.onload = cb;
   }
 
-  // Turn any gid / base64 gid / id string into a plain numeric variant/product id
   function gidToNumericId(gid) {
     if (!gid) return null;
     try {
@@ -71,18 +101,6 @@
     return m ? m[1] : null;
   }
 
-  // ------------------- CART HELPERS -------------------
-
-  function ensureCartReady() {
-    // If we already have a ready cart, just resolve with it
-    if (state.cart) return Promise.resolve(state.cart);
-    // If cart is in-flight, reuse the same promise
-    if (state.cartPromise) return state.cartPromise;
-
-    // Otherwise, if UI isn't ready yet, wait for init to finish
-    return Promise.reject(new Error('Cart not initialized yet'));
-  }
-
   function defaultMoney(amountStr) {
     var n = Number(amountStr);
     if (isNaN(n)) return '$0.00';
@@ -100,6 +118,26 @@
 
     if (v.price && v.price.amount) return String(v.price.amount);
     return null;
+  }
+
+  // ------------------- CART HELPERS -------------------
+
+  function ensureCartReady() {
+    // In this setup the cart is created synchronously in init(),
+    // but this keeps us safe if mountVariantPills gets called ASAP.
+    return new Promise(function (resolve) {
+      if (state.cart) return resolve(state.cart);
+
+      var attempts = 0;
+      (function check() {
+        if (state.cart || attempts > 60) {
+          resolve(state.cart || null);
+        } else {
+          attempts++;
+          setTimeout(check, 50);
+        }
+      })();
+    });
   }
 
   // ------------------- PRODUCT FETCHING (for pills) -------------------
@@ -132,7 +170,7 @@
     });
   }
 
-  // ------------------- VARIANT PILLS MOUNT -------------------
+  // ------------------- VARIANT PILLS -------------------
 
   function mountVariantPills(cfg) {
     if (!cfg || !cfg.productId) return;
@@ -175,7 +213,7 @@
     function renderPillsFromProduct(product) {
       pillsNode.innerHTML = '';
 
-      // Figure out which option index matches "size" / etc.
+      // Figure out which option index matches "size"/etc.
       var optionIndex = -1;
       if (product && product.options && product.options.length) {
         for (var oi = 0; oi < product.options.length; oi++) {
@@ -237,7 +275,7 @@
         }
       });
 
-      // Hook Add to Cart (only once)
+      // Hook Add to Cart (once per mount)
       addBtn.addEventListener('click', function () {
         if (!selectedVariant) return;
 
@@ -248,30 +286,31 @@
           if (!isNaN(q) && q > 0) qty = Math.floor(q);
         }
 
-        // Use the cart component's checkout to add the item
         ensureCartReady().then(function (cart) {
           if (!cart || !cart.props || !cart.props.client || !cart.model) {
             throw new Error('Cart drawer not ready');
           }
+
+          var client = cart.props.client;
+          var checkoutId = cart.model.id;
 
           var lineItem = {
             variantId: String(selectedVariant.id),
             quantity: qty
           };
 
-          return cart.props.client.checkout.addLineItems(cart.model.id, [lineItem])
-            .then(function () {
-              if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
-                cart.open();
-              }
-            });
+          return client.checkout.addLineItems(checkoutId, [lineItem]).then(function () {
+            if (cfg.openCartOnAdd !== false && typeof cart.open === 'function') {
+              cart.open();
+            }
+          });
         }).catch(function (err) {
-          console.error('Error adding item to Shopify cart; falling back to direct checkout.', err);
+          console.error('Error adding item to Shopify cart; falling back to cart URL.', err);
 
-          // Last-resort fallback: send them straight to the online store cart
+          // Fallback: send them to the Online Store cart with just this item
           var numericId = gidToNumericId(selectedVariant.id);
           if (numericId) {
-            var url = '/cart/' + numericId + ':' + qty;
+            var url = CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
             window.location.href = url;
           }
         });
@@ -315,25 +354,18 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
-      // 1) Create the cart drawer (one per page)
-      state.cartPromise = ui.createComponent('cart', {
+      // 1. Create cart drawer (synchronously in this SDK)
+      state.cart = ui.createComponent('cart', {
         options: {
           cart: {
             startOpen: false,
-            popup: true, // default: Shopify opens checkout in a popup window
+            popup: false, // checkout in same window/tab
             text: { total: 'Subtotal', button: 'Checkout' }
           }
         }
-      }).then(function (cart) {
-        state.cart = cart;
-        return cart;
-      }).catch(function (err) {
-        console.error('Error creating Shopify cart component:', err);
-        state.cart = null;
-        return null;
       });
 
-      // 2) Create header toggle, if the node exists
+      // 2. Create header toggle if node exists
       var toggleNode = document.getElementById(CONFIG.toggleNodeId);
       if (toggleNode) {
         ui.createComponent('toggle', {
@@ -352,15 +384,18 @@
         });
       }
 
-      // 3) Expose global helpers
+      // 3. Expose globals
       window.DNShopify = window.DNShopify || {};
       window.DNShopify.__initialized = true;
       window.DNShopify.ui = ui;
       window.DNShopify.client = state.client;
+      window.DNShopify.cart = state.cart;
 
       window.DNShopify.openCart = function () {
         ensureCartReady().then(function (cart) {
-          if (cart && typeof cart.open === 'function') cart.open();
+          if (cart && typeof cart.open === 'function') {
+            cart.open();
+          }
         }).catch(function () {});
       };
 
@@ -375,8 +410,6 @@
 
   if (window.ShopifyBuy && window.ShopifyBuy.UI) {
     init();
-  } else if (window.ShopifyBuy) {
-    loadSdk(init);
   } else {
     loadSdk(init);
   }
