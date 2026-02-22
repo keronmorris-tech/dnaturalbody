@@ -1,0 +1,273 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Firming | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    #product-component-14892428329325 .shopify-buy__product__variant-selectors,
+    #product-component-14892428329325 .shopify-buy__option-select-wrapper,
+    #product-component-14892428329325 select.shopify-buy__option-select__select,
+    #product-component-14892428329325 .shopify-buy__product__quantity,
+    #product-component-14892428329325 .shopify-buy__btn {
+      display: none !important;
+    }
+
+    .purchase-block { margin-top: 22px; }
+    .purchase-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 8px;
+    }
+
+    .size-options {
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin:10px 0 14px;
+    }
+    .size-pill {
+      border:1px solid #222;
+      background:#fff;
+      color:#000;
+      padding:10px 16px;
+      border-radius:999px;
+      cursor:pointer;
+      font-weight:600;
+      font-size:14px;
+      transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease;
+    }
+    .size-pill.active {
+      background:#111;
+      color:#fff;
+      border-color:#111;
+    }
+
+    .variant-price {
+      font-size:18px;
+      font-weight:700;
+      margin:6px 0 10px;
+    }
+
+    .qty-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin: 8px 0 14px;
+    }
+    .qty-btn {
+      width:42px;
+      height:42px;
+      border:1px solid #222;
+      background:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:18px;
+    }
+    .qty-input {
+      width:64px;
+      height:42px;
+      border:1px solid #222;
+      border-radius:10px;
+      text-align:center;
+      font-weight:700;
+    }
+
+    .btn-primary {
+      background:#111;
+      color:#fff;
+      border:none;
+      padding:14px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      width:220px;
+      text-align:center;
+    }
+    .btn-primary:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+  </style>
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Firming-body-butter.jpg" alt="Firming Body Butter">
+      </div>
+
+      <div class="product-info">
+        <h1>Firming</h1>
+        <div class="product-type">Body Butter</div>
+
+        <p class="product-desc">
+          A targeted, smoothing body butter crafted to help firm the look of skin while keeping it deeply
+          moisturized. Think silky, bouncy, vacation-ready skin in a jar.
+        </p>
+
+        <a href="../shop-body-butter.html" class="outline-btn">Back</a>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Helps improve the look of dimpled, uneven areas over time.<br>
+              • Cushions skin with rich, non-greasy moisture so it feels soft and supple.<br>
+              • Leaves a smooth, “held-in” feel that pairs perfectly with body care routines.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              A blend of skin-loving butters and oils (like shea, mango and cocoa), moisturizing esters,
+              and a gentle preservative system to keep your butter fresh. Crafted without harsh
+              drying alcohols or mineral oil.
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Massage onto areas you’d like to smooth — thighs, hips, booty, arms, and tummy — using
+              upward, circular motions. Use daily, especially after bathing, for best results.
+            </p>
+          </details>
+        </div>
+
+        <div class="purchase-block">
+          <div class="purchase-label">Size</div>
+          <div id="size-options" class="size-options"></div>
+
+          <div id="variant-price" class="variant-price">$0.00</div>
+
+          <div class="purchase-label">Quantity</div>
+          <div class="qty-row">
+            <button class="qty-btn" type="button" id="qty-minus">−</button>
+            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
+            <button class="qty-btn" type="button" id="qty-plus">+</button>
+          </div>
+
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>
+            Add to cart
+          </button>
+
+          <div id="product-component-14892428329325" style="display:none;"></div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script src="../buybutton.js"></script>
+
+  <script>
+    (function () {
+      var PRODUCT_ID_NUMERIC = '14892428329325';
+
+      function clampQty(n) {
+        n = Number(n);
+        if (isNaN(n) || n < 1) n = 1;
+        return Math.floor(n);
+      }
+
+      function initQtyControls() {
+        var qtyInput = document.getElementById('qty-input');
+        var qtyMinus = document.getElementById('qty-minus');
+        var qtyPlus  = document.getElementById('qty-plus');
+        if (!qtyInput || !qtyMinus || !qtyPlus) return;
+
+        qtyInput.value = '1';
+
+        qtyMinus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value) - 1;
+          if (current < 1) current = 1;
+          qtyInput.value = current;
+        });
+
+        qtyPlus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value) + 1;
+          qtyInput.value = current;
+        });
+
+        qtyInput.addEventListener('blur', function () {
+          qtyInput.value = clampQty(qtyInput.value);
+        });
+      }
+
+      function initVariantPills() {
+        function waitForDNShopify() {
+          if (
+            window.DNShopify &&
+            window.DNShopify.__initialized &&
+            typeof window.DNShopify.mountVariantPills === 'function'
+          ) {
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',
+              priceNode: '#variant-price',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
+            });
+          } else {
+            setTimeout(waitForDNShopify, 50);
+          }
+        }
+        waitForDNShopify();
+      }
+
+      function initPage() {
+        initQtyControls();
+        initVariantPills();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+      } else {
+        initPage();
+      }
+    })();
+  </script>
+</body>
+</html>
