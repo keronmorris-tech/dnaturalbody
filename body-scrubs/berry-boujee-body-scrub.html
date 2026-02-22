@@ -8,6 +8,16 @@
   <link rel="stylesheet" href="../styles.css">
 
   <style>
+    /* Hide Shopify default variant dropdown / qty / button if a product component is ever mounted */
+    #product-component-14889683222893 .shopify-buy__product__variant-selectors,
+    #product-component-14889683222893 .shopify-buy__option-select-wrapper,
+    #product-component-14889683222893 select.shopify-buy__option-select__select,
+    #product-component-14889683222893 .shopify-buy__product__quantity,
+    #product-component-14889683222893 .shopify-buy__btn {
+      display: none !important;
+    }
+
+    /* Purchase block, qty + button – same look as Cashmere */
     .purchase-block { margin-top: 22px; }
     .purchase-label {
       font-size: 12px;
@@ -17,12 +27,19 @@
       margin-bottom: 8px;
     }
 
+    .variant-price {
+      font-size:18px;
+      font-weight:700;
+      margin:6px 0 10px;
+    }
+
     .qty-row {
       display:flex;
       align-items:center;
       gap:10px;
       margin: 8px 0 14px;
     }
+
     .qty-btn {
       width:42px;
       height:42px;
@@ -32,6 +49,7 @@
       cursor:pointer;
       font-size:18px;
     }
+
     .qty-input {
       width:64px;
       height:42px;
@@ -52,15 +70,15 @@
       width:220px;
       text-align:center;
     }
+
     .btn-primary:disabled {
       opacity:.5;
       cursor:not-allowed;
     }
 
-    /* Hidden size pills container (scrubs are one-size but we still use it to wire Shopify) */
-    .size-options {
-      display:none;
-    }
+    /* We still create size pills for Shopify wiring, but hide them visually */
+    .size-options { display:none; }
+    .size-pill { display:none; }
   </style>
 </head>
 
@@ -86,6 +104,7 @@
       <a href="../about.html" class="nav-link">About</a>
       <a href="../contact.html" class="nav-link">Contact</a>
 
+      <!-- Shopify cart toggle button (cart drawer) -->
       <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
     </nav>
   </header>
@@ -94,7 +113,7 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Berry-Boujee-body-scrub.jpg" alt="Berry Boujee">
+        <img src="../images/Berry-Boujee-body-scrub.jpg" alt="Berry Boujee Body Scrub">
       </div>
 
       <div class="product-info">
@@ -102,6 +121,7 @@
         <div class="product-type">Body Scrub</div>
 
         <div class="product-meta">
+          <!-- Price will get updated from Shopify by JS, so this is just a placeholder -->
           <div class="price" id="priceText">$22.00</div>
           <div class="size" id="sizeText">Net Wt. 12 oz</div>
         </div>
@@ -126,21 +146,31 @@
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica (for colour),
-              Preservative, Vitamin E.
+              Sugar, plant-based oils and butters, gentle cleansing agents, and a mild
+              preservative system to keep your scrub fresh. (Customize this list with your
+              exact INCI when you’re ready.)
             </p>
           </details>
 
           <details>
             <summary>How to Use</summary>
             <p>
-              Massage onto damp skin in circular motions, then rinse thoroughly.
-              Use 2–3 times per week for soft, glowing skin. Avoid broken or freshly shaved skin.
+              Massage onto damp skin in circular motions, focusing on rough areas like elbows,
+              knees, and thighs. Rinse thoroughly and follow with your favourite body butter
+              for extra glow. Use 2–3 times per week.
             </p>
           </details>
         </div>
 
+        <!-- PURCHASE BLOCK -->
         <div class="purchase-block">
+          <!-- Hidden size options (for Shopify variant wiring) -->
+          <div id="size-options" class="size-options"></div>
+
+          <!-- Price shown near the button as well -->
+          <div class="purchase-label">Price</div>
+          <div id="variant-price" class="variant-price">$0.00</div>
+
           <div class="purchase-label">Quantity</div>
           <div class="qty-row">
             <button class="qty-btn" type="button" id="qty-minus">−</button>
@@ -152,12 +182,11 @@
             Add to cart
           </button>
 
-          <!-- Hidden size pills (used only to satisfy DNShopify.mountVariantPills) -->
-          <div id="size-options" class="size-options"></div>
+          <!-- Hidden Shopify product component (if you ever decide to mount it) -->
+          <div id="product-component-14889683222893" style="display:none;"></div>
         </div>
 
       </div>
-
     </div>
   </section>
 
@@ -166,10 +195,13 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
+  <!-- Global Shopify wiring (cart drawer + DNShopify helpers) -->
   <script src="../buybutton.js"></script>
 
+  <!-- Page-specific logic: quantity controls + hook into DNShopify -->
   <script>
     (function () {
+      // Berry Boujee product ID from your original Shopify embed
       var PRODUCT_ID_NUMERIC = '14889683222893';
 
       function clampQty(n) {
@@ -204,23 +236,36 @@
         });
       }
 
-      function initVariantBinding() {
+      function initVariantHook() {
         function waitForDNShopify() {
           if (
             window.DNShopify &&
             window.DNShopify.__initialized &&
             typeof window.DNShopify.mountVariantPills === 'function'
           ) {
+            // Use mountVariantPills just like the butters,
+            // but the size pills are hidden (single-variant product).
             window.DNShopify.mountVariantPills({
               productId: PRODUCT_ID_NUMERIC,
-              pillsNode: '#size-options',   // hidden, but required
-              priceNode: '#priceText',
+              pillsNode: '#size-options',
+              priceNode: '#variant-price',
               addBtn: '#add-to-cart',
               qtyInput: '#qty-input',
               optionNames: ['size', 'weight', 'amount', 'title'],
               openCartOnAdd: true
             });
+
+            // Also mirror the price into the meta price at the top
+            var topPrice = document.getElementById('priceText');
+            var priceNode = document.getElementById('variant-price');
+            if (topPrice && priceNode) {
+              var observer = new MutationObserver(function () {
+                topPrice.textContent = priceNode.textContent;
+              });
+              observer.observe(priceNode, { childList: true, characterData: true, subtree: true });
+            }
           } else {
+            // DNShopify not ready yet, try again shortly
             setTimeout(waitForDNShopify, 50);
           }
         }
@@ -230,7 +275,7 @@
 
       function initPage() {
         initQtyControls();
-        initVariantBinding();
+        initVariantHook();
       }
 
       if (document.readyState === 'loading') {
