@@ -20,7 +20,9 @@
     myshopifyDomain: 'dpscr1-vz.myshopify.com',
     storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-    toggleNodeId: 'shopify-cart-toggle'
+    toggleNodeId: 'shopify-cart-toggle',
+    // NEW: your Online Store cart base URL
+    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart'
   };
 
   var state = {
@@ -33,7 +35,7 @@
   };
 
   // ---------------------------
-  // Tiny toast helper (NEW)
+  // Tiny toast helper
   // ---------------------------
   function showCartToast(message) {
     try {
@@ -59,7 +61,7 @@
 
       el.textContent = message || 'Item added to cart';
 
-      // force reflow so transition always runs
+      // force reflow
       void el.offsetWidth;
 
       el.style.opacity = '1';
@@ -71,7 +73,7 @@
         el.style.transform = 'translate(-50%, -8px)';
       }, 2200);
     } catch (e) {
-      // don't blow anything up if toast fails
+      // fail silently
     }
   }
 
@@ -91,7 +93,7 @@
   }
 
   // ---------------------------
-  // Helpers for product lookup
+  // Helpers for product/variant lookup
   // ---------------------------
   function gidToNumericId(gid) {
     if (!gid) return null;
@@ -137,6 +139,57 @@
   }
 
   // ---------------------------
+  // Cart helpers for redirecting checkout
+  // ---------------------------
+  function getLineItems() {
+    try {
+      return (state.cart && state.cart.model && state.cart.model.lineItems) || [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  function buildCartPermalinkFromDrawer() {
+    var items = getLineItems();
+    if (!items.length) return CONFIG.onlineStoreCartBase;
+
+    var segments = [];
+    for (var i = 0; i < items.length; i++) {
+      var item = items[i];
+      var variantGid = item && item.variant && item.variant.id;
+      var variantId = gidToNumericId(variantGid);
+      var qty = Number((item && item.quantity) || 0);
+      if (variantId && qty > 0) {
+        segments.push(variantId + ':' + qty);
+      }
+    }
+
+    if (!segments.length) return CONFIG.onlineStoreCartBase;
+    return CONFIG.onlineStoreCartBase + '/' + segments.join(',');
+  }
+
+  function interceptDrawerCheckoutToCartPage() {
+    // Capture clicks on Shopify cart checkout buttons
+    document.addEventListener(
+      'click',
+      function (e) {
+        var target = e.target;
+        if (!target || !target.closest) return;
+
+        var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
+        if (!btn) return;
+
+        e.preventDefault();
+        e.stopPropagation();
+        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+
+        window.location.href = buildCartPermalinkFromDrawer();
+      },
+      true
+    );
+  }
+
+  // ---------------------------
   // Hidden Shopify product (for real cart add)
   // ---------------------------
   function ensureHiddenProductComponent(productId) {
@@ -160,8 +213,8 @@
               display: 'none'
             }
           }
-        },
-        // We DON'T specify cart/toggle options here; they use the global cart we created.
+        }
+        // Cart/toggle use the global cart we created.
       }
     });
 
@@ -210,6 +263,9 @@
           }
         });
       }
+
+      // Intercept checkout button → Online Store cart page
+      interceptDrawerCheckoutToCartPage();
 
       // Expose global object
       window.DNShopify = window.DNShopify || {};
@@ -287,7 +343,7 @@
         function renderPillsFromProduct(product, hiddenRoot) {
           pillsNode.innerHTML = '';
 
-          // Grab title for toast
+          // Product title for toast
           var productTitle = product && product.title ? product.title : 'Item';
 
           // Which option index corresponds to size?
@@ -367,9 +423,6 @@
 
             // Sync size selection into hidden select (by label text)
             if (hiddenSelect) {
-              var targetLabel = null;
-
-              // Figure out which label this variant uses on our pills
               var keyLabel = null;
               if (optionIndex >= 0 && selectedVariant.options && selectedVariant.options[optionIndex]) {
                 keyLabel = String(selectedVariant.options[optionIndex]).trim();
@@ -382,21 +435,18 @@
                 var txt = String(opts[i].textContent || opts[i].value || '').trim();
                 if (txt === keyLabel) {
                   hiddenSelect.selectedIndex = i;
-                  targetLabel = txt;
+
+                  var evt;
+                  if (typeof Event === 'function') {
+                    evt = new Event('change', { bubbles: true });
+                  } else {
+                    evt = document.createEvent('Event');
+                    evt.initEvent('change', true, true);
+                  }
+                  hiddenSelect.dispatchEvent(evt);
                   break;
                 }
               }
-
-              // Trigger change so Shopify updates selectedVariant internally
-              var evt;
-              if (typeof Event === 'function') {
-                evt = new Event('change', { bubbles: true });
-              } else {
-                // IE fallback
-                evt = document.createEvent('Event');
-                evt.initEvent('change', true, true);
-              }
-              hiddenSelect.dispatchEvent(evt);
             }
 
             // Sync quantity
@@ -409,7 +459,7 @@
               hiddenBtn.click();
             }
 
-            // >>> NEW: show toast
+            // Toast
             showCartToast(productTitle + ' added to cart');
           });
         }
