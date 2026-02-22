@@ -121,7 +121,7 @@
       <a href="../contact.html" class="nav-link">Contact</a>
 
       <!-- Shopify cart toggle button will render here (from buybutton.js) -->
-      <div id="shopify-cart-toggle"></div>
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
     </nav>
   </header>
 
@@ -249,14 +249,14 @@
             typeof window.DNShopify.mountVariantPills === 'function'
           ) {
             window.DNShopify.mountVariantPills({
-              productId: PRODUCT_ID_NUMERIC,
-              pillsNode: '#size-options',
-              priceNode: '#variant-price',
-              addBtn: '#add-to-cart',
-              qtyInput: '#qty-input',
-              optionNames: ['size', 'weight', 'amount', 'title'],
-              openCartOnAdd: true   // open the cart drawer after adding
-            });
+  productId: '14889665036653',
+  pillsNode: '#size-options',
+  priceNode: '#variant-price',
+  addBtn: '#add-to-cart',
+  qtyInput: '#qty-input',
+  optionNames: ['size', 'weight', 'amount', 'title'],
+  openCartOnAdd: true
+});
           } else {
             // DNShopify not ready yet, try again shortly
             setTimeout(waitForDNShopify, 50);
