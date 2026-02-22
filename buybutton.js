@@ -146,16 +146,32 @@
       return Promise.resolve(null);
     }
 
-    var gid = 'gid://shopify/Product/' + String(numericId);
+    var idStr = String(numericId);
 
+    // 1) Try numeric ID (Shopify UI snippets use numeric ids)
     return state.client.product
-      .fetch(gid)
+      .fetch(idStr)
       .then(function (product) {
-        return product || null;
+        if (product) return product;
+
+        // 2) Fallback: try GID
+        var gid = 'gid://shopify/Product/' + idStr;
+        return state.client.product.fetch(gid).then(function (p2) {
+          return p2 || null;
+        });
       })
-      .catch(function (err) {
-        console.error('DNShopify: error fetching product', numericId, err);
-        return null;
+      .catch(function () {
+        // 3) If numeric failed, try GID once more
+        var gid = 'gid://shopify/Product/' + idStr;
+        return state.client.product
+          .fetch(gid)
+          .then(function (product) {
+            return product || null;
+          })
+          .catch(function (err) {
+            console.error('DNShopify: error fetching product', idStr, err);
+            return null;
+          });
       });
   }
 
@@ -276,13 +292,11 @@
         }
 
         ensureCartReady().then(function (cart) {
-          if (!cart || !cart.props || !cart.props.client || !cart.model) {
+          if (!cart || !cart.model || !cart.model.id || !state.client) {
             throw new Error('Cart drawer not ready');
           }
 
-          var client = cart.props.client;
           var checkoutId = cart.model.id;
-
           var lineItem = {
             variantId: String(selectedVariant.id),
             quantity: qty
@@ -290,7 +304,7 @@
 
           var p;
           try {
-            p = client.checkout.addLineItems(checkoutId, [lineItem]);
+            p = state.client.checkout.addLineItems(checkoutId, [lineItem]);
           } catch (err) {
             console.error('DNShopify: addLineItems threw synchronously', err);
           }
