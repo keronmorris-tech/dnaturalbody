@@ -1,406 +1,272 @@
-/* buybutton.js (D'Natural Body)
-   - Loads Shopify Buy Button SDK once
-   - Creates ONE shared cart drawer + toggle
-   - Exposes:
-       window.DNShopify.mountVariantPills({
-         productId,           // numeric product id string, e.g. "14889665036653"
-         pillsNode,           // selector or element for size pills wrapper
-         priceNode,           // selector or element for price text
-         addBtn,              // selector or element for your Add to cart button
-         qtyInput,            // selector or element for your visible qty input
-         optionNames,         // ['size','weight','amount','title'] etc.
-         openCartOnAdd: true  // (we let Shopify open drawer automatically)
-       })
-*/
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Island Sugar Glow | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
 
-(function () {
-  if (window.DNShopify && window.DNShopify.__initialized) return;
+  <style>
+    /* Hide Shopify default variant dropdown / qty / button if a product component is ever mounted */
+    #product-component-14892490981741 .shopify-buy__product__variant-selectors,
+    #product-component-14892490981741 .shopify-buy__option-select-wrapper,
+    #product-component-14892490981741 select.shopify-buy__option-select__select,
+    #product-component-14892490981741 .shopify-buy__product__quantity,
+    #product-component-14892490981741 .shopify-buy__btn {
+      display: none !important;
+    }
 
-  var CONFIG = {
-    myshopifyDomain: 'dpscr1-vz.myshopify.com',
-    storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-    toggleNodeId: 'shopify-cart-toggle'
-  };
+    .purchase-block { margin-top: 22px; }
+    .purchase-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 8px;
+    }
 
-  var state = {
-    client: null,
-    ui: null,
-    cart: null,
-    productsCache: null,
-    productsCachePromise: null,
-    hiddenProducts: {} // productId -> {component, root}
-  };
+    .variant-price {
+      font-size:18px;
+      font-weight:700;
+      margin:6px 0 10px;
+    }
 
-  // ---------------------------
-  // SDK loader
-  // ---------------------------
-  function loadSdk(cb) {
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = CONFIG.sdkUrl;
-    (document.head || document.body).appendChild(s);
-    s.onload = cb;
-  }
+    .qty-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin: 8px 0 14px;
+    }
 
-  function ensureToggleNodeExists() {
-    return !!document.getElementById(CONFIG.toggleNodeId);
-  }
+    .qty-btn {
+      width:42px;
+      height:42px;
+      border:1px solid #222;
+      background:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:18px;
+    }
 
-  // ---------------------------
-  // Helpers for product lookup
-  // ---------------------------
-  function gidToNumericId(gid) {
-    if (!gid) return null;
-    try {
-      var str = String(gid);
-      if (str.indexOf('gid://') === 0) {
-        var parts = str.split('/');
-        return parts[parts.length - 1] || null;
+    .qty-input {
+      width:64px;
+      height:42px;
+      border:1px solid #222;
+      border-radius:10px;
+      text-align:center;
+      font-weight:700;
+    }
+
+    .btn-primary {
+      background:#111;
+      color:#fff;
+      border:none;
+      padding:14px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      width:220px;
+      text-align:center;
+    }
+
+    .btn-primary:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+
+    /* Hidden size pills for single-variant product */
+    .size-options { display:none; }
+    .size-pill { display:none; }
+  </style>
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Island-sugar-glow-body-scrub.jpg" alt="Island Sugar Glow Body Scrub">
+      </div>
+
+      <div class="product-info">
+        <h1>Island Sugar Glow</h1>
+        <div class="product-type">Body Scrub</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 10 oz</div>
+        </div>
+
+        <p class="product-desc">
+          A tropical sugar scrub that gently polishes away dullness while drenching your skin
+          in island-sweet moisture. Think beach vacation, but in your shower.
+        </p>
+
+        <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Creamy sugar scrub that exfoliates without stripping moisture.<br>
+              • Leaves skin soft, juicy, and glowing.<br>
+              • Infused with an island-fresh scent that lingers on warm skin.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              Sugar, plant-based oils and butters, fragrance/essential oils, and a gentle
+              preservative system. (Swap in your exact INCI when you’re ready.)
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Massage onto damp skin in circular motions, focusing on dry or rough areas.
+              Rinse well and follow with body butter for extra island glow. Use 2–3 times weekly.
+            </p>
+          </details>
+        </div>
+
+        <div class="purchase-block">
+          <div id="size-options" class="size-options"></div>
+
+          <div class="purchase-label">Price</div>
+          <div id="variant-price" class="variant-price">$0.00</div>
+
+          <div class="purchase-label">Quantity</div>
+          <div class="qty-row">
+            <button class="qty-btn" type="button" id="qty-minus">−</button>
+            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
+            <button class="qty-btn" type="button" id="qty-plus">+</button>
+          </div>
+
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>
+            Add to cart
+          </button>
+
+          <div id="product-component-14892490981741" style="display:none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script src="../buybutton.js"></script>
+
+  <script>
+    (function () {
+      var PRODUCT_ID_NUMERIC = '14892490981741';
+
+      function clampQty(n) {
+        n = Number(n);
+        if (isNaN(n) || n < 1) n = 1;
+        return Math.floor(n);
       }
-      var decoded = atob(str);
-      if (decoded && decoded.indexOf('gid://') === 0) {
-        var p = decoded.split('/');
-        return p[p.length - 1] || null;
-      }
-    } catch (e) {}
 
-    var m = String(gid).match(/(\d+)$/);
-    return m ? m[1] : null;
-  }
+      function initQtyControls() {
+        var qtyInput = document.getElementById('qty-input');
+        var qtyMinus = document.getElementById('qty-minus');
+        var qtyPlus  = document.getElementById('qty-plus');
 
-  function fetchAllProductsOnce() {
-    if (state.productsCache) return Promise.resolve(state.productsCache);
-    if (state.productsCachePromise) return state.productsCachePromise;
+        if (!qtyInput || !qtyMinus || !qtyPlus) return;
 
-    state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
-      state.productsCache = products || [];
-      return state.productsCache;
-    });
+        qtyInput.value = '1';
 
-    return state.productsCachePromise;
-  }
+        qtyMinus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value) - 1;
+          if (current < 1) current = 1;
+          qtyInput.value = current;
+        });
 
-  function findProductByNumericId(numericId) {
-    var wanted = String(numericId);
-    return fetchAllProductsOnce().then(function (products) {
-      for (var i = 0; i < products.length; i++) {
-        var p = products[i];
-        var num = gidToNumericId(p && p.id);
-        if (num && String(num) === wanted) return p;
-      }
-      return null;
-    });
-  }
+        qtyPlus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value);
+          qtyInput.value = current + 1;
+        });
 
-  // ---------------------------
-  // Hidden Shopify product (for real cart add)
-  // ---------------------------
-  function ensureHiddenProductComponent(productId) {
-    var key = String(productId);
-    if (state.hiddenProducts[key]) return state.hiddenProducts[key];
-
-    var nodeId = 'product-component-' + key;
-    var root = document.getElementById(nodeId);
-    if (!root || !state.ui) return null;
-
-    // Render Shopify product into this node (we keep it invisible via CSS/inline style)
-    var comp = state.ui.createComponent('product', {
-      id: key,
-      node: root,
-      moneyFormat: '${{amount}}',
-      options: {
-        product: {
-          iframe: false, // render directly in DOM so we can poke its <select>, qty, button
-          styles: {
-            product: {
-              display: 'none'
-            }
-          }
-        },
-        // We DON'T specify cart/toggle options here; they use the global cart we created.
-      }
-    });
-
-    var entry = { component: comp, root: root };
-    state.hiddenProducts[key] = entry;
-    return entry;
-  }
-
-  // ---------------------------
-  // Init Shopify client + UI
-  // ---------------------------
-  function init() {
-    state.client = ShopifyBuy.buildClient({
-      domain: CONFIG.myshopifyDomain,
-      storefrontAccessToken: CONFIG.storefrontAccessToken
-    });
-
-    ShopifyBuy.UI.onReady(state.client).then(function (ui) {
-      state.ui = ui;
-
-      // Global cart drawer
-      state.cart = ui.createComponent('cart', {
-        options: {
-          cart: {
-            iframe: true,
-            popup: true,
-            startOpen: false
-          }
-        }
-      });
-
-      // Header toggle, if node exists
-      if (ensureToggleNodeExists()) {
-        ui.createComponent('toggle', {
-          node: document.getElementById(CONFIG.toggleNodeId),
-          options: {
-            toggle: {
-              styles: {
-                toggle: {
-                  'background-color': 'transparent',
-                  ':hover': { 'background-color': 'transparent' },
-                  ':focus': { 'background-color': 'transparent' }
-                }
-              }
-            }
-          }
+        qtyInput.addEventListener('blur', function () {
+          qtyInput.value = clampQty(qtyInput.value);
         });
       }
 
-      // Expose global object
-      window.DNShopify = window.DNShopify || {};
-      window.DNShopify.__initialized = true;
-      window.DNShopify.client = state.client;
-      window.DNShopify.ui = ui;
-      window.DNShopify.cart = state.cart;
-
-      // ---------------------------
-      // Variant pills helper
-      // ---------------------------
-      window.DNShopify.mountVariantPills = function (cfg) {
-        if (!cfg || !cfg.productId) return;
-
-        var productId = String(cfg.productId);
-
-        var pillsNode =
-          typeof cfg.pillsNode === 'string'
-            ? document.querySelector(cfg.pillsNode)
-            : cfg.pillsNode;
-
-        var priceNode =
-          typeof cfg.priceNode === 'string'
-            ? document.querySelector(cfg.priceNode)
-            : cfg.priceNode;
-
-        var addBtn =
-          typeof cfg.addBtn === 'string'
-            ? document.querySelector(cfg.addBtn)
-            : cfg.addBtn;
-
-        var qtyInput =
-          typeof cfg.qtyInput === 'string'
-            ? document.querySelector(cfg.qtyInput)
-            : cfg.qtyInput;
-
-        if (!pillsNode || !priceNode || !addBtn) return;
-
-        var optionNames = (cfg.optionNames && cfg.optionNames.length)
-          ? cfg.optionNames.map(function (s) { return String(s).toLowerCase(); })
-          : ['size', 'weight', 'amount', 'title'];
-
-        var selectedVariant = null;
-
-        function defaultMoney(amountStr) {
-          var n = Number(amountStr);
-          if (isNaN(n)) return '$0.00';
-          return '$' + n.toFixed(2);
-        }
-
-        function getVariantPrice(v) {
-          if (!v) return null;
-          if (typeof v.price === 'string' || typeof v.price === 'number') return String(v.price);
-          if (v.priceV2) {
-            if (typeof v.priceV2 === 'string' || typeof v.priceV2 === 'number') return String(v.priceV2);
-            if (v.priceV2.amount) return String(v.priceV2.amount);
-          }
-          if (v.price && v.price.amount) return String(v.price.amount);
-          return null;
-        }
-
-        function setBtnEnabled(on) {
-          addBtn.disabled = !on;
-          addBtn.classList.toggle('disabled', !on);
-        }
-
-        function setActive(btnEl) {
-          var btns = pillsNode.querySelectorAll('.size-pill');
-          for (var i = 0; i < btns.length; i++) {
-            btns[i].classList.remove('active');
-          }
-          if (btnEl) btnEl.classList.add('active');
-        }
-
-        function renderPillsFromProduct(product, hiddenRoot) {
-          pillsNode.innerHTML = '';
-
-          // Which option index corresponds to size?
-          var optionIndex = -1;
-          if (product && product.options && product.options.length) {
-            for (var oi = 0; oi < product.options.length; oi++) {
-              var name = String(product.options[oi].name || '').toLowerCase();
-              if (optionNames.indexOf(name) !== -1) {
-                optionIndex = oi;
-                break;
-              }
-            }
-            if (optionIndex === -1 && product.options.length === 1) optionIndex = 0;
-          }
-
-          var labels = [];
-          var labelToVariant = {};
-          (product.variants || []).forEach(function (v) {
-            var label = null;
-            if (optionIndex >= 0 && v.options && v.options[optionIndex]) {
-              label = v.options[optionIndex];
-            }
-            if (!label) label = v.title || 'Default';
-            label = String(label).trim();
-            if (!label) label = 'Default';
-
-            if (!labelToVariant[label]) {
-              labels.push(label);
-              labelToVariant[label] = v;
-            }
-          });
-
-          if (!labels.length) {
-            priceNode.textContent = defaultMoney('0');
-            setBtnEnabled(false);
-            return;
-          }
-
-          labels.forEach(function (label, idx) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'size-pill';
-            btn.textContent = label;
-            btn.dataset.value = label;
-
-            btn.addEventListener('click', function () {
-              var v = labelToVariant[label];
-              if (!v) return;
-              selectedVariant = v;
-              setActive(btn);
-              priceNode.textContent = defaultMoney(getVariantPrice(selectedVariant));
-              setBtnEnabled(true);
+      function initVariantHook() {
+        function waitForDNShopify() {
+          if (
+            window.DNShopify &&
+            window.DNShopify.__initialized &&
+            typeof window.DNShopify.mountVariantPills === 'function'
+          ) {
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',
+              priceNode: '#variant-price',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
             });
 
-            pillsNode.appendChild(btn);
-
-            // Auto-select first pill
-            if (idx === 0) {
-              setTimeout(function () { btn.click(); }, 0);
+            var topPrice = document.getElementById('priceText');
+            var priceNode = document.getElementById('variant-price');
+            if (topPrice && priceNode) {
+              var observer = new MutationObserver(function () {
+                topPrice.textContent = priceNode.textContent;
+              });
+              observer.observe(priceNode, { childList: true, characterData: true, subtree: true });
             }
-          });
-
-          // Hook Add to cart click -> drive hidden Shopify product
-          addBtn.addEventListener('click', function () {
-            if (!selectedVariant) return;
-
-            // Find hidden Shopify controls
-            var hiddenSelect = hiddenRoot
-              ? hiddenRoot.querySelector('select.shopify-buy__option-select__select')
-              : null;
-            var hiddenQtyInput = hiddenRoot
-              ? hiddenRoot.querySelector('input.shopify-buy__quantity')
-              : null;
-            var hiddenBtn = hiddenRoot
-              ? hiddenRoot.querySelector('.shopify-buy__btn')
-              : null;
-
-            // Sync size selection into hidden select (by label text)
-            if (hiddenSelect) {
-              var targetLabel = null;
-
-              // Figure out which label this variant uses on our pills
-              var keyLabel = null;
-              if (optionIndex >= 0 && selectedVariant.options && selectedVariant.options[optionIndex]) {
-                keyLabel = String(selectedVariant.options[optionIndex]).trim();
-              } else {
-                keyLabel = String(selectedVariant.title || '').trim();
-              }
-
-              var opts = hiddenSelect.options;
-              for (var i = 0; i < opts.length; i++) {
-                var txt = String(opts[i].textContent || opts[i].value || '').trim();
-                if (txt === keyLabel) {
-                  hiddenSelect.selectedIndex = i;
-                  targetLabel = txt;
-                  break;
-                }
-              }
-
-              // Trigger change so Shopify updates selectedVariant internally
-              var evt;
-              if (typeof Event === 'function') {
-                evt = new Event('change', { bubbles: true });
-              } else {
-                // IE fallback
-                evt = document.createEvent('Event');
-                evt.initEvent('change', true, true);
-              }
-              hiddenSelect.dispatchEvent(evt);
-            }
-
-            // Sync quantity
-            if (hiddenQtyInput && qtyInput) {
-              hiddenQtyInput.value = qtyInput.value;
-            }
-
-            // Click Shopify's own Add to cart button
-            if (hiddenBtn && typeof hiddenBtn.click === 'function') {
-              hiddenBtn.click();
-            }
-          });
+          } else {
+            setTimeout(waitForDNShopify, 50);
+          }
         }
 
-        // Start disabled until product loads
-        setBtnEnabled(false);
-        priceNode.textContent = '$0.00';
+        waitForDNShopify();
+      }
 
-        // Make sure hidden Shopify product for this ID exists
-        var hiddenEntry = ensureHiddenProductComponent(productId);
-        var hiddenRoot = hiddenEntry ? hiddenEntry.root : null;
+      function initPage() {
+        initQtyControls();
+        initVariantHook();
+      }
 
-        // Fetch product (from cache) and build pills
-        findProductByNumericId(productId)
-          .then(function (product) {
-            if (!product) {
-              // Try again after cache warm if needed
-              return fetchAllProductsOnce().then(function () {
-                return findProductByNumericId(productId);
-              });
-            }
-            return product;
-          })
-          .then(function (product) {
-            if (!product) {
-              setBtnEnabled(false);
-              return;
-            }
-            renderPillsFromProduct(product, hiddenRoot);
-          });
-      };
-    });
-  }
-
-  // ---------------------------
-  // Boot
-  // ---------------------------
-  window.DNShopify = window.DNShopify || {};
-  window.DNShopify.__initialized = false;
-
-  if (window.ShopifyBuy && window.ShopifyBuy.UI) init();
-  else loadSdk(init);
-})();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+      } else {
+        initPage();
+      }
+    })();
+  </script>
+</body>
+</html>
