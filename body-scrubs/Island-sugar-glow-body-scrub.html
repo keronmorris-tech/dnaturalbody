@@ -1,463 +1,303 @@
-/* buybutton.js (D'Natural Body)
-   Shopify Buy Button SDK + Cart Drawer + Header Toggle
-   + OPTIONAL custom variant pills UI
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Island Sugar Glow | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
 
-   Exposes:
-     - window.DNShopify.mountProduct({id,node,options})
-     - window.DNShopify.mountVariantPills({
-         productId, pillsNode, priceNode, addBtn, qtyInput,
-         optionNames: ['size','weight','amount','title'],
-         openCartOnAdd: true
-       })
-*/
-
-(function () {
-  if (window.DNShopify && window.DNShopify.__initialized) return;
-
-  var CONFIG = {
-    myshopifyDomain: 'dpscr1-vz.myshopify.com',
-    storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
-    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart',
-    sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-    toggleNodeId: 'shopify-cart-toggle'
-  };
-
-  var state = {
-    ui: null,
-    cart: null,
-    client: null,
-    productsCache: null,
-    productsCachePromise: null
-  };
-
-  function loadSdk(cb) {
-    var s = document.createElement('script');
-    s.async = true;
-    s.src = CONFIG.sdkUrl;
-    (document.head || document.body).appendChild(s);
-    s.onload = cb;
-  }
-
-  function gidToNumericId(gid) {
-    if (!gid) return null;
-    try {
-      var str = String(gid);
-      if (str.indexOf('gid://') === 0) {
-        var parts = str.split('/');
-        return parts[parts.length - 1] || null;
-      }
-      // maybe base64 gid
-      var decoded = atob(str);
-      if (decoded && decoded.indexOf('gid://') === 0) {
-        var p = decoded.split('/');
-        return p[p.length - 1] || null;
-      }
-    } catch (e) {}
-
-    var m = String(gid).match(/(\d+)$/);
-    return m ? m[1] : null;
-  }
-
-  function getLineItems() {
-    try {
-      return (state.cart && state.cart.model && state.cart.model.lineItems)
-        ? state.cart.model.lineItems
-        : [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function buildCartPermalinkFromDrawer() {
-    var items = getLineItems();
-    if (!items.length) return CONFIG.onlineStoreCartBase;
-
-    var segments = [];
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var variantGid = item && item.variant && item.variant.id;
-      var variantId = gidToNumericId(variantGid);
-      var qty = Number((item && item.quantity) || 0);
-      if (variantId && qty > 0) segments.push(variantId + ':' + qty);
+  <style>
+    /* Hide Shopify default variant dropdown / qty / button if a product component is ever mounted */
+    #product-component-14892490981741 .shopify-buy__product__variant-selectors,
+    #product-component-14892490981741 .shopify-buy__option-select-wrapper,
+    #product-component-14892490981741 select.shopify-buy__option-select__select,
+    #product-component-14892490981741 .shopify-buy__product__quantity,
+    #product-component-14892490981741 .shopify-buy__btn {
+      display: none !important;
     }
 
-    if (!segments.length) return CONFIG.onlineStoreCartBase;
-    return CONFIG.onlineStoreCartBase + '/' + segments.join(',');
-  }
+    .purchase-block { margin-top: 22px; }
+    .purchase-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 8px;
+    }
 
-  function interceptDrawerCheckoutToCartPage() {
-    document.addEventListener(
-      'click',
-      function (e) {
-        var target = e.target;
-        if (!target || !target.closest) return;
+    .variant-price {
+      font-size:18px;
+      font-weight:700;
+      margin:6px 0 10px;
+    }
 
-        var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
-        if (!btn) return;
+    .qty-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin: 8px 0 14px;
+    }
 
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
+    .qty-btn {
+      width:42px;
+      height:42px;
+      border:1px solid #222;
+      background:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:18px;
+    }
 
-        window.location.href = buildCartPermalinkFromDrawer();
-      },
-      true
-    );
-  }
+    .qty-input {
+      width:64px;
+      height:42px;
+      border:1px solid #222;
+      border-radius:10px;
+      text-align:center;
+      font-weight:700;
+    }
 
-  function ensureToggleNodeExists() {
-    // We don’t auto-create the toggle; it must exist in the header markup.
-    return !!document.getElementById(CONFIG.toggleNodeId);
-  }
+    .btn-primary {
+      background:#111;
+      color:#fff;
+      border:none;
+      padding:14px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      width:220px;
+      text-align:center;
+    }
 
-  function init() {
-    state.client = ShopifyBuy.buildClient({
-      domain: CONFIG.myshopifyDomain,
-      storefrontAccessToken: CONFIG.storefrontAccessToken
-    });
+    .btn-primary:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
 
-    ShopifyBuy.UI.onReady(state.client).then(function (ui) {
-      state.ui = ui;
+    /* Hidden size pills for single-variant product */
+    .size-options { display:none; }
+    .size-pill { display:none; }
+  </style>
+</head>
 
-      // main cart drawer
-      state.cart = ui.createComponent('cart', {
-        options: {
-          cart: {
-            startOpen: false,
-            popup: false,
-            text: { total: 'Subtotal', button: 'Checkout' }
-          }
-        }
-      });
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
 
-      // header cart toggle, if present in DOM
-      if (ensureToggleNodeExists()) {
-        ui.createComponent('toggle', {
-          node: document.getElementById(CONFIG.toggleNodeId),
-          options: {
-            toggle: {
-              styles: {
-                toggle: {
-                  'background-color': 'transparent',
-                  ':hover': { 'background-color': 'transparent' },
-                  ':focus': { 'background-color': 'transparent' }
-                }
-              }
-            }
-          }
-        });
-      }
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
 
-      interceptDrawerCheckoutToCartPage();
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
 
-      window.DNShopify = window.DNShopify || {};
-      window.DNShopify.__initialized = true;
-      window.DNShopify.ui = ui;
-      window.DNShopify.cart = state.cart;
-      window.DNShopify.client = state.client;
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
 
-      window.DNShopify.openCart = function () {
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Island-sugar-glow-body-scrub.jpg" alt="Island Sugar Glow Body Scrub">
+      </div>
+
+      <div class="product-info">
+        <h1>Island Sugar Glow</h1>
+        <div class="product-type">Body Scrub</div>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 10 oz</div>
+        </div>
+
+        <p class="product-desc">
+          A tropical sugar scrub that gently polishes away dullness while drenching your skin
+          in island-sweet moisture. Think beach vacation, but in your shower.
+        </p>
+
+        <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Creamy sugar scrub that exfoliates without stripping moisture.<br>
+              • Leaves skin soft, juicy, and glowing.<br>
+              • Infused with an island-fresh scent that lingers on warm skin.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              Sugar, plant-based oils and butters, fragrance/essential oils, and a gentle
+              preservative system. (Swap in your exact INCI when you’re ready.)
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Massage onto damp skin in circular motions, focusing on dry or rough areas.
+              Rinse well and follow with body butter for extra island glow. Use 2–3 times weekly.
+            </p>
+          </details>
+        </div>
+
+        <div class="purchase-block">
+          <div id="size-options" class="size-options"></div>
+
+          <div class="purchase-label">Price</div>
+          <div id="variant-price" class="variant-price">$0.00</div>
+
+          <div class="purchase-label">Quantity</div>
+          <div class="qty-row">
+            <button class="qty-btn" type="button" id="qty-minus">−</button>
+            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
+            <button class="qty-btn" type="button" id="qty-plus">+</button>
+          </div>
+
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>
+            Add to cart
+          </button>
+
+          <div id="product-component-14892490981741" style="display:none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+   <script src="../buybutton.js"></script>
+
+  <!-- Force Shopify checkout/cart links to stay in the same tab -->
+  <script>
+    (function () {
+      // Avoid double-patching if something else already added this
+      if (window.__DN_FORCE_SAME_TAB__) return;
+      window.__DN_FORCE_SAME_TAB__ = true;
+
+      var nativeOpen = window.open;
+
+      window.open = function (url, name, specs) {
         try {
-          if (state.cart && typeof state.cart.open === 'function') {
-            state.cart.open();
+          if (
+            typeof url === 'string' &&
+            (
+              url.indexOf('myshopify.com') !== -1 ||      // your myshopify domain
+              url.indexOf('shop.dnaturalbody.com') !== -1 // your custom storefront
+            )
+          ) {
+            // Use same tab instead of a new window
+            window.location.href = url;
+            return window;
           }
-        } catch (e) {}
+        } catch (e) {
+          // if anything goes weird, fall back to the original
+        }
+        return nativeOpen.apply(this, arguments);
       };
+    })();
+  </script>
 
-      // ------- Standard Buy Button products (if you ever need them) -------
-      window.DNShopify.mountProduct = function (cfg) {
-        if (!cfg || !cfg.id || !cfg.node) return;
-        var nodeEl = typeof cfg.node === 'string' ? document.querySelector(cfg.node) : cfg.node;
-        if (!nodeEl) return;
+  <script>
+    (function () {
+      var PRODUCT_ID_NUMERIC = '14892490981741';
+      // ... rest of your page-specific JS stays exactly the same
 
-        var options = cfg.options || {};
-        options.events = options.events || {};
-        if (!options.events.afterAddVariant) {
-          options.events.afterAddVariant = function () {
-            if (window.DNShopify && window.DNShopify.openCart) window.DNShopify.openCart();
-          };
-        }
-
-        ui.createComponent('product', {
-          id: String(cfg.id),
-          node: nodeEl,
-          moneyFormat: '${{amount}}',
-          options: options
-        });
-      };
-
-      // ---------- Variant Pills ----------
-
-      function fetchAllProductsOnce() {
-        if (state.productsCache) return Promise.resolve(state.productsCache);
-        if (state.productsCachePromise) return state.productsCachePromise;
-
-        state.productsCachePromise = state.client.product.fetchAll(250).then(function (products) {
-          state.productsCache = products || [];
-          return state.productsCache;
-        });
-
-        return state.productsCachePromise;
+      function clampQty(n) {
+        n = Number(n);
+        if (isNaN(n) || n < 1) n = 1;
+        return Math.floor(n);
       }
 
-      function findProductByNumericId(numericId) {
-        var wanted = String(numericId);
-        return fetchAllProductsOnce().then(function (products) {
-          for (var i = 0; i < products.length; i++) {
-            var p = products[i];
-            var num = gidToNumericId(p && p.id);
-            if (num && String(num) === wanted) return p;
-          }
-          return null;
+      function initQtyControls() {
+        var qtyInput = document.getElementById('qty-input');
+        var qtyMinus = document.getElementById('qty-minus');
+        var qtyPlus  = document.getElementById('qty-plus');
+
+        if (!qtyInput || !qtyMinus || !qtyPlus) return;
+
+        qtyInput.value = '1';
+
+        qtyMinus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value) - 1;
+          if (current < 1) current = 1;
+          qtyInput.value = current;
+        });
+
+        qtyPlus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value);
+          qtyInput.value = current + 1;
+        });
+
+        qtyInput.addEventListener('blur', function () {
+          qtyInput.value = clampQty(qtyInput.value);
         });
       }
 
-      function getVariantPrice(v) {
-        if (!v) return null;
-        if (typeof v.price === 'string' || typeof v.price === 'number') return String(v.price);
-        if (v.priceV2) {
-          if (typeof v.priceV2 === 'string' || typeof v.priceV2 === 'number') return String(v.priceV2);
-          if (v.priceV2.amount) return String(v.priceV2.amount);
-        }
-        if (v.price && v.price.amount) return String(v.price.amount);
-        return null;
-      }
-
-      function defaultMoney(amountStr) {
-        var n = Number(amountStr);
-        if (isNaN(n)) return '$0.00';
-        return '$' + n.toFixed(2);
-      }
-
-      // ---------- PUBLIC: mountVariantPills ----------
-      window.DNShopify.mountVariantPills = function (cfg) {
-        if (!cfg || !cfg.productId) return;
-
-        var pillsNode = typeof cfg.pillsNode === 'string' ? document.querySelector(cfg.pillsNode) : cfg.pillsNode;
-        var priceNode = typeof cfg.priceNode === 'string' ? document.querySelector(cfg.priceNode) : cfg.priceNode;
-        var addBtn    = typeof cfg.addBtn === 'string'    ? document.querySelector(cfg.addBtn)    : cfg.addBtn;
-        var qtyInput  = typeof cfg.qtyInput === 'string'  ? document.querySelector(cfg.qtyInput)  : cfg.qtyInput;
-
-        if (!pillsNode || !priceNode || !addBtn) return;
-
-        var optionNames = (cfg.optionNames && cfg.optionNames.length)
-          ? cfg.optionNames.map(function (s) { return String(s).toLowerCase(); })
-          : ['size', 'weight', 'amount', 'title'];
-
-        var selectedVariant = null;
-
-        function setBtnEnabled(on) {
-          addBtn.disabled = !on;
-          addBtn.classList.toggle('disabled', !on);
-        }
-
-        function setActive(btnEl) {
-          var btns = pillsNode.querySelectorAll('.size-pill');
-          for (var i = 0; i < btns.length; i++) btns[i].classList.remove('active');
-          if (btnEl) btnEl.classList.add('active');
-        }
-
-        // Simple top-center toast for "added to cart"
-        function showToast(productTitle) {
-          var msg = (productTitle ? productTitle : 'Item') + ' was added to your cart.';
-
-          var toast = document.getElementById('dn-cart-toast');
-          if (!toast) {
-            toast = document.createElement('div');
-            toast.id = 'dn-cart-toast';
-            toast.style.position = 'fixed';
-            toast.style.top = '16px';
-            toast.style.left = '50%';
-            toast.style.transform = 'translateX(-50%)';
-            toast.style.background = 'rgba(0,0,0,0.9)';
-            toast.style.color = '#fff';
-            toast.style.padding = '10px 18px';
-            toast.style.borderRadius = '999px';
-            toast.style.fontSize = '14px';
-            toast.style.fontFamily = 'Montserrat, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
-            toast.style.zIndex = '9999';
-            toast.style.opacity = '0';
-            toast.style.transition = 'opacity 0.25s ease';
-            toast.style.pointerEvents = 'none';
-            document.body.appendChild(toast);
-          }
-
-          toast.textContent = msg;
-          toast.style.opacity = '1';
-
-          clearTimeout(showToast._hideTimer);
-          showToast._hideTimer = setTimeout(function () {
-            toast.style.opacity = '0';
-          }, 2200);
-        }
-
-        function renderPillsFromVariants(product) {
-          pillsNode.innerHTML = '';
-
-          // Which option index to use for labels
-          var optionIndex = -1;
-          if (product && product.options && product.options.length) {
-            for (var oi = 0; oi < product.options.length; oi++) {
-              var name = String(product.options[oi].name || '').toLowerCase();
-              if (optionNames.indexOf(name) !== -1) {
-                optionIndex = oi;
-                break;
-              }
-            }
-            if (optionIndex === -1 && product.options.length === 1) optionIndex = 0;
-          }
-
-          // Unique label -> variant
-          var labels = [];
-          var labelToVariant = {};
-          (product.variants || []).forEach(function (v) {
-            var label = null;
-            if (optionIndex >= 0 && v.options && v.options[optionIndex]) {
-              label = v.options[optionIndex];
-            }
-            if (!label) label = v.title || 'Default';
-
-            label = String(label).trim();
-            if (!label) label = 'Default';
-
-            if (!labelToVariant[label]) {
-              labels.push(label);
-              labelToVariant[label] = v;
-            }
-          });
-
-          if (!labels.length) {
-            priceNode.textContent = defaultMoney('0');
-            setBtnEnabled(false);
-            return;
-          }
-
-          labels.forEach(function (label, idx) {
-            var btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'size-pill';
-            btn.textContent = label;
-            btn.dataset.value = label;
-
-            btn.addEventListener('click', function () {
-              var v = labelToVariant[label];
-              if (!v) return;
-              selectedVariant = v;
-              setActive(btn);
-              priceNode.textContent = defaultMoney(getVariantPrice(selectedVariant));
-              setBtnEnabled(selectedVariant.available !== false);
+      function initVariantHook() {
+        function waitForDNShopify() {
+          if (
+            window.DNShopify &&
+            window.DNShopify.__initialized &&
+            typeof window.DNShopify.mountVariantPills === 'function'
+          ) {
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',
+              priceNode: '#variant-price',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
             });
 
-            pillsNode.appendChild(btn);
-
-            if (idx === 0) {
-              setTimeout(function () { btn.click(); }, 0);
+            var topPrice = document.getElementById('priceText');
+            var priceNode = document.getElementById('variant-price');
+            if (topPrice && priceNode) {
+              var observer = new MutationObserver(function () {
+                topPrice.textContent = priceNode.textContent;
+              });
+              observer.observe(priceNode, { childList: true, characterData: true, subtree: true });
             }
-          });
-
-          // Add-to-cart click
-          addBtn.addEventListener('click', function () {
-            if (!selectedVariant) return;
-
-            var qty = 1;
-            if (qtyInput) {
-              var q = Number(qtyInput.value);
-              if (!isNaN(q) && q > 0) qty = Math.floor(q);
-            }
-
-            try {
-              var hasDrawerCheckout =
-                state.cart &&
-                state.cart.props &&
-                state.cart.props.client &&
-                state.cart.model &&
-                state.cart.model.id;
-
-              var lineItem = {
-                variantId: String(selectedVariant.id),
-                quantity: qty
-              };
-
-              if (hasDrawerCheckout) {
-                var p = state.cart.props.client.checkout.addLineItems(
-                  state.cart.model.id,
-                  [lineItem]
-                );
-
-                if (p && typeof p.then === 'function') {
-                  p.then(function () {
-                    // ✅ show toast
-                    showToast(product && product.title);
-
-                    if (
-                      cfg.openCartOnAdd !== false &&
-                      window.DNShopify &&
-                      typeof window.DNShopify.openCart === 'function'
-                    ) {
-                      window.DNShopify.openCart();
-                    }
-                  }).catch(function (err) {
-                    console.error('Error adding item to Shopify cart, falling back to cart URL', err);
-                    var numericId = gidToNumericId(selectedVariant.id);
-                    if (numericId) {
-                      window.location.href =
-                        CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-                    }
-                  });
-                } else {
-                  // No promise (unlikely), still show toast & try to open cart
-                  showToast(product && product.title);
-                  if (
-                    cfg.openCartOnAdd !== false &&
-                    window.DNShopify &&
-                    typeof window.DNShopify.openCart === 'function'
-                  ) {
-                    window.DNShopify.openCart();
-                  }
-                }
-              } else {
-                // Drawer/cart not initialized → go to Online Store cart page directly
-                var numericId = gidToNumericId(selectedVariant.id);
-                if (numericId) {
-                  window.location.href =
-                    CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-                } else {
-                  console.error('Shopify cart not ready and could not resolve variant id');
-                }
-              }
-            } catch (e) {
-              console.error('Error adding item to Shopify cart', e);
-            }
-          });
+          } else {
+            setTimeout(waitForDNShopify, 50);
+          }
         }
 
-        // Fetch product by numeric ID
-        setBtnEnabled(false);
-        priceNode.textContent = '$0.00';
+        waitForDNShopify();
+      }
 
-        findProductByNumericId(cfg.productId).then(function (product) {
-          if (!product) {
-            // hydrate cache then retry once
-            return fetchAllProductsOnce().then(function () {
-              return findProductByNumericId(cfg.productId);
-            });
-          }
-          return product;
-        }).then(function (product) {
-          if (!product) {
-            setBtnEnabled(false);
-            return;
-          }
-          renderPillsFromVariants(product);
-        });
-      };
-    });
-  }
+      function initPage() {
+        initQtyControls();
+        initVariantHook();
+      }
 
-  window.DNShopify = window.DNShopify || {};
-  window.DNShopify.__initialized = false;
-
-  if (window.ShopifyBuy && window.ShopifyBuy.UI) init();
-  else if (window.ShopifyBuy) loadSdk(init);
-  else loadSdk(init);
-})();
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+      } else {
+        initPage();
+      }
+    })();
+  </script>
+</body>
+</html>
