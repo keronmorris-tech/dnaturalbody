@@ -237,6 +237,15 @@
 
       // Global cart drawer
       state.cart = ui.createComponent('cart', {
+         // Remove target="_blank" from drawer checkout links
+setTimeout(function () {
+  var links = document.querySelectorAll(
+    '.shopify-buy__cart a[target="_blank"]'
+  );
+  links.forEach(function (a) {
+    a.removeAttribute('target');
+  });
+}, 1000);
         options: {
           cart: {
             iframe: true,
