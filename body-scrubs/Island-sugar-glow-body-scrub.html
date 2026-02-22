@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Berry Boujee | D'NATURAL BODY</title>
+  <title>Island Sugar Glow | D'NATURAL BODY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
@@ -57,7 +57,6 @@
       cursor:not-allowed;
     }
 
-    /* Hidden size pills container (scrubs are one-size but we still use it to wire Shopify) */
     .size-options {
       display:none;
     }
@@ -94,11 +93,11 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Berry-Boujee-body-scrub.jpg" alt="Berry Boujee">
+        <img src="../images/Island-sugar-glow-body-scrub.jpg" alt="Island Sugar Glow">
       </div>
 
       <div class="product-info">
-        <h1>Berry Boujee</h1>
+        <h1>Island Sugar Glow</h1>
         <div class="product-type">Body Scrub</div>
 
         <div class="product-meta">
@@ -107,8 +106,8 @@
         </div>
 
         <p class="product-desc">
-          A juicy, sugar-based exfoliating scrub that gently buffs away dull skin,
-          leaving your body soft, hydrated, and smelling like a berry-filled treat.
+          A tropical sugar scrub that gently polishes away dullness while drenching skin
+          in island-sweet moisture. Think warm sand, coconut drinks, and glowy vacation skin.
         </p>
 
         <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
@@ -117,16 +116,16 @@
           <details open>
             <summary>Benefits</summary>
             <p>
-              • Berry-sweet scent for a fun, feel-good shower ritual.<br>
-              • Exfoliates without stripping moisture.<br>
-              • Leaves skin smooth, nourished, and glowing.
+              • Gently buffs away dull, flaky skin.<br>
+              • Leaves skin soft, juicy, and touchably smooth.<br>
+              • Tropical scent that feels like an instant getaway.
             </p>
           </details>
 
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica (for colour),
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica,
               Preservative, Vitamin E.
             </p>
           </details>
@@ -134,8 +133,8 @@
           <details>
             <summary>How to Use</summary>
             <p>
-              Massage onto damp skin in circular motions, then rinse thoroughly.
-              Use 2–3 times per week for soft, glowing skin. Avoid broken or freshly shaved skin.
+              Massage onto damp skin in circular motions, focusing on rough areas.
+              Rinse thoroughly and pat dry. Use 2–3 times per week.
             </p>
           </details>
         </div>
@@ -152,7 +151,6 @@
             Add to cart
           </button>
 
-          <!-- Hidden size pills (used only to satisfy DNShopify.mountVariantPills) -->
           <div id="size-options" class="size-options"></div>
         </div>
 
@@ -170,7 +168,7 @@
 
   <script>
     (function () {
-      var PRODUCT_ID_NUMERIC = '14889683222893';
+      var PRODUCT_ID_NUMERIC = '14892490981741';
 
       function clampQty(n) {
         n = Number(n);
@@ -213,7 +211,7 @@
           ) {
             window.DNShopify.mountVariantPills({
               productId: PRODUCT_ID_NUMERIC,
-              pillsNode: '#size-options',   // hidden, but required
+              pillsNode: '#size-options',
               priceNode: '#priceText',
               addBtn: '#add-to-cart',
               qtyInput: '#qty-input',
