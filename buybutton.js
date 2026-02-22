@@ -121,19 +121,29 @@
   // ------------------- CART HELPERS -------------------
 
   function ensureCartReady() {
-    // Cart is created synchronously in init, but in case mountVariantPills
-    // runs very quickly, we poll a few times.
+    // Wait until the cart EXISTS *and* has a checkout model.id.
     return new Promise(function (resolve) {
-      if (state.cart) return resolve(state.cart);
-
       var attempts = 0;
       (function check() {
-        if (state.cart || attempts > 60) {
-          resolve(state.cart || null);
-        } else {
-          attempts++;
-          setTimeout(check, 50);
+        var cart = state.cart;
+        var ready =
+          cart &&
+          cart.model &&
+          cart.model.id;
+
+        if (ready) {
+          resolve(cart);
+          return;
         }
+
+        attempts++;
+        if (attempts > 200) {   // ~10 seconds max (200 * 50ms)
+          console.error('DNShopify: cart never finished initializing');
+          resolve(null);
+          return;
+        }
+
+        setTimeout(check, 50);
       })();
     });
   }
@@ -310,7 +320,7 @@
 
         ensureCartReady().then(function (cart) {
           if (!cart || !cart.model || !cart.model.id || !state.client) {
-            console.error('DNShopify: cart drawer not ready; item not added');
+            console.error('DNShopify: cart drawer still not ready; could not add item');
             return;
           }
 
@@ -334,7 +344,6 @@
               }
             }).catch(function (err) {
               console.error('DNShopify: error adding line items', err);
-              // NO redirect here – user stays on page
             });
           } else {
             // No promise returned – assume it worked, just open the cart
@@ -343,7 +352,7 @@
             }
           }
         }).catch(function (err) {
-          console.error('DNShopify: cart not ready', err);
+          console.error('DNShopify: cart not ready (promise rejected)', err);
         });
       });
     }
