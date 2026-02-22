@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Island Sugar Glow | D'NATURAL BODY</title>
+  <title>Berry Boujee | D'NATURAL BODY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
@@ -16,6 +16,7 @@
       opacity: .7;
       margin-bottom: 8px;
     }
+
     .qty-row {
       display:flex;
       align-items:center;
@@ -39,6 +40,7 @@
       text-align:center;
       font-weight:700;
     }
+
     .btn-primary {
       background:#111;
       color:#fff;
@@ -53,6 +55,11 @@
     .btn-primary:disabled {
       opacity:.5;
       cursor:not-allowed;
+    }
+
+    /* Hidden size pills container (scrubs are one-size but we still use it to wire Shopify) */
+    .size-options {
+      display:none;
     }
   </style>
 </head>
@@ -87,18 +94,21 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Island-sugar-glow-body-scrub.jpg" alt="Island Sugar Glow Body Scrub">
+        <img src="../images/Berry-Boujee-body-scrub.jpg" alt="Berry Boujee">
       </div>
 
       <div class="product-info">
-        <h1>Island Sugar Glow</h1>
+        <h1>Berry Boujee</h1>
         <div class="product-type">Body Scrub</div>
-        <p class="product-price">$22.00</p>
-        <p class="product-meta">Net Wt. 12 oz</p>
+
+        <div class="product-meta">
+          <div class="price" id="priceText">$22.00</div>
+          <div class="size" id="sizeText">Net Wt. 12 oz</div>
+        </div>
 
         <p class="product-desc">
-          A tropical sugar scrub that polishes away dry, flaky skin while wrapping you
-          in a warm, island-sweet scent.
+          A juicy, sugar-based exfoliating scrub that gently buffs away dull skin,
+          leaving your body soft, hydrated, and smelling like a berry-filled treat.
         </p>
 
         <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
@@ -107,25 +117,25 @@
           <details open>
             <summary>Benefits</summary>
             <p>
-              • Smooths rough, bumpy skin.<br>
-              • Reveals a soft, radiant glow.<br>
-              • Coconut–sugar vibe that feels like vacation in a jar.
+              • Berry-sweet scent for a fun, feel-good shower ritual.<br>
+              • Exfoliates without stripping moisture.<br>
+              • Leaves skin smooth, nourished, and glowing.
             </p>
           </details>
 
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils,
-              Vitamin E, Mica, Preservative.
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils, Mica (for colour),
+              Preservative, Vitamin E.
             </p>
           </details>
 
           <details>
             <summary>How to Use</summary>
             <p>
-              On wet skin, massage in circular motions concentrating on rough areas
-              like elbows, knees, and legs. Rinse thoroughly. Use 2–3 times weekly.
+              Massage onto damp skin in circular motions, then rinse thoroughly.
+              Use 2–3 times per week for soft, glowing skin. Avoid broken or freshly shaved skin.
             </p>
           </details>
         </div>
@@ -142,10 +152,12 @@
             Add to cart
           </button>
 
-          <div id="product-component-14892490981741" style="display:none;"></div>
+          <!-- Hidden size pills (used only to satisfy DNShopify.mountVariantPills) -->
+          <div id="size-options" class="size-options"></div>
         </div>
 
       </div>
+
     </div>
   </section>
 
@@ -155,10 +167,10 @@
   </footer>
 
   <script src="../buybutton.js"></script>
+
   <script>
     (function () {
-      var PRODUCT_ID = '14892490981741';
-      var HIDDEN_NODE_ID = 'product-component-14892490981741';
+      var PRODUCT_ID_NUMERIC = '14889683222893';
 
       function clampQty(n) {
         n = Number(n);
@@ -192,74 +204,25 @@
         });
       }
 
-      function initShopifyBridge() {
+      function initVariantBinding() {
         function waitForDNShopify() {
           if (
             window.DNShopify &&
             window.DNShopify.__initialized &&
-            typeof window.DNShopify.mountProduct === 'function'
+            typeof window.DNShopify.mountVariantPills === 'function'
           ) {
-            window.DNShopify.mountProduct({
-              id: PRODUCT_ID,
-              node: '#' + HIDDEN_NODE_ID,
-              options: {
-                product: {
-                  buttonDestination: 'cart',
-                  layout: 'vertical',
-                  contents: {
-                    img: false,
-                    title: false,
-                    price: false,
-                    options: true,
-                    quantity: true,
-                    button: true
-                  },
-                  text: { button: 'Add to cart' }
-                },
-                cart: { popup: false }
-              }
+            window.DNShopify.mountVariantPills({
+              productId: PRODUCT_ID_NUMERIC,
+              pillsNode: '#size-options',   // hidden, but required
+              priceNode: '#priceText',
+              addBtn: '#add-to-cart',
+              qtyInput: '#qty-input',
+              optionNames: ['size', 'weight', 'amount', 'title'],
+              openCartOnAdd: true
             });
-
-            bridgeVisibleButton();
           } else {
             setTimeout(waitForDNShopify, 50);
           }
-        }
-
-        function bridgeVisibleButton() {
-          var visibleBtn = document.getElementById('add-to-cart');
-          var qtyInput  = document.getElementById('qty-input');
-          if (!visibleBtn) return;
-
-          visibleBtn.disabled = true;
-
-          function connect() {
-            var root = document.getElementById(HIDDEN_NODE_ID);
-            if (!root) { setTimeout(connect, 60); return; }
-
-            var hiddenBtn = root.querySelector('.shopify-buy__btn');
-            var hiddenQty = root.querySelector('.shopify-buy__quantity-input');
-
-            if (!hiddenBtn) { setTimeout(connect, 80); return; }
-
-            visibleBtn.disabled = false;
-
-            visibleBtn.addEventListener('click', function (e) {
-              e.preventDefault();
-              var qty = clampQty(qtyInput && qtyInput.value);
-              if (qtyInput) qtyInput.value = qty;
-
-              if (hiddenQty) {
-                hiddenQty.value = String(qty);
-                var evt = new Event('change', { bubbles: true });
-                hiddenQty.dispatchEvent(evt);
-              }
-
-              hiddenBtn.click();
-            });
-          }
-
-          connect();
         }
 
         waitForDNShopify();
@@ -267,7 +230,7 @@
 
       function initPage() {
         initQtyControls();
-        initShopifyBridge();
+        initVariantBinding();
       }
 
       if (document.readyState === 'loading') {
