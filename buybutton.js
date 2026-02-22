@@ -382,26 +382,30 @@
           }
 
           try {
-            var hasDrawerCheckout =
+            // Do we have a cart drawer + checkout?
+            var hasCartCheckout =
               state.cart &&
-              state.cart.props &&
-              state.cart.props.client &&
+              state.client &&
               state.cart.model &&
               state.cart.model.id;
 
-            var lineItem = {
-              variantId: String(selectedVariant.id),
-              quantity: qty
-            };
+            var numericId = gidToNumericId(selectedVariant.id);
 
-            if (hasDrawerCheckout) {
-              var p = state.cart.props.client.checkout.addLineItems(
+            if (hasCartCheckout) {
+              var lineItem = {
+                variantId: String(selectedVariant.id),
+                quantity: qty
+              };
+
+              // Use the main client to add line items to the existing checkout
+              var p = state.client.checkout.addLineItems(
                 state.cart.model.id,
                 [lineItem]
               );
 
               if (p && typeof p.then === 'function') {
                 p.then(function () {
+                  // Always open the drawer when requested and available
                   if (
                     cfg.openCartOnAdd !== false &&
                     window.DNShopify &&
@@ -411,15 +415,14 @@
                   }
                 }).catch(function (err) {
                   console.error('Error adding item to Shopify cart, falling back to cart URL', err);
-                  // fallback: go to online store cart page with just this item
-                  var numericId = gidToNumericId(selectedVariant.id);
+                  // Fallback: go to Online Store cart page with just this item
                   if (numericId) {
                     window.location.href =
                       CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
                   }
                 });
               } else {
-                // no promise, just open drawer
+                // No promise returned – just open the drawer
                 if (
                   cfg.openCartOnAdd !== false &&
                   window.DNShopify &&
@@ -428,15 +431,12 @@
                   window.DNShopify.openCart();
                 }
               }
+            } else if (numericId) {
+              // Drawer not initialized → go straight to Online Store cart page
+              window.location.href =
+                CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
             } else {
-              // Drawer/cart didn't initialize → go to Online Store cart page
-              var numericId = gidToNumericId(selectedVariant.id);
-              if (numericId) {
-                window.location.href =
-                  CONFIG.onlineStoreCartBase + '/' + numericId + ':' + qty;
-              } else {
-                console.error('Shopify cart not ready and could not resolve variant id');
-              }
+              console.error('Shopify cart not ready and could not resolve variant id');
             }
           } catch (e) {
             console.error('Error adding item to Shopify cart', e);
