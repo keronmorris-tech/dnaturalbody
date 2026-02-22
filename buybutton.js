@@ -1,6 +1,6 @@
-/* buybutton.js (D'Natural Body) 
+/* buybutton.js (D'Natural Body)
    - Loads Shopify Buy Button SDK once
-   - Creates ONE shared cart drawer + toggle
+   - Creates ONE shared cart drawer + toggle (in an iframe, default styling)
    - Exposes:
        window.DNShopify.mountVariantPills({
          productId,           // numeric product id string, e.g. "14889665036653"
@@ -9,8 +9,11 @@
          addBtn,              // selector or element for your Add to cart button
          qtyInput,            // selector or element for your visible qty input
          optionNames,         // ['size','weight','amount','title'] etc.
-         openCartOnAdd: true  // (we let Shopify open drawer automatically)
        })
+
+   Plus:
+   - Shows a toast "Product Name added to cart" after add
+   - Forces Shopify checkout to open in the SAME TAB
 */
 
 (function () {
@@ -20,8 +23,7 @@
     myshopifyDomain: 'dpscr1-vz.myshopify.com',
     storefrontAccessToken: 'b6634d4da21c44f64244a1ff19a52d78',
     sdkUrl: 'https://sdks.shopifycdn.com/buy-button/latest/buy-button-storefront.min.js',
-    toggleNodeId: 'shopify-cart-toggle',
-    onlineStoreCartBase: 'https://shop.dnaturalbody.com/cart'
+    toggleNodeId: 'shopify-cart-toggle'
   };
 
   var state = {
@@ -33,9 +35,9 @@
     hiddenProducts: {} // productId -> {component, root}
   };
 
-  /* ---------------------------
-     Tiny toast helper
-  --------------------------- */
+  // ---------------------------
+  // Tiny toast helper
+  // ---------------------------
   function showCartToast(message) {
     try {
       var el = document.getElementById('dn-cart-toast');
@@ -76,9 +78,9 @@
     }
   }
 
-  /* ---------------------------
-     SDK loader
-  --------------------------- */
+  // ---------------------------
+  // SDK loader
+  // ---------------------------
   function loadSdk(cb) {
     var s = document.createElement('script');
     s.async = true;
@@ -91,9 +93,9 @@
     return !!document.getElementById(CONFIG.toggleNodeId);
   }
 
-  /* ---------------------------
-     Helpers for product/variant lookup
-  --------------------------- */
+  // ---------------------------
+  // Helpers for product lookup
+  // ---------------------------
   function gidToNumericId(gid) {
     if (!gid) return null;
     try {
@@ -137,62 +139,9 @@
     });
   }
 
-  /* ---------------------------
-     Cart helpers for redirecting checkout
-  --------------------------- */
-  function getLineItems() {
-    try {
-      return (state.cart && state.cart.model && state.cart.model.lineItems) || [];
-    } catch (e) {
-      return [];
-    }
-  }
-
-  function buildCartPermalinkFromDrawer() {
-    var items = getLineItems();
-    if (!items.length) return CONFIG.onlineStoreCartBase;
-
-    var segments = [];
-    for (var i = 0; i < items.length; i++) {
-      var item = items[i];
-      var variantGid = item && item.variant && item.variant.id;
-      var variantId = gidToNumericId(variantGid);
-      var qty = Number((item && item.quantity) || 0);
-      if (variantId && qty > 0) {
-        segments.push(variantId + ':' + qty);
-      }
-    }
-
-    if (!segments.length) return CONFIG.onlineStoreCartBase;
-    return CONFIG.onlineStoreCartBase + '/' + segments.join(',');
-  }
-
-  function interceptDrawerCheckoutToCartPage() {
-    // Capture clicks on Shopify cart checkout buttons
-    document.addEventListener(
-      'click',
-      function (e) {
-        var target = e.target;
-        if (!target || !target.closest) return;
-
-        var btn = target.closest('.shopify-buy__btn--cart-checkout, .shopify-buy__cart__checkout');
-        if (!btn) return;
-
-        e.preventDefault();
-        e.stopPropagation();
-        if (e.stopImmediatePropagation) e.stopImmediatePropagation();
-
-        // Force SAME-TAB navigation
-        var url = buildCartPermalinkFromDrawer();
-        window.location.assign(url);
-      },
-      true
-    );
-  }
-
-  /* ---------------------------
-     Hidden Shopify product (for real cart add)
-  --------------------------- */
+  // ---------------------------
+  // Hidden Shopify product (for real cart add)
+  // ---------------------------
   function ensureHiddenProductComponent(productId) {
     var key = String(productId);
     if (state.hiddenProducts[key]) return state.hiddenProducts[key];
@@ -215,7 +164,7 @@
             }
           }
         }
-        // Cart/toggle use the global cart we created.
+        // We DON'T specify cart/toggle options here; they use the global cart we created.
       }
     });
 
@@ -224,9 +173,9 @@
     return entry;
   }
 
-  /* ---------------------------
-     Init Shopify client + UI
-  --------------------------- */
+  // ---------------------------
+  // Init Shopify client + UI
+  // ---------------------------
   function init() {
     state.client = ShopifyBuy.buildClient({
       domain: CONFIG.myshopifyDomain,
@@ -236,24 +185,16 @@
     ShopifyBuy.UI.onReady(state.client).then(function (ui) {
       state.ui = ui;
 
-      // Global cart drawer (NO iframe so we can intercept clicks)
+      // Global cart drawer (BACK TO IFRAME: true → Shopify styles + layout)
       state.cart = ui.createComponent('cart', {
         options: {
           cart: {
-            iframe: false,
+            iframe: true,
             popup: true,
             startOpen: false
           }
         }
       });
-
-      // Just in case Shopify still sneaks in target="_blank"
-      setTimeout(function () {
-        var links = document.querySelectorAll('.shopify-buy__cart a[target="_blank"]');
-        links.forEach(function (a) {
-          a.removeAttribute('target');
-        });
-      }, 1500);
 
       // Header toggle, if node exists
       if (ensureToggleNodeExists()) {
@@ -273,8 +214,17 @@
         });
       }
 
-      // Intercept checkout button → Online Store cart page in same tab
-      interceptDrawerCheckoutToCartPage();
+      // Force Shopify checkout to open in SAME TAB instead of new window
+      (function patchWindowOpenForCheckout() {
+        var originalOpen = window.open;
+        window.open = function (url, target, features) {
+          if (typeof url === 'string' && target === '_blank' && url.indexOf('http') === 0) {
+            window.location.href = url;
+            return null;
+          }
+          return originalOpen.apply(window, arguments);
+        };
+      })();
 
       // Expose global object
       window.DNShopify = window.DNShopify || {};
@@ -283,9 +233,9 @@
       window.DNShopify.ui = ui;
       window.DNShopify.cart = state.cart;
 
-      /* ---------------------------
-         Variant pills helper
-      --------------------------- */
+      // ---------------------------
+      // Variant pills helper
+      // ---------------------------
       window.DNShopify.mountVariantPills = function (cfg) {
         if (!cfg || !cfg.productId) return;
 
@@ -352,8 +302,7 @@
         function renderPillsFromProduct(product, hiddenRoot) {
           pillsNode.innerHTML = '';
 
-          // Product title for toast
-          var productTitle = product && product.title ? product.title : 'Item';
+          var productTitle = (product && product.title) ? product.title : 'Item';
 
           // Which option index corresponds to size?
           var optionIndex = -1;
@@ -503,9 +452,9 @@
     });
   }
 
-  /* ---------------------------
-     Boot
-  --------------------------- */
+  // ---------------------------
+  // Boot
+  // ---------------------------
   window.DNShopify = window.DNShopify || {};
   window.DNShopify.__initialized = false;
 
