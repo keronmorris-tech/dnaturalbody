@@ -254,6 +254,25 @@
           if (btnEl) btnEl.classList.add('active');
         }
 
+        // Wait for cart/checkout to be ready before adding items
+        function waitForCartReady(callback, tries) {
+          tries = tries || 0;
+          if (
+            state.cart &&
+            state.cart.model &&
+            state.cart.props &&
+            state.cart.props.client
+          ) {
+            callback();
+          } else if (tries < 50) {
+            setTimeout(function () {
+              waitForCartReady(callback, tries + 1);
+            }, 50);
+          } else {
+            console.error('Shopify cart failed to initialize');
+          }
+        }
+
         function renderPillsFromVariants(product) {
           pillsNode.innerHTML = '';
 
@@ -276,7 +295,9 @@
           var labelToVariant = {};
           (product.variants || []).forEach(function (v) {
             var label = null;
-            if (optionIndex >= 0 && v.options && v.options[optionIndex]) label = v.options[optionIndex];
+            if (optionIndex >= 0 && v.options && v.options[optionIndex]) {
+              label = v.options[optionIndex];
+            }
             if (!label) label = v.title || 'Default';
 
             // normalize
@@ -316,52 +337,58 @@
 
             // auto-select first
             if (idx === 0) {
-              // click after appended so class toggles work
-              setTimeout(function(){ btn.click(); }, 0);
+              setTimeout(function () { btn.click(); }, 0);
             }
           });
 
-// Hook add button
-addBtn.addEventListener('click', function () {
-  if (!selectedVariant) return;
+          // Hook add button (only once per mount)
+          addBtn.addEventListener('click', function () {
+            if (!selectedVariant) return;
 
-  // Read quantity (default 1)
-  var qty = 1;
-  if (qtyInput) {
-    var q = Number(qtyInput.value);
-    if (!isNaN(q) && q > 0) qty = Math.floor(q);
-  }
+            // Read quantity (default 1)
+            var qty = 1;
+            if (qtyInput) {
+              var q = Number(qtyInput.value);
+              if (!isNaN(q) && q > 0) qty = Math.floor(q);
+            }
 
-  try {
-    // Make sure the Shopify cart + client are ready
-    if (!state.cart || !state.cart.props || !state.cart.props.client || !state.cart.model) {
-      console.error('Shopify cart is not ready');
-      return;
-    }
+            waitForCartReady(function () {
+              try {
+                var lineItem = {
+                  variantId: String(selectedVariant.id),
+                  quantity: qty
+                };
 
-    var lineItem = {
-      variantId: String(selectedVariant.id),
-      quantity: qty
-    };
+                // Add to the SAME checkout the drawer is using
+                var p = state.cart.props.client.checkout.addLineItems(
+                  state.cart.model.id,
+                  [lineItem]
+                );
 
-    // ✅ Add to the SAME checkout the drawer is using
-    var p = state.cart.props.client.checkout.addLineItems(state.cart.model.id, [lineItem]);
-
-    if (p && typeof p.then === 'function') {
-      p.then(function () {
-        if (cfg.openCartOnAdd !== false && window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-          window.DNShopify.openCart();
-        }
-      });
-    } else {
-      if (cfg.openCartOnAdd !== false && window.DNShopify && typeof window.DNShopify.openCart === 'function') {
-        window.DNShopify.openCart();
-      }
-    }
-  } catch (e) {
-    console.error('Error adding item to Shopify cart', e);
-  }
-});
+                if (p && typeof p.then === 'function') {
+                  p.then(function () {
+                    if (
+                      cfg.openCartOnAdd !== false &&
+                      window.DNShopify &&
+                      typeof window.DNShopify.openCart === 'function'
+                    ) {
+                      window.DNShopify.openCart();
+                    }
+                  });
+                } else {
+                  if (
+                    cfg.openCartOnAdd !== false &&
+                    window.DNShopify &&
+                    typeof window.DNShopify.openCart === 'function'
+                  ) {
+                    window.DNShopify.openCart();
+                  }
+                }
+              } catch (e) {
+                console.error('Error adding item to Shopify cart', e);
+              }
+            });
+          });
         }
 
         // Fetch product by numeric ID
@@ -371,7 +398,9 @@ addBtn.addEventListener('click', function () {
         findProductByNumericId(cfg.productId).then(function (product) {
           if (!product) {
             // If not found, try to fetch a smaller set again (sometimes cache)
-            return fetchAllProductsOnce().then(function(){ return findProductByNumericId(cfg.productId); });
+            return fetchAllProductsOnce().then(function () {
+              return findProductByNumericId(cfg.productId);
+            });
           }
           return product;
         }).then(function (product) {
