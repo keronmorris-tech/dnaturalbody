@@ -1,0 +1,281 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Vanilla Vibes | D'NATURAL BODY</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
+
+  <style>
+    .purchase-block { margin-top: 22px; }
+    .purchase-label {
+      font-size: 12px;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      opacity: .7;
+      margin-bottom: 8px;
+    }
+    .qty-row {
+      display:flex;
+      align-items:center;
+      gap:10px;
+      margin: 8px 0 14px;
+    }
+    .qty-btn {
+      width:42px;
+      height:42px;
+      border:1px solid #222;
+      background:#fff;
+      border-radius:10px;
+      cursor:pointer;
+      font-size:18px;
+    }
+    .qty-input {
+      width:64px;
+      height:42px;
+      border:1px solid #222;
+      border-radius:10px;
+      text-align:center;
+      font-weight:700;
+    }
+    .btn-primary {
+      background:#111;
+      color:#fff;
+      border:none;
+      padding:14px 18px;
+      border-radius:10px;
+      cursor:pointer;
+      font-weight:700;
+      width:220px;
+      text-align:center;
+    }
+    .btn-primary:disabled {
+      opacity:.5;
+      cursor:not-allowed;
+    }
+  </style>
+</head>
+
+<body class="product-body">
+  <header class="header">
+    <a href="../index.html" class="logo">
+      <img src="../images/logo.png" alt="D'NATURAL BODY Logo">
+    </a>
+
+    <nav class="main-nav">
+      <a href="../index.html" class="nav-link">Home</a>
+
+      <div class="nav-item dropdown">
+        <a href="../shop.html" class="nav-link">Shop ▾</a>
+        <div class="dropdown-menu">
+          <a href="../shop.html">View All</a>
+          <a href="../shop-body-butter.html">Body Butter</a>
+          <a href="../shop-body-scrub.html">Body Scrub</a>
+          <a href="../shop-body-yogurt.html">Body Yogurt</a>
+        </div>
+      </div>
+
+      <a href="../about.html" class="nav-link">About</a>
+      <a href="../contact.html" class="nav-link">Contact</a>
+
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
+    </nav>
+  </header>
+
+  <section class="product-detail">
+    <div class="product-detail-inner">
+
+      <div class="product-image">
+        <img src="../images/Vanilla-vibes-body-scrub.jpg" alt="Vanilla Vibes Body Scrub">
+      </div>
+
+      <div class="product-info">
+        <h1>Vanilla Vibes</h1>
+        <div class="product-type">Body Scrub</div>
+        <p class="product-price">$22.00</p>
+        <p class="product-meta">Net Wt. 12 oz</p>
+
+        <p class="product-desc">
+          A warm vanilla sugar scrub that polishes away roughness and leaves your
+          skin smelling like a cozy dessert.
+        </p>
+
+        <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
+
+        <div class="product-sections">
+          <details open>
+            <summary>Benefits</summary>
+            <p>
+              • Gently refines skin texture.<br>
+              • Leaves a soft, sweet vanilla trail on the skin.<br>
+              • Perfect pre-shave or pre-tan exfoliator.
+            </p>
+          </details>
+
+          <details>
+            <summary>Ingredients</summary>
+            <p>
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils,
+              Vitamin E, Mica, Preservative.
+            </p>
+          </details>
+
+          <details>
+            <summary>How to Use</summary>
+            <p>
+              Apply to damp skin, massage, and rinse.
+              Follow with Vanilla Vibes body butter to lock in moisture.
+            </p>
+          </details>
+        </div>
+
+        <div class="purchase-block">
+          <div class="purchase-label">Quantity</div>
+          <div class="qty-row">
+            <button class="qty-btn" type="button" id="qty-minus">−</button>
+            <input class="qty-input" type="text" id="qty-input" value="1" inputmode="numeric" />
+            <button class="qty-btn" type="button" id="qty-plus">+</button>
+          </div>
+
+          <button id="add-to-cart" class="btn-primary" type="button" disabled>
+            Add to cart
+          </button>
+
+          <div id="product-component-14892492063085" style="display:none;"></div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <footer class="footer">
+    <p>© 2026 D'NATURAL BODY</p>
+    <p>Email: dnaturalbody@outlook.com</p>
+  </footer>
+
+  <script src="../buybutton.js"></script>
+  <script>
+    (function () {
+      var PRODUCT_ID = '14892492063085';
+      var HIDDEN_NODE_ID = 'product-component-14892492063085';
+
+      function clampQty(n) {
+        n = Number(n);
+        if (isNaN(n) || n < 1) n = 1;
+        return Math.floor(n);
+      }
+
+      function initQtyControls() {
+        var qtyInput = document.getElementById('qty-input');
+        var qtyMinus = document.getElementById('qty-minus');
+        var qtyPlus  = document.getElementById('qty-plus');
+
+        if (!qtyInput || !qtyMinus || !qtyPlus) return;
+
+        qtyInput.value = '1';
+
+        qtyMinus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value);
+          current = current - 1;
+          if (current < 1) current = 1;
+          qtyInput.value = current;
+        });
+
+        qtyPlus.addEventListener('click', function () {
+          var current = clampQty(qtyInput.value);
+          qtyInput.value = current + 1;
+        });
+
+        qtyInput.addEventListener('blur', function () {
+          qtyInput.value = clampQty(qtyInput.value);
+        });
+      }
+
+      function initShopifyBridge() {
+        function waitForDNShopify() {
+          if (
+            window.DNShopify &&
+            window.DNShopify.__initialized &&
+            typeof window.DNShopify.mountProduct === 'function'
+          ) {
+            window.DNShopify.mountProduct({
+              id: PRODUCT_ID,
+              node: '#' + HIDDEN_NODE_ID,
+              options: {
+                product: {
+                  buttonDestination: 'cart',
+                  layout: 'vertical',
+                  contents: {
+                    img: false,
+                    title: false,
+                    price: false,
+                    options: true,
+                    quantity: true,
+                    button: true
+                  },
+                  text: { button: 'Add to cart' }
+                },
+                cart: { popup: false }
+              }
+            });
+
+            bridgeVisibleButton();
+          } else {
+            setTimeout(waitForDNShopify, 50);
+          }
+        }
+
+        function bridgeVisibleButton() {
+          var visibleBtn = document.getElementById('add-to-cart');
+          var qtyInput  = document.getElementById('qty-input');
+          if (!visibleBtn) return;
+
+          visibleBtn.disabled = true;
+
+          function connect() {
+            var root = document.getElementById(HIDDEN_NODE_ID);
+            if (!root) { setTimeout(connect, 60); return; }
+
+            var hiddenBtn = root.querySelector('.shopify-buy__btn');
+            var hiddenQty = root.querySelector('.shopify-buy__quantity-input');
+
+            if (!hiddenBtn) { setTimeout(connect, 80); return; }
+
+            visibleBtn.disabled = false;
+
+            visibleBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              var qty = clampQty(qtyInput && qtyInput.value);
+              if (qtyInput) qtyInput.value = qty;
+
+              if (hiddenQty) {
+                hiddenQty.value = String(qty);
+                var evt = new Event('change', { bubbles: true });
+                hiddenQty.dispatchEvent(evt);
+              }
+
+              hiddenBtn.click();
+            });
+          }
+
+          connect();
+        }
+
+        waitForDNShopify();
+      }
+
+      function initPage() {
+        initQtyControls();
+        initShopifyBridge();
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initPage);
+      } else {
+        initPage();
+      }
+    })();
+  </script>
+</body>
+</html>
