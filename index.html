@@ -32,10 +32,8 @@
       <a href="about.html" class="nav-link">About</a>
       <a href="contact.html" class="nav-link">Contact</a>
 
-      <button class="cart-button" id="cartButton" type="button">
-        <span class="cart-icon">👜</span>
-        <span class="cart-count" id="cartCount">0</span>
-      </button>
+      <!-- Shopify cart toggle button will render here (from buybutton.js) -->
+      <div id="shopify-cart-toggle" class="shopify-cart-toggle" aria-label="Cart"></div>
     </nav>
   </header>
 
@@ -74,29 +72,7 @@
     <p>Email: dnaturalbody@outlook.com</p>
   </footer>
 
-  <!-- CART DRAWER OVERLAY -->
-  <div class="cart-overlay" id="cartOverlay"></div>
-
-  <!-- CART DRAWER PANEL -->
-  <aside class="cart-drawer" id="cartDrawer">
-    <div class="cart-drawer-header">
-      <h2>Your Cart</h2>
-      <button id="closeCart" class="cart-close">&times;</button>
-    </div>
-
-    <div class="cart-items" id="cartItems"></div>
-
-    <div class="cart-footer">
-      <div class="cart-subtotal">
-        <span>Subtotal</span>
-        <span id="cartSubtotal">$0.00</span>
-      </div>
-
-      <button class="primary-btn cart-checkout">Checkout</button>
-      <button class="outline-btn cart-continue" id="cartContinue">Continue Shopping</button>
-    </div>
-  </aside>
-
-  <script src="cart.js"></script>
+  <!-- Global Shopify Buy Button wiring (shared cart drawer + header toggle) -->
+  <script src="buybutton.js"></script>
 </body>
 </html>
