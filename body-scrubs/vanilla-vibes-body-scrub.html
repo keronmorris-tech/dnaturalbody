@@ -2,20 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8" />
-  <title>Shea | D'NATURAL BODY</title>
+  <title>Vanilla Vibes | D'NATURAL BODY</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../styles.css">
 
   <style>
-    #product-component-14892491866477 .shopify-buy__product__variant-selectors,
-    #product-component-14892491866477 .shopify-buy__option-select-wrapper,
-    #product-component-14892491866477 select.shopify-buy__option-select__select,
-    #product-component-14892491866477 .shopify-buy__product__quantity,
-    #product-component-14892491866477 .shopify-buy__btn {
-      display: none !important;
-    }
-
     .purchase-block { margin-top: 22px; }
     .purchase-label {
       font-size: 12px;
@@ -24,20 +16,12 @@
       opacity: .7;
       margin-bottom: 8px;
     }
-
-    .variant-price {
-      font-size:18px;
-      font-weight:700;
-      margin:6px 0 10px;
-    }
-
     .qty-row {
       display:flex;
       align-items:center;
       gap:10px;
       margin: 8px 0 14px;
     }
-
     .qty-btn {
       width:42px;
       height:42px;
@@ -47,7 +31,6 @@
       cursor:pointer;
       font-size:18px;
     }
-
     .qty-input {
       width:64px;
       height:42px;
@@ -56,7 +39,6 @@
       text-align:center;
       font-weight:700;
     }
-
     .btn-primary {
       background:#111;
       color:#fff;
@@ -68,14 +50,10 @@
       width:220px;
       text-align:center;
     }
-
     .btn-primary:disabled {
       opacity:.5;
       cursor:not-allowed;
     }
-
-    .size-options { display:none; }
-    .size-pill { display:none; }
   </style>
 </head>
 
@@ -109,21 +87,18 @@
     <div class="product-detail-inner">
 
       <div class="product-image">
-        <img src="../images/Shea-body-scrub.jpg" alt="Shea Body Scrub">
+        <img src="../images/Vanilla-vibes-body-scrub.jpg" alt="Vanilla Vibes Body Scrub">
       </div>
 
       <div class="product-info">
-        <h1>Shea</h1>
+        <h1>Vanilla Vibes</h1>
         <div class="product-type">Body Scrub</div>
-
-        <div class="product-meta">
-          <div class="price" id="priceText">$22.00</div>
-          <div class="size" id="sizeText">Net Wt. 10 oz</div>
-        </div>
+        <p class="product-price">$22.00</p>
+        <p class="product-meta">Net Wt. 12 oz</p>
 
         <p class="product-desc">
-          A rich, shea-powered sugar scrub that melts onto the skin, buffing away roughness
-          while leaving behind deep, buttery moisture.
+          A warm vanilla sugar scrub that polishes away roughness and leaves your
+          skin smelling like a cozy dessert.
         </p>
 
         <a href="../shop-body-scrub.html" class="outline-btn">Back</a>
@@ -132,35 +107,30 @@
           <details open>
             <summary>Benefits</summary>
             <p>
-              • Creamy scrub that exfoliates without stripping the skin.<br>
-              • Shea and nourishing oils leave a soft, moisturized finish — not a tight squeak.<br>
-              • Ideal for dry or flaky areas that need extra love.
+              • Gently refines skin texture.<br>
+              • Leaves a soft, sweet vanilla trail on the skin.<br>
+              • Perfect pre-shave or pre-tan exfoliator.
             </p>
           </details>
 
           <details>
             <summary>Ingredients</summary>
             <p>
-              Sugar, shea butter, plant oils, fragrance/essential oils, and a gentle preservative.
-              Replace with your exact INCI list on your final labels.
+              Sugar, Coconut Oil, Shea Butter, Emulsifying Wax, Fragrance/Essential Oils,
+              Vitamin E, Mica, Preservative.
             </p>
           </details>
 
           <details>
             <summary>How to Use</summary>
             <p>
-              On damp skin, massage a small amount in circular motions, concentrating on dry spots.
-              Rinse thoroughly and pat skin dry. Follow with your favourite body butter.
+              Apply to damp skin, massage, and rinse.
+              Follow with Vanilla Vibes body butter to lock in moisture.
             </p>
           </details>
         </div>
 
         <div class="purchase-block">
-          <div id="size-options" class="size-options"></div>
-
-          <div class="purchase-label">Price</div>
-          <div id="variant-price" class="variant-price">$0.00</div>
-
           <div class="purchase-label">Quantity</div>
           <div class="qty-row">
             <button class="qty-btn" type="button" id="qty-minus">−</button>
@@ -172,7 +142,7 @@
             Add to cart
           </button>
 
-          <div id="product-component-14892491866477" style="display:none;"></div>
+          <div id="product-component-14892492063085" style="display:none;"></div>
         </div>
 
       </div>
@@ -185,10 +155,10 @@
   </footer>
 
   <script src="../buybutton.js"></script>
-
   <script>
     (function () {
-      var PRODUCT_ID_NUMERIC = '14892491866477';
+      var PRODUCT_ID = '14892492063085';
+      var HIDDEN_NODE_ID = 'product-component-14892492063085';
 
       function clampQty(n) {
         n = Number(n);
@@ -206,7 +176,8 @@
         qtyInput.value = '1';
 
         qtyMinus.addEventListener('click', function () {
-          var current = clampQty(qtyInput.value) - 1;
+          var current = clampQty(qtyInput.value);
+          current = current - 1;
           if (current < 1) current = 1;
           qtyInput.value = current;
         });
@@ -221,34 +192,74 @@
         });
       }
 
-      function initVariantHook() {
+      function initShopifyBridge() {
         function waitForDNShopify() {
           if (
             window.DNShopify &&
             window.DNShopify.__initialized &&
-            typeof window.DNShopify.mountVariantPills === 'function'
+            typeof window.DNShopify.mountProduct === 'function'
           ) {
-            window.DNShopify.mountVariantPills({
-              productId: PRODUCT_ID_NUMERIC,
-              pillsNode: '#size-options',
-              priceNode: '#variant-price',
-              addBtn: '#add-to-cart',
-              qtyInput: '#qty-input',
-              optionNames: ['size', 'weight', 'amount', 'title'],
-              openCartOnAdd: true
+            window.DNShopify.mountProduct({
+              id: PRODUCT_ID,
+              node: '#' + HIDDEN_NODE_ID,
+              options: {
+                product: {
+                  buttonDestination: 'cart',
+                  layout: 'vertical',
+                  contents: {
+                    img: false,
+                    title: false,
+                    price: false,
+                    options: true,
+                    quantity: true,
+                    button: true
+                  },
+                  text: { button: 'Add to cart' }
+                },
+                cart: { popup: false }
+              }
             });
 
-            var topPrice = document.getElementById('priceText');
-            var priceNode = document.getElementById('variant-price');
-            if (topPrice && priceNode) {
-              var observer = new MutationObserver(function () {
-                topPrice.textContent = priceNode.textContent;
-              });
-              observer.observe(priceNode, { childList: true, characterData: true, subtree: true });
-            }
+            bridgeVisibleButton();
           } else {
             setTimeout(waitForDNShopify, 50);
           }
+        }
+
+        function bridgeVisibleButton() {
+          var visibleBtn = document.getElementById('add-to-cart');
+          var qtyInput  = document.getElementById('qty-input');
+          if (!visibleBtn) return;
+
+          visibleBtn.disabled = true;
+
+          function connect() {
+            var root = document.getElementById(HIDDEN_NODE_ID);
+            if (!root) { setTimeout(connect, 60); return; }
+
+            var hiddenBtn = root.querySelector('.shopify-buy__btn');
+            var hiddenQty = root.querySelector('.shopify-buy__quantity-input');
+
+            if (!hiddenBtn) { setTimeout(connect, 80); return; }
+
+            visibleBtn.disabled = false;
+
+            visibleBtn.addEventListener('click', function (e) {
+              e.preventDefault();
+              var qty = clampQty(qtyInput && qtyInput.value);
+              if (qtyInput) qtyInput.value = qty;
+
+              if (hiddenQty) {
+                hiddenQty.value = String(qty);
+                var evt = new Event('change', { bubbles: true });
+                hiddenQty.dispatchEvent(evt);
+              }
+
+              hiddenBtn.click();
+            });
+          }
+
+          connect();
         }
 
         waitForDNShopify();
@@ -256,7 +267,7 @@
 
       function initPage() {
         initQtyControls();
-        initVariantHook();
+        initShopifyBridge();
       }
 
       if (document.readyState === 'loading') {
